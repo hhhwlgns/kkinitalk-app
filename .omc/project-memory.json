@@ -32,7 +32,7 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npx tsc --noEmit 2>&1 | head -40 && echo \"---TSC DONE---\"",
+    "buildCommand": "npx tsc --noEmit 2>&1 | head -30 && echo \"---TSC DONE---\"",
     "testCommand": "cd C:/kkinitalk-app && grep -iE \"jest\" package.json; ls node_modules | grep -iE \"^jest\" 2>&1",
     "lintCommand": null,
     "devCommand": "npm run start",
@@ -123,20 +123,20 @@
   "hotPaths": [
     {
       "path": "app\\elderly\\home.tsx",
-      "accessCount": 54,
-      "lastAccessed": 1783960646569,
+      "accessCount": 57,
+      "lastAccessed": 1783962048351,
       "type": "file"
     },
     {
       "path": "app\\elderly\\onboarding\\index.tsx",
-      "accessCount": 53,
-      "lastAccessed": 1783948828444,
+      "accessCount": 54,
+      "lastAccessed": 1783961760352,
       "type": "file"
     },
     {
       "path": "src\\theme\\tokens.ts",
-      "accessCount": 43,
-      "lastAccessed": 1783949388113,
+      "accessCount": 48,
+      "lastAccessed": 1783961868253,
       "type": "file"
     },
     {
@@ -164,15 +164,15 @@
       "type": "file"
     },
     {
-      "path": "app\\elderly\\profile.tsx",
-      "accessCount": 38,
-      "lastAccessed": 1783948828761,
+      "path": "app\\elderly\\result.tsx",
+      "accessCount": 40,
+      "lastAccessed": 1783962237468,
       "type": "file"
     },
     {
-      "path": "app\\elderly\\result.tsx",
-      "accessCount": 37,
-      "lastAccessed": 1783960611494,
+      "path": "app\\elderly\\profile.tsx",
+      "accessCount": 39,
+      "lastAccessed": 1783961760631,
       "type": "file"
     },
     {
@@ -213,8 +213,8 @@
     },
     {
       "path": "app\\elderly\\_layout.tsx",
-      "accessCount": 25,
-      "lastAccessed": 1783960067046,
+      "accessCount": 26,
+      "lastAccessed": 1783962174298,
       "type": "file"
     },
     {
@@ -249,14 +249,14 @@
     },
     {
       "path": "app\\guardian\\_layout.tsx",
-      "accessCount": 19,
-      "lastAccessed": 1783948400199,
+      "accessCount": 20,
+      "lastAccessed": 1783962198721,
       "type": "file"
     },
     {
       "path": "src\\mocks\\nutritionAnalysis.ts",
-      "accessCount": 18,
-      "lastAccessed": 1783959649770,
+      "accessCount": 19,
+      "lastAccessed": 1783962100905,
       "type": "file"
     },
     {

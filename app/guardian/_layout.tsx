@@ -43,6 +43,7 @@ export default function GuardianLayout() {
         options={{ title: '리포트', tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart" color={color} size={size} /> }}
       />
       <Tabs.Screen name="connect" options={{ href: null }} />
+      <Tabs.Screen name="analysis" options={{ href: null }} />
     </Tabs>
   );
 }

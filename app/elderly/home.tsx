@@ -8,7 +8,8 @@ import { CameraIcon } from '../../src/components/icons/CameraIcon';
 import { CheckIcon } from '../../src/components/icons/CheckIcon';
 import { ChevronIcon } from '../../src/components/icons/ChevronIcon';
 import { PillIcon } from '../../src/components/icons/PillIcon';
-import { colors, fontFamily, fontSize, radius, shadow, spacing } from '../../src/theme/tokens';
+import { Badge, Card, SectionHeader, StatTile } from '../../src/components/ui';
+import { colors, fontFamily, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
 import { useRole } from '../../src/state/RoleContext';
 import {
   checkInsCollection,
@@ -110,20 +111,21 @@ export default function ElderlyHomeScreen() {
     : (profile?.avoidedFoods.length ?? 0) > 0
       ? '피해야 할 음식은 제외했어요'
       : '균형 잡힌 식사예요';
-  const recBasis = profile ? '건강 프로필 기반 추천' : '최근 식사 기록 기반 추천';
 
   const isSodiumCaution = verdict.fitness === 'caution';
   const hasMealsToday = todayMeals.length > 0;
-  const proteinLabel = !hasMealsToday
-    ? '–'
+  const proteinTone = !hasMealsToday
+    ? 'default'
     : nutrientPct(totalNutrients.proteinG, 'proteinG') >= 50
-      ? '좋음'
-      : '부족';
+      ? 'default'
+      : 'caution';
+  const proteinLabel = !hasMealsToday ? '–' : proteinTone === 'default' ? '좋음' : '부족';
+  const latestMeal = recentMeals[0] ?? null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.greetingBlock}>
           <Text style={styles.dateLabel}>{formatDateWithWeekday(now)}</Text>
           <Text style={styles.greeting}>
             {name} 님,{'\n'}
@@ -131,106 +133,119 @@ export default function ElderlyHomeScreen() {
           </Text>
         </View>
 
-        {!todayCheckIn && (
-          <Pressable style={styles.checkinCard} onPress={() => router.push('/elderly/checkin')}>
-            <View style={styles.checkinIconWrap}>
-              <AlarmIcon />
-            </View>
-            <View style={styles.flex1}>
-              <Text style={styles.checkinTitle}>아침 체크인 하기</Text>
-              <Text style={styles.checkinSub}>30초면 돼요 · 말로 대답하세요</Text>
-            </View>
-            <ChevronIcon />
+        {!todayCheckIn ? (
+          <Pressable onPress={() => router.push('/elderly/checkin')}>
+            <Card style={styles.actionRow}>
+              <View style={styles.actionIconBrand}>
+                <AlarmIcon size={22} color={colors.primary} />
+              </View>
+              <View style={styles.flex1}>
+                <Text style={styles.actionTitle}>오늘 체크인하기</Text>
+                <Text style={styles.actionSub}>30초면 돼요 · 말로 대답하세요</Text>
+              </View>
+              <ChevronIcon size={16} color={colors.textFaint} />
+            </Card>
           </Pressable>
-        )}
-        {todayCheckIn && (
-          <View style={styles.doneBanner}>
-            <View style={styles.doneIconWrap}>
-              <CheckIcon />
+        ) : (
+          <View style={styles.statusStrip}>
+            <View style={styles.statusDotWrap}>
+              <CheckIcon size={14} color={colors.surface} />
             </View>
-            <Text style={styles.doneText}>오늘 체크인 완료 — 컨디션 {CONDITION_LABEL[todayCheckIn.condition]}</Text>
+            <Text style={styles.statusStripText}>
+              오늘 체크인 완료 · 컨디션 {CONDITION_LABEL[todayCheckIn.condition]}
+            </Text>
           </View>
         )}
 
-        {hasNextMed && nextMed && (
-          <View style={styles.nextMedCard}>
-            <View style={styles.nextMedIconWrap}>
-              <PillIcon />
+        {/* Focal action: log a meal — the app's core loop. */}
+        <Pressable onPress={() => router.push('/elderly/camera')} style={({ pressed }) => pressed && styles.pressed}>
+          <View style={styles.cameraCta}>
+            <View style={styles.cameraIconWrap}>
+              <CameraIcon size={26} color={colors.onPrimary} />
             </View>
             <View style={styles.flex1}>
-              <Text style={styles.nextMedTime}>다음 약 · {formatKoreanTime(earliestTime(nextMed.timesOfDay))}</Text>
-              <Text style={styles.nextMedName}>{nextMed.name}</Text>
+              <Text style={styles.cameraCtaLabel}>식사 사진 찍기</Text>
+              <Text style={styles.cameraCtaSub}>찍으면 영양을 바로 분석해드려요</Text>
             </View>
-            <Pressable style={styles.nextMedButton} onPress={() => router.push('/elderly/medications')}>
-              <Text style={styles.nextMedButtonLabel}>보기</Text>
-            </Pressable>
+            <ChevronIcon size={18} color={colors.onPrimary} />
           </View>
-        )}
-        {homeMedsAllDone && (
-          <View style={styles.doneBanner}>
-            <View style={styles.doneIconWrap}>
-              <CheckIcon />
-            </View>
-            <Text style={styles.doneText}>오늘 약을 모두 드셨어요</Text>
-          </View>
-        )}
-
-        <Pressable style={styles.cameraCta} onPress={() => router.push('/elderly/camera')}>
-          <CameraIcon />
-          <Text style={styles.cameraCtaLabel}>식사 사진 찍기</Text>
         </Pressable>
 
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryHeader}>
-            <Text style={styles.summaryTitle}>오늘 드신 것</Text>
-            <Text style={styles.summaryCount}>{todayMeals.length}건</Text>
+        {hasNextMed && nextMed ? (
+          <Card style={styles.actionRow}>
+            <View style={styles.actionIconPill}>
+              <PillIcon size={22} color={colors.onPrimary} />
+            </View>
+            <View style={styles.flex1}>
+              <Text style={styles.actionEyebrow}>다음 약 · {formatKoreanTime(earliestTime(nextMed.timesOfDay))}</Text>
+              <Text style={styles.actionTitle}>{nextMed.name}</Text>
+            </View>
+            <Pressable style={styles.smallButton} onPress={() => router.push('/elderly/medications')}>
+              <Text style={styles.smallButtonLabel}>보기</Text>
+            </Pressable>
+          </Card>
+        ) : homeMedsAllDone ? (
+          <View style={styles.statusStrip}>
+            <View style={styles.statusDotWrap}>
+              <CheckIcon size={14} color={colors.surface} />
+            </View>
+            <Text style={styles.statusStripText}>오늘 약을 모두 드셨어요</Text>
           </View>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryBox}>
-              <Text style={styles.summaryBoxLabel}>칼로리</Text>
-              <Text style={styles.summaryBoxValue} numberOfLines={1} adjustsFontSizeToFit>
-                {Math.round(totalNutrients.calories)}kcal
-              </Text>
+        ) : null}
+
+        <View>
+          <SectionHeader
+            title="오늘 드신 것"
+            action={
+              hasMealsToday ? (
+                <Pressable onPress={() => router.push('/elderly/history')} hitSlop={8}>
+                  <Text style={styles.linkLabel}>기록 보기</Text>
+                </Pressable>
+              ) : undefined
+            }
+          />
+          <Card>
+            <View style={styles.summaryTopRow}>
+              <Text style={styles.summaryCount}>{todayMeals.length}끼 기록</Text>
+              {hasMealsToday ? (
+                <Badge label={isSodiumCaution ? '나트륨 주의' : '균형 좋음'} tone={isSodiumCaution ? 'caution' : 'good'} />
+              ) : null}
             </View>
-            <View
-              style={[
-                styles.summaryBox,
-                isSodiumCaution && { backgroundColor: colors.dangerBg },
-              ]}
-            >
-              <Text style={styles.summaryBoxLabel}>나트륨</Text>
-              <Text
-                style={[
-                  styles.summaryBoxValue,
-                  isSodiumCaution && { color: colors.danger },
-                ]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
+            <View style={styles.statRow}>
+              <StatTile label="칼로리" value={hasMealsToday ? `${Math.round(totalNutrients.calories)}kcal` : '–'} />
+              <StatTile
+                label="나트륨"
+                value={hasMealsToday ? `${Math.round(totalNutrients.sodiumMg).toLocaleString()}mg` : '–'}
+                tone={isSodiumCaution ? 'danger' : 'default'}
+              />
+              <StatTile label="단백질" value={proteinLabel} tone={proteinTone} />
+            </View>
+            {latestMeal ? (
+              <Pressable
+                style={styles.detailLink}
+                onPress={() => router.push({ pathname: '/elderly/analysis', params: { mealId: latestMeal.id } })}
               >
-                {Math.round(totalNutrients.sodiumMg).toLocaleString()}mg
-              </Text>
-            </View>
-            <View style={styles.summaryBox}>
-              <Text style={styles.summaryBoxLabel}>단백질</Text>
-              <Text
-                style={[styles.summaryBoxValue, proteinLabel === '부족' && { color: colors.caution }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {proteinLabel}
-              </Text>
-            </View>
-          </View>
+                <Text style={styles.detailLinkLabel}>가장 최근 식사 자세히 보기</Text>
+                <ChevronIcon size={14} color={colors.secondaryAccent} />
+              </Pressable>
+            ) : (
+              <Text style={styles.summaryHint}>사진을 찍으면 오늘 영양이 여기에 쌓여요.</Text>
+            )}
+          </Card>
         </View>
 
-        <View style={styles.recCard}>
-          <Text style={styles.recTitle}>{NEXT_SLOT_TITLE[currentSlot]}</Text>
-          <Text style={styles.recName}>{recText}</Text>
-          <Text style={styles.recWhy}>{recWhy}</Text>
-          <Text style={styles.recBasis}>{recBasis}</Text>
-          <Pressable style={styles.recButton} onPress={() => setRecVariant((v) => v + 1)}>
-            <Text style={styles.recButtonLabel}>다른 추천 받기</Text>
-          </Pressable>
+        <View>
+          <SectionHeader title={NEXT_SLOT_TITLE[currentSlot]} />
+          <Card>
+            <Text style={styles.recName}>{recText}</Text>
+            <View style={styles.recWhyRow}>
+              <View style={styles.recDot} />
+              <Text style={styles.recWhy}>{recWhy}</Text>
+            </View>
+            <Pressable style={styles.recButton} onPress={() => setRecVariant((v) => v + 1)}>
+              <Text style={styles.recButtonLabel}>다른 추천 받기</Text>
+            </Pressable>
+          </Card>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -239,133 +254,123 @@ export default function ElderlyHomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, gap: spacing.md },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
   flex1: { flex: 1 },
-  dateLabel: { fontSize: fontSize.body, fontFamily: fontFamily.semibold, color: colors.textMuted },
-  greeting: {
-    fontSize: fontSize.sectionHeader,
-    fontFamily: fontFamily.extrabold,
-    color: colors.text,
-    letterSpacing: -0.5,
-    marginTop: 4,
-  },
-  checkinCard: {
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  checkinIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: colors.primaryHoverBg,
+  pressed: { opacity: 0.85 },
+
+  greetingBlock: { marginBottom: spacing.xxs },
+  dateLabel: { ...typeElder.callout, color: colors.textMuted },
+  greeting: { ...typeElder.title, color: colors.text, marginTop: spacing.xxs },
+
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  actionIconBrand: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkinTitle: { fontSize: fontSize.label, fontFamily: fontFamily.extrabold, color: colors.text },
-  checkinSub: { fontSize: fontSize.small, fontFamily: fontFamily.semibold, color: colors.textMuted, marginTop: 2 },
-  doneBanner: {
-    borderRadius: radius.lg,
-    backgroundColor: colors.goodBg,
-    borderWidth: 1.5,
-    borderColor: colors.goodBorder,
-    padding: spacing.sm,
+  actionIconPill: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionEyebrow: { ...typeElder.caption, color: colors.secondaryAccent, fontFamily: fontFamily.bold },
+  actionTitle: { ...typeElder.subheading, color: colors.text },
+  actionSub: { ...typeElder.callout, color: colors.textMuted, marginTop: 2 },
+
+  statusStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.sm,
+    backgroundColor: colors.goodBg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.goodBorder,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
-  doneIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  statusDotWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: colors.good,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  doneText: { fontSize: fontSize.label, fontFamily: fontFamily.extrabold, color: colors.good },
-  nextMedCard: {
-    borderRadius: radius.lg,
-    backgroundColor: colors.nextMedBg,
-    borderWidth: 1.5,
-    borderColor: colors.profileHighlightBorder,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  nextMedIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: radius.sm,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nextMedTime: { fontSize: fontSize.small, fontFamily: fontFamily.bold, color: colors.secondaryAccent },
-  nextMedName: { fontSize: fontSize.label, fontFamily: fontFamily.extrabold, color: colors.text, marginTop: 2 },
-  nextMedButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  nextMedButtonLabel: { color: colors.onPrimary, fontSize: fontSize.body, fontFamily: fontFamily.extrabold },
+  statusStripText: { ...typeElder.callout, color: colors.good, fontFamily: fontFamily.bold, flex: 1 },
+
   cameraCta: {
-    borderRadius: radius.xl,
-    backgroundColor: colors.primary,
-    paddingVertical: 26,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 14,
+    gap: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
     ...shadow.cta,
   },
-  cameraCtaLabel: { color: colors.onPrimary, fontSize: 26, fontFamily: fontFamily.extrabold },
-  summaryCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    ...shadow.card,
-  },
-  summaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  summaryTitle: { fontSize: fontSize.body, fontFamily: fontFamily.extrabold, color: colors.textMuted },
-  summaryCount: { fontSize: fontSize.small, fontFamily: fontFamily.bold, color: colors.good },
-  summaryRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  summaryBox: {
-    flex: 1,
-    backgroundColor: colors.cardSubBg,
+  cameraIconWrap: {
+    width: 48,
+    height: 48,
     borderRadius: radius.md,
-    paddingVertical: 13,
-    paddingHorizontal: 8,
+    backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
-  },
-  summaryBoxLabel: { fontSize: fontSize.small, fontFamily: fontFamily.semibold, color: colors.textMuted },
-  summaryBoxValue: { fontSize: 21, fontFamily: fontFamily.extrabold, color: colors.text, marginTop: 3 },
-  recCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    ...shadow.card,
-  },
-  recTitle: { fontSize: fontSize.body, fontFamily: fontFamily.extrabold, color: colors.textMuted },
-  recName: { fontSize: 23, fontFamily: fontFamily.extrabold, color: colors.text, marginTop: 6 },
-  recWhy: { fontSize: fontSize.body, fontFamily: fontFamily.bold, color: colors.good, marginTop: 4 },
-  recBasis: { fontSize: 14, fontFamily: fontFamily.semibold, color: colors.textFaint, marginTop: 12 },
-  recButton: {
-    marginTop: 10,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    minHeight: 52,
     justifyContent: 'center',
   },
-  recButtonLabel: { fontSize: fontSize.label, fontFamily: fontFamily.extrabold, color: colors.text },
+  cameraCtaLabel: { ...typeElder.heading, color: colors.onPrimary },
+  cameraCtaSub: { ...typeElder.callout, color: colors.onPrimary, opacity: 0.85, marginTop: 2 },
+
+  smallButton: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  smallButtonLabel: { ...typeElder.callout, color: colors.onPrimary, fontFamily: fontFamily.bold },
+
+  linkLabel: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.bold, color: colors.secondaryAccent },
+
+  summaryTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  summaryCount: { ...typeElder.bodyStrong, color: colors.text },
+  statRow: { flexDirection: 'row', gap: spacing.sm },
+  summaryHint: { ...typeElder.callout, color: colors.textFaint, marginTop: spacing.sm },
+  detailLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.dividerLight,
+  },
+  detailLinkLabel: { ...typeElder.callout, color: colors.secondaryAccent, fontFamily: fontFamily.bold },
+
+  recName: { ...typeElder.subheading, color: colors.text },
+  recWhyRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: spacing.xs },
+  recDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.good },
+  recWhy: { ...typeElder.callout, color: colors.good, fontFamily: fontFamily.bold },
+  recButton: {
+    marginTop: spacing.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    minHeight: 48,
+    justifyContent: 'center',
+  },
+  recButtonLabel: { ...typeElder.callout, color: colors.text, fontFamily: fontFamily.bold },
 });

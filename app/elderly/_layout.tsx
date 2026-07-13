@@ -68,6 +68,7 @@ export default function ElderlyLayout() {
       />
       <Tabs.Screen name="checkin" options={{ href: null }} />
       <Tabs.Screen name="result" options={{ href: null }} />
+      <Tabs.Screen name="analysis" options={{ href: null }} />
       <Tabs.Screen name="onboarding" options={{ href: null }} />
     </Tabs>
   );

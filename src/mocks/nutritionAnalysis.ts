@@ -119,3 +119,60 @@ const NUTRIENT_TARGETS = {
 export function nutrientPct(value: number, key: keyof typeof NUTRIENT_TARGETS): number {
   return Math.min(100, Math.round((value / NUTRIENT_TARGETS[key]) * 100));
 }
+
+// Per-food contribution to the meal's calories & sodium — powers the detailed
+// analysis breakdown so users see *which* food drove a warning.
+export interface FoodContribution {
+  food: FoodItem;
+  calories: number;
+  sodiumMg: number;
+  proteinG: number;
+  sodiumShare: number; // 0-100, this food's share of the meal's sodium
+}
+
+export function computeFoodContributions(foods: FoodItem[]): FoodContribution[] {
+  const totalSodium = foods.reduce((sum, f) => sum + f.nutrients.sodiumMg, 0) || 1;
+  return foods
+    .map((food) => ({
+      food,
+      calories: food.nutrients.calories,
+      sodiumMg: food.nutrients.sodiumMg,
+      proteinG: food.nutrients.proteinG,
+      sodiumShare: Math.round((food.nutrients.sodiumMg / totalSodium) * 100),
+    }))
+    .sort((a, b) => b.sodiumMg - a.sodiumMg);
+}
+
+// Actionable, elder-friendly suggestions derived from the meal's numbers + profile.
+export function buildMealInsights(
+  totals: NutrientBreakdown,
+  foods: FoodItem[],
+  profile?: HealthProfile | null,
+): string[] {
+  const insights: string[] = [];
+  const contributions = computeFoodContributions(foods);
+  const topSodium = contributions[0];
+
+  if (totals.sodiumMg > SODIUM_CAUTION_THRESHOLD_MG && topSodium) {
+    insights.push(`나트륨이 높아요. 특히 ${topSodium.food.name}의 국물을 남기면 도움이 돼요.`);
+  } else if (totals.sodiumMg <= 800) {
+    insights.push('나트륨이 낮아 심심할 수 있어요. 지금처럼 싱겁게 드시면 좋아요.');
+  }
+
+  if (nutrientPct(totals.proteinG, 'proteinG') < 50) {
+    insights.push('단백질이 조금 부족해요. 다음 끼니에 생선·두부·계란을 곁들여보세요.');
+  } else {
+    insights.push('단백질을 충분히 드셨어요. 근력 유지에 좋아요.');
+  }
+
+  const hasHypertension = profile?.conditions.some((c) => c === '고혈압') ?? false;
+  if (hasHypertension && totals.sodiumMg > 1200) {
+    insights.push('고혈압이 있으시니 국·찌개는 절반만 드시는 걸 권해요.');
+  }
+
+  if (profile?.swallowingDifficulty) {
+    insights.push('삼키기 어려우실 수 있으니 부드럽게 조리한 반찬을 추천해요.');
+  }
+
+  return insights;
+}

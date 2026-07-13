@@ -1,27 +1,32 @@
 export const colors = {
-  background: '#F6F0E6',
+  background: '#F5EEE2',
   backgroundGradientEnd: '#FDF8EF',
   surface: '#FFFFFF',
-  cardSubBg: '#FBF6EC',
+  // Sunken surface for insets/sub-panels — gives cards internal hierarchy
+  // instead of every block being a floating white card.
+  surfaceSunken: '#F3ECDF',
+  cardSubBg: '#F7F1E6',
 
-  text: '#3B3025',
-  textMuted: '#8A7B6C',
-  textFaint: '#B3A590',
+  text: '#2E251C',
+  textMuted: '#7C6E5E',
+  textFaint: '#A99A86',
 
-  primary: '#E8622C',
-  primaryPressed: '#D5551F',
-  onPrimary: '#FFF9F2',
+  primary: '#E15B26',
+  primaryPressed: '#C74A17',
+  onPrimary: '#FFFFFF',
   iconFillCream: '#FFF6EC',
-  primaryHoverBg: '#FDEFE6',
+  primaryHoverBg: '#FBEADE',
+  primarySoft: '#F7E4D5',
 
-  secondaryAccent: '#B4540A',
-  secondaryAccentHover: '#9A4405',
+  secondaryAccent: '#A54A08',
+  secondaryAccentHover: '#8C3F06',
   linkHover: '#8C3F06',
 
-  neutralFill: '#EFE6D7',
-  border: '#E3D7C3',
-  dividerLight: '#F1E9DB',
-  photoStripe: '#F7F1E5',
+  neutralFill: '#EBE1D0',
+  border: '#E4D8C6',
+  borderStrong: '#D4C4AC',
+  dividerLight: '#EFE7D9',
+  photoStripe: '#F1E9DB',
 
   good: '#2E7D5B',
   goodBg: '#EAF4EE',
@@ -84,12 +89,42 @@ export const fontSizeCompact = {
   sectionHeader: 26,
 };
 
+// Coherent type scale: size + lineHeight + weight bundled so screens don't
+// hand-pick mismatched numbers. Use `type.*` for new/redesigned screens.
+export const type = {
+  display: { fontSize: 34, lineHeight: 42, fontFamily: fontFamily.extrabold, letterSpacing: -0.6 },
+  title: { fontSize: 27, lineHeight: 36, fontFamily: fontFamily.extrabold, letterSpacing: -0.4 },
+  heading: { fontSize: 21, lineHeight: 29, fontFamily: fontFamily.bold, letterSpacing: -0.2 },
+  subheading: { fontSize: 18, lineHeight: 26, fontFamily: fontFamily.bold, letterSpacing: -0.1 },
+  body: { fontSize: 16, lineHeight: 25, fontFamily: fontFamily.medium, letterSpacing: 0 },
+  bodyStrong: { fontSize: 16, lineHeight: 25, fontFamily: fontFamily.bold, letterSpacing: 0 },
+  callout: { fontSize: 15, lineHeight: 22, fontFamily: fontFamily.semibold, letterSpacing: 0 },
+  caption: { fontSize: 13, lineHeight: 18, fontFamily: fontFamily.medium, letterSpacing: 0.1 },
+  overline: { fontSize: 12, lineHeight: 16, fontFamily: fontFamily.bold, letterSpacing: 0.4 },
+} as const;
+
+// Elder-facing type scale — larger minimums for the elderly role's primary flows.
+export const typeElder = {
+  display: { fontSize: 40, lineHeight: 50, fontFamily: fontFamily.extrabold, letterSpacing: -0.6 },
+  title: { fontSize: 30, lineHeight: 40, fontFamily: fontFamily.extrabold, letterSpacing: -0.4 },
+  heading: { fontSize: 24, lineHeight: 33, fontFamily: fontFamily.extrabold, letterSpacing: -0.2 },
+  subheading: { fontSize: 20, lineHeight: 29, fontFamily: fontFamily.bold, letterSpacing: -0.1 },
+  body: { fontSize: 18, lineHeight: 28, fontFamily: fontFamily.medium, letterSpacing: 0 },
+  bodyStrong: { fontSize: 18, lineHeight: 28, fontFamily: fontFamily.bold, letterSpacing: 0 },
+  callout: { fontSize: 16, lineHeight: 24, fontFamily: fontFamily.semibold, letterSpacing: 0 },
+  caption: { fontSize: 14, lineHeight: 20, fontFamily: fontFamily.medium, letterSpacing: 0.1 },
+} as const;
+
+// 4pt grid. Existing keys kept; values snapped to the grid so every screen
+// shares one rhythm instead of ad-hoc 8/12/20/28/40 jumps.
 export const spacing = {
+  xxs: 4,
   xs: 8,
   sm: 12,
-  md: 20,
-  lg: 28,
-  xl: 40,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 44,
 };
 
 export const radius = {
@@ -102,25 +137,35 @@ export const radius = {
 };
 
 export const shadow = {
+  // Subtle resting elevation for standard cards — pairs with a hairline border
+  // so cards read as grouped panels, not a pile of floating white boxes.
   card: {
-    shadowColor: '#3B3025',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
+    shadowColor: '#2E251C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  // Slightly raised — for the one focal card on a screen.
+  raised: {
+    shadowColor: '#2E251C',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
   cta: {
-    shadowColor: '#E8622C',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowColor: '#E15B26',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 5,
   },
   micOrb: {
-    shadowColor: '#E8622C',
+    shadowColor: '#E15B26',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.4,
-    shadowRadius: 26,
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
     elevation: 8,
   },
 };

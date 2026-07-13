@@ -34,6 +34,7 @@ interface TimelineEntry {
   title: string;
   desc: string;
   dot: string;
+  mealId?: string;
 }
 
 function minutesAgo(iso: string, now: Date): string {
@@ -179,8 +180,9 @@ export default function GuardianHomeScreen() {
         id: `meal-${meal.id}`,
         time: formatMealTime(meal.recordedAt),
         title: `${displayName} 식사`,
-        desc: meal.fitness === 'good' ? '영양 적합' : '나트륨 주의',
+        desc: meal.fitness === 'good' ? '영양 적합 · 눌러서 분석 보기' : '나트륨 주의 · 눌러서 분석 보기',
         dot: meal.fitness === 'good' ? colors.good : colors.caution,
+        mealId: meal.id,
       });
     }
     for (const log of recentLogs.filter((log) => log.takenAt.slice(0, 10) === todayDate())) {
@@ -273,9 +275,18 @@ export default function GuardianHomeScreen() {
             <Text style={styles.timelineEmpty}>아직 기록이 없어요</Text>
           ) : (
             timeline.map((entry, index) => (
-              <View
+              <Pressable
                 key={entry.id}
-                style={[styles.timelineRow, index === timeline.length - 1 && styles.timelineRowLast]}
+                disabled={!entry.mealId}
+                onPress={() =>
+                  entry.mealId &&
+                  router.push({ pathname: '/guardian/analysis', params: { mealId: entry.mealId } })
+                }
+                style={({ pressed }) => [
+                  styles.timelineRow,
+                  index === timeline.length - 1 && styles.timelineRowLast,
+                  pressed && entry.mealId ? styles.timelinePressed : null,
+                ]}
               >
                 <Text style={styles.timelineTime}>{entry.time}</Text>
                 <View style={[styles.timelineDot, { backgroundColor: entry.dot }]} />
@@ -283,7 +294,8 @@ export default function GuardianHomeScreen() {
                   <Text style={styles.timelineTitle}>{entry.title}</Text>
                   <Text style={styles.timelineDesc}>{entry.desc}</Text>
                 </View>
-              </View>
+                {entry.mealId ? <ChevronIcon size={13} color={colors.textFaint} /> : null}
+              </Pressable>
             ))
           )}
         </View>
@@ -375,6 +387,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.dividerLight,
   },
   timelineRowLast: { borderBottomWidth: 0 },
+  timelinePressed: { opacity: 0.6 },
   timelineTime: { width: 44, fontSize: fontSize.meta, fontFamily: fontFamily.bold, color: colors.textMuted, marginTop: 3 },
   timelineDot: { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
   timelineTitle: { fontSize: fontSize.body, fontFamily: fontFamily.bold, color: colors.text },

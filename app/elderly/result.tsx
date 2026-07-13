@@ -239,6 +239,13 @@ export default function ResultScreen() {
           />
         </View>
 
+        <Pressable
+          style={styles.detailButton}
+          onPress={() => router.push({ pathname: '/elderly/analysis', params: { mealId: meal.id } })}
+        >
+          <Text style={styles.detailButtonLabel}>자세한 분석 보기</Text>
+        </Pressable>
+
         <Pressable style={styles.saveButton} onPress={saveRecord} disabled={saving}>
           <Text style={styles.saveButtonLabel}>기록 저장하기</Text>
         </Pressable>
@@ -408,6 +415,20 @@ const styles = StyleSheet.create({
   nutrientFill: {
     height: '100%',
     borderRadius: 6,
+  },
+  detailButton: {
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingVertical: 18,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  detailButtonLabel: {
+    color: colors.secondaryAccent,
+    fontSize: fontSize.label,
+    fontFamily: fontFamily.extrabold,
   },
   saveButton: {
     borderRadius: radius.lg,
