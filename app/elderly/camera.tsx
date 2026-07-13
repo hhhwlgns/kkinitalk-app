@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 
 import { AnalyzingSpinner } from '../../src/components/voice/AnalyzingSpinner';
@@ -29,32 +30,11 @@ export default function CameraScreen() {
   const { activeUserId } = useRole();
   const userId = activeUserId ?? 'elderly-self';
 
+  const cameraRef = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraReady, setCameraReady] = useState(false);
   const [stage, setStage] = useState<Stage>('idle');
   const [error, setError] = useState<string | null>(null);
-
-  async function pickFrom(source: 'camera' | 'library') {
-    setError(null);
-    const permission =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      setError('사진 접근 권한이 필요해요. 설정에서 권한을 허용해 주세요.');
-      return;
-    }
-
-    const result =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.6 })
-        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6 });
-
-    if (result.canceled || result.assets.length === 0) {
-      return;
-    }
-
-    await analyzeAndSave(result.assets[0].uri);
-  }
 
   async function analyzeAndSave(uri: string) {
     setStage('analyzing');
@@ -92,12 +72,60 @@ export default function CameraScreen() {
     router.replace({ pathname: '/elderly/result', params: { mealId: meal.id } });
   }
 
+  async function takePicture() {
+    if (stage === 'analyzing' || !cameraReady) return;
+    setError(null);
+    try {
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.6 });
+      if (photo?.uri) {
+        await analyzeAndSave(photo.uri);
+      }
+    } catch {
+      setError('사진을 찍지 못했어요. 다시 시도해 주세요.');
+    }
+  }
+
+  async function pickFromLibrary() {
+    if (stage === 'analyzing') return;
+    setError(null);
+    const media = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!media.granted) {
+      setError('사진 보관함 접근 권한이 필요해요. 설정에서 권한을 허용해 주세요.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6 });
+    if (result.canceled || result.assets.length === 0) {
+      return;
+    }
+    await analyzeAndSave(result.assets[0].uri);
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>식사가 잘 보이게{'\n'}찍어주세요</Text>
 
       <View style={styles.viewfinder}>
-        <Text style={styles.viewfinderHint}>카메라 화면 · 식사</Text>
+        {permission?.granted ? (
+          <CameraView
+            ref={cameraRef}
+            style={styles.cameraFill}
+            facing="back"
+            onCameraReady={() => setCameraReady(true)}
+          />
+        ) : (
+          <View style={styles.permissionBox}>
+            <Text style={styles.permissionText}>
+              {permission
+                ? '카메라 권한이 필요해요.\n아래 버튼을 눌러 허용해 주세요.'
+                : '카메라를 준비하고 있어요…'}
+            </Text>
+            {permission && !permission.granted && (
+              <Pressable style={styles.permissionButton} onPress={requestPermission}>
+                <Text style={styles.permissionButtonLabel}>카메라 켜기</Text>
+              </Pressable>
+            )}
+          </View>
+        )}
 
         {stage === 'analyzing' && (
           <View style={styles.analyzingOverlay}>
@@ -114,11 +142,13 @@ export default function CameraScreen() {
           <Text style={styles.cancelLabel}>취소</Text>
         </Pressable>
         <Pressable
-          style={styles.shutter}
-          onPress={() => pickFrom('camera')}
-          disabled={stage === 'analyzing'}
+          style={[styles.shutter, (!cameraReady || !permission?.granted) && styles.shutterDisabled]}
+          onPress={takePicture}
+          disabled={stage === 'analyzing' || !cameraReady || !permission?.granted}
+          accessibilityRole="button"
+          accessibilityLabel="사진 찍기"
         />
-        <Pressable onPress={() => pickFrom('library')} disabled={stage === 'analyzing'}>
+        <Pressable onPress={pickFromLibrary} disabled={stage === 'analyzing'}>
           <Text style={styles.libraryLabel}>갤러리</Text>
         </Pressable>
       </View>
@@ -154,10 +184,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  viewfinderHint: {
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.meta,
-    color: colors.cameraHint,
+  cameraFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  permissionBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 18,
+    paddingHorizontal: spacing.lg,
+  },
+  permissionText: {
+    fontFamily: fontFamily.semibold,
+    fontSize: fontSize.body,
+    color: colors.cameraTextFaint,
+    textAlign: 'center',
+    lineHeight: 26,
+  },
+  permissionButton: {
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+  },
+  permissionButtonLabel: {
+    color: colors.onPrimary,
+    fontSize: fontSize.label,
+    fontFamily: fontFamily.extrabold,
   },
   analyzingOverlay: {
     position: 'absolute',
@@ -181,6 +237,7 @@ const styles = StyleSheet.create({
     color: colors.dangerBorder,
     textAlign: 'center',
     marginBottom: spacing.sm,
+    paddingHorizontal: spacing.lg,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -201,6 +258,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.iconFillCream,
     borderWidth: 5,
     borderColor: colors.cameraBorderFaint,
+  },
+  shutterDisabled: {
+    opacity: 0.4,
   },
   libraryLabel: {
     color: colors.cameraTextFaint,

@@ -32,7 +32,7 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npx tsc --noEmit 2>&1 | head -100",
+    "buildCommand": "npx tsc --noEmit 2>&1 | head -40 && echo \"---TSC DONE---\"",
     "testCommand": "cd C:/kkinitalk-app && grep -iE \"jest\" package.json; ls node_modules | grep -iE \"^jest\" 2>&1",
     "lintCommand": null,
     "devCommand": "npm run start",
@@ -122,15 +122,15 @@
   },
   "hotPaths": [
     {
-      "path": "app\\elderly\\onboarding\\index.tsx",
-      "accessCount": 53,
-      "lastAccessed": 1783948828444,
+      "path": "app\\elderly\\home.tsx",
+      "accessCount": 54,
+      "lastAccessed": 1783960646569,
       "type": "file"
     },
     {
-      "path": "app\\elderly\\home.tsx",
-      "accessCount": 44,
-      "lastAccessed": 1783948883793,
+      "path": "app\\elderly\\onboarding\\index.tsx",
+      "accessCount": 53,
+      "lastAccessed": 1783948828444,
       "type": "file"
     },
     {
@@ -158,15 +158,21 @@
       "type": "file"
     },
     {
+      "path": "app\\elderly\\camera.tsx",
+      "accessCount": 41,
+      "lastAccessed": 1783960211688,
+      "type": "file"
+    },
+    {
       "path": "app\\elderly\\profile.tsx",
       "accessCount": 38,
       "lastAccessed": 1783948828761,
       "type": "file"
     },
     {
-      "path": "app\\elderly\\camera.tsx",
+      "path": "app\\elderly\\result.tsx",
       "accessCount": 37,
-      "lastAccessed": 1783949394758,
+      "lastAccessed": 1783960611494,
       "type": "file"
     },
     {
@@ -176,15 +182,15 @@
       "type": "file"
     },
     {
-      "path": "app\\elderly\\result.tsx",
-      "accessCount": 33,
-      "lastAccessed": 1783948828693,
-      "type": "file"
-    },
-    {
       "path": "app\\elderly\\history.tsx",
       "accessCount": 32,
       "lastAccessed": 1783949408705,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\types.ts",
+      "accessCount": 31,
+      "lastAccessed": 1783959649850,
       "type": "file"
     },
     {
@@ -194,21 +200,21 @@
       "type": "directory"
     },
     {
-      "path": "src\\domain\\types.ts",
-      "accessCount": 30,
-      "lastAccessed": 1783923034598,
-      "type": "file"
-    },
-    {
       "path": "src\\components\\BigButton.tsx",
-      "accessCount": 28,
-      "lastAccessed": 1783908590993,
+      "accessCount": 29,
+      "lastAccessed": 1783960111931,
       "type": "file"
     },
     {
       "path": "package.json",
-      "accessCount": 26,
-      "lastAccessed": 1783922510186,
+      "accessCount": 27,
+      "lastAccessed": 1783959630003,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\_layout.tsx",
+      "accessCount": 25,
+      "lastAccessed": 1783960067046,
       "type": "file"
     },
     {
@@ -219,8 +225,8 @@
     },
     {
       "path": "src\\components\\DisclaimerBanner.tsx",
-      "accessCount": 23,
-      "lastAccessed": 1783908591352,
+      "accessCount": 24,
+      "lastAccessed": 1783960112015,
       "type": "file"
     },
     {
@@ -242,27 +248,21 @@
       "type": "file"
     },
     {
-      "path": "app\\elderly\\_layout.tsx",
-      "accessCount": 21,
-      "lastAccessed": 1783948779142,
-      "type": "file"
-    },
-    {
       "path": "app\\guardian\\_layout.tsx",
       "accessCount": 19,
       "lastAccessed": 1783948400199,
       "type": "file"
     },
     {
-      "path": "src\\mocks\\db\\store.ts",
-      "accessCount": 17,
-      "lastAccessed": 1783922434437,
+      "path": "src\\mocks\\nutritionAnalysis.ts",
+      "accessCount": 18,
+      "lastAccessed": 1783959649770,
       "type": "file"
     },
     {
-      "path": "src\\mocks\\nutritionAnalysis.ts",
+      "path": "src\\mocks\\db\\store.ts",
       "accessCount": 17,
-      "lastAccessed": 1783927406557,
+      "lastAccessed": 1783922434437,
       "type": "file"
     },
     {
@@ -273,8 +273,8 @@
     },
     {
       "path": "src\\domain\\id.ts",
-      "accessCount": 14,
-      "lastAccessed": 1783923054350,
+      "accessCount": 15,
+      "lastAccessed": 1783960084870,
       "type": "file"
     },
     {
@@ -284,21 +284,21 @@
       "type": "file"
     },
     {
-      "path": "src\\domain\\historyView.ts",
-      "accessCount": 10,
-      "lastAccessed": 1783899468866,
-      "type": "file"
-    },
-    {
       "path": "app.json",
-      "accessCount": 10,
-      "lastAccessed": 1783921087819,
+      "accessCount": 12,
+      "lastAccessed": 1783960018992,
       "type": "file"
     },
     {
       "path": "src\\domain\\conflictRules.ts",
+      "accessCount": 11,
+      "lastAccessed": 1783959675293,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\historyView.ts",
       "accessCount": 10,
-      "lastAccessed": 1783923053199,
+      "lastAccessed": 1783899468866,
       "type": "file"
     },
     {

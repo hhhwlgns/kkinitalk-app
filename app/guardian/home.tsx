@@ -235,17 +235,21 @@ export default function GuardianHomeScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryBox}>
               <Text style={styles.summaryBoxLabel}>오늘 식사</Text>
-              <Text style={styles.summaryBoxValue}>{todayMeals.length}회</Text>
+              <Text style={styles.summaryBoxValue} numberOfLines={1} adjustsFontSizeToFit>
+                {todayMeals.length}회
+              </Text>
             </View>
             <View style={styles.summaryBox}>
               <Text style={styles.summaryBoxLabel}>복약</Text>
-              <Text style={styles.summaryBoxValue}>
+              <Text style={styles.summaryBoxValue} numberOfLines={1} adjustsFontSizeToFit>
                 {todayLogs.length}/{medicationCount}
               </Text>
             </View>
             <View style={[styles.summaryBox, sodiumBoxStyle]}>
               <Text style={[styles.summaryBoxLabel, { color: sodiumLabelColor }]}>나트륨</Text>
-              <Text style={[styles.summaryBoxValue, { color: sodiumValueColor }]}>{sodiumLabel}</Text>
+              <Text style={[styles.summaryBoxValue, { color: sodiumValueColor }]} numberOfLines={1} adjustsFontSizeToFit>
+                {sodiumLabel}
+              </Text>
             </View>
           </View>
         </View>

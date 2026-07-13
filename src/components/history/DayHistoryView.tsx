@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AlarmIcon } from '../icons/AlarmIcon';
 import { CalendarIcon } from '../icons/CalendarIcon';
@@ -182,17 +182,27 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
         <View style={styles.summaryRow}>
           <View style={styles.summaryBox}>
             <Text style={styles.summaryBoxLabel}>칼로리</Text>
-            <Text style={[styles.summaryBoxValue, { fontSize: size.label }]}>{Math.round(dayNutrients.calories)}kcal</Text>
+            <Text style={[styles.summaryBoxValue, { fontSize: size.label }]} numberOfLines={1} adjustsFontSizeToFit>
+              {Math.round(dayNutrients.calories)}kcal
+            </Text>
           </View>
           <View style={styles.summaryBox}>
             <Text style={styles.summaryBoxLabel}>나트륨</Text>
-            <Text style={[styles.summaryBoxValue, { fontSize: size.label }, isSodiumCaution && { color: colors.danger }]}>
+            <Text
+              style={[styles.summaryBoxValue, { fontSize: size.label }, isSodiumCaution && { color: colors.danger }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {Math.round(dayNutrients.sodiumMg).toLocaleString()}mg
             </Text>
           </View>
           <View style={styles.summaryBox}>
             <Text style={styles.summaryBoxLabel}>단백질</Text>
-            <Text style={[styles.summaryBoxValue, { fontSize: size.label }, isProteinCaution && { color: colors.danger }]}>
+            <Text
+              style={[styles.summaryBoxValue, { fontSize: size.label }, isProteinCaution && { color: colors.danger }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {Math.round(dayNutrients.proteinG)}g
             </Text>
           </View>
@@ -205,9 +215,17 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
         const displayName = meal.foods.length > 0 ? `${meal.foods[0].name} 등` : '식사';
         return (
           <View key={meal.id} style={[styles.mealCard, compact && styles.mealCardCompact]}>
-            <View style={[styles.mealPhoto, compact && styles.mealPhotoCompact]}>
-              <Text style={styles.mealPhotoLabel}>사진</Text>
-            </View>
+            {meal.photoUri ? (
+              <Image
+                source={{ uri: meal.photoUri }}
+                style={[styles.mealPhoto, compact && styles.mealPhotoCompact]}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.mealPhoto, compact && styles.mealPhotoCompact]}>
+                <Text style={styles.mealPhotoLabel}>사진</Text>
+              </View>
+            )}
             <View style={styles.flex1}>
               <Text style={styles.mealTime}>{formatMealTime(meal.recordedAt)}</Text>
               <Text style={[styles.mealName, { fontSize: size.label }]}>{displayName}</Text>

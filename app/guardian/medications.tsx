@@ -66,6 +66,7 @@ export default function GuardianMedicationsScreen() {
       <MedicationsView
         title="복약 관리"
         medications={medications}
+        compact
         onSave={handleSave}
         renderAction={(medication) => (
           <BigButton label="삭제" variant="secondary" onPress={() => deleteMedication(medication.id)} />

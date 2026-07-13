@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
@@ -42,8 +42,10 @@ function NutrientBar({
   return (
     <View>
       <View style={styles.nutrientRow}>
-        <Text style={styles.nutrientName}>{name}</Text>
-        <Text style={[styles.nutrientValue, { color }]}>
+        <Text style={styles.nutrientName} numberOfLines={1}>
+          {name}
+        </Text>
+        <Text style={[styles.nutrientValue, { color }]} numberOfLines={1}>
           {value}
           {unit}
         </Text>
@@ -143,7 +145,11 @@ export default function ResultScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.headerRow}>
-          <View style={styles.photoStripe} />
+          {meal.photoUri ? (
+            <Image source={{ uri: meal.photoUri }} style={styles.photoStripe} resizeMode="cover" />
+          ) : (
+            <View style={styles.photoStripe} />
+          )}
           <View style={styles.headerText}>
             <Text style={styles.headerMeta}>
               {SLOT_LABEL[meal.slot]} · {formatTime(meal.recordedAt)}

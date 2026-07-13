@@ -19,7 +19,7 @@ import {
 } from '../../src/mocks/db/collections';
 import type { CheckIn, ConditionLevel, HealthProfile, Meal, Medication, MedicationLog } from '../../src/domain/types';
 import { earliestTime, formatDateWithWeekday, formatKoreanTime, todayDate } from '../../src/domain/date';
-import { assessMealFitness, inferMealSlot, suggestNextMeal, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { assessMealFitness, inferMealSlot, nutrientPct, suggestNextMeal, sumNutrients } from '../../src/mocks/nutritionAnalysis';
 
 const CONDITION_LABEL: Record<ConditionLevel, string> = {
   good: '좋음',
@@ -113,6 +113,12 @@ export default function ElderlyHomeScreen() {
   const recBasis = profile ? '건강 프로필 기반 추천' : '최근 식사 기록 기반 추천';
 
   const isSodiumCaution = verdict.fitness === 'caution';
+  const hasMealsToday = todayMeals.length > 0;
+  const proteinLabel = !hasMealsToday
+    ? '–'
+    : nutrientPct(totalNutrients.proteinG, 'proteinG') >= 50
+      ? '좋음'
+      : '부족';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -182,7 +188,9 @@ export default function ElderlyHomeScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryBox}>
               <Text style={styles.summaryBoxLabel}>칼로리</Text>
-              <Text style={styles.summaryBoxValue}>{Math.round(totalNutrients.calories)}kcal</Text>
+              <Text style={styles.summaryBoxValue} numberOfLines={1} adjustsFontSizeToFit>
+                {Math.round(totalNutrients.calories)}kcal
+              </Text>
             </View>
             <View
               style={[
@@ -196,13 +204,21 @@ export default function ElderlyHomeScreen() {
                   styles.summaryBoxValue,
                   isSodiumCaution && { color: colors.danger },
                 ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
               >
                 {Math.round(totalNutrients.sodiumMg).toLocaleString()}mg
               </Text>
             </View>
             <View style={styles.summaryBox}>
               <Text style={styles.summaryBoxLabel}>단백질</Text>
-              <Text style={styles.summaryBoxValue}>좋음</Text>
+              <Text
+                style={[styles.summaryBoxValue, proteinLabel === '부족' && { color: colors.caution }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {proteinLabel}
+              </Text>
             </View>
           </View>
         </View>
@@ -211,9 +227,6 @@ export default function ElderlyHomeScreen() {
           <Text style={styles.recTitle}>{NEXT_SLOT_TITLE[currentSlot]}</Text>
           <Text style={styles.recName}>{recText}</Text>
           <Text style={styles.recWhy}>{recWhy}</Text>
-          <View style={styles.recPhotoPlaceholder}>
-            <Text style={styles.recPhotoLabel}>추천 식단 사진</Text>
-          </View>
           <Text style={styles.recBasis}>{recBasis}</Text>
           <Pressable style={styles.recButton} onPress={() => setRecVariant((v) => v + 1)}>
             <Text style={styles.recButtonLabel}>다른 추천 받기</Text>
@@ -342,15 +355,6 @@ const styles = StyleSheet.create({
   recTitle: { fontSize: fontSize.body, fontFamily: fontFamily.extrabold, color: colors.textMuted },
   recName: { fontSize: 23, fontFamily: fontFamily.extrabold, color: colors.text, marginTop: 6 },
   recWhy: { fontSize: fontSize.body, fontFamily: fontFamily.bold, color: colors.good, marginTop: 4 },
-  recPhotoPlaceholder: {
-    marginTop: 14,
-    height: 86,
-    borderRadius: radius.md,
-    backgroundColor: colors.photoStripe,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recPhotoLabel: { fontSize: fontSize.meta, fontFamily: fontFamily.regular, color: colors.avatarInitial },
   recBasis: { fontSize: 14, fontFamily: fontFamily.semibold, color: colors.textFaint, marginTop: 12 },
   recButton: {
     marginTop: 10,

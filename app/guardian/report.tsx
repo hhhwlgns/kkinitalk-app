@@ -39,6 +39,49 @@ function lastNDates(n: number): string[] {
   return dates;
 }
 
+// Composes an elder-friendly weekly summary from the aggregated stats.
+// This is a rule-based stand-in for a real AI summary — kept in the "참고용" tone.
+function buildWeeklySummary(input: {
+  totalMeals: number;
+  daysWithMeals: number;
+  sodiumExceedDays: number;
+  adherenceRate: number | null;
+}): string {
+  const { totalMeals, daysWithMeals, sodiumExceedDays, adherenceRate } = input;
+
+  if (totalMeals === 0 && adherenceRate === null) {
+    return '이번 주에는 기록이 거의 없어요. 어르신께 식사와 복약 기록을 부탁드려 보세요.';
+  }
+
+  const parts: string[] = [];
+
+  if (daysWithMeals >= 5) {
+    parts.push('이번 주 식사는 꾸준했어요.');
+  } else if (daysWithMeals > 0) {
+    parts.push(`이번 주 식사 기록이 ${daysWithMeals}일뿐이라 조금 아쉬워요.`);
+  }
+
+  if (sodiumExceedDays >= 3) {
+    parts.push(`국·찌개로 나트륨이 ${sodiumExceedDays}일이나 기준을 넘었어요. 저염으로 도와주세요.`);
+  } else if (sodiumExceedDays > 0) {
+    parts.push(`나트륨이 ${sodiumExceedDays}일 기준을 넘었어요.`);
+  } else if (daysWithMeals > 0) {
+    parts.push('나트륨은 대체로 안정적이었어요.');
+  }
+
+  if (adherenceRate !== null) {
+    if (adherenceRate >= 80) {
+      parts.push(`복약도 ${adherenceRate}%로 잘 챙기셨어요.`);
+    } else if (adherenceRate >= 50) {
+      parts.push(`복약 이행률은 ${adherenceRate}%예요. 저녁 약을 잊는 날이 있는지 살펴봐 주세요.`);
+    } else {
+      parts.push(`복약 이행률이 ${adherenceRate}%로 낮아요. 알림 시간을 조정해 보는 것을 권해요.`);
+    }
+  }
+
+  return parts.join(' ');
+}
+
 function buildDayStats(dates: string[], meals: Meal[], medications: Medication[], logs: MedicationLog[]): DayStat[] {
   return dates.map((date) => {
     const dayMeals = meals.filter((meal) => meal.recordedAt.slice(0, 10) === date);
@@ -133,7 +176,16 @@ export default function GuardianReportScreen() {
   const adherenceRate = totalScheduled > 0 ? Math.round((totalTaken / totalScheduled) * 100) : null;
   const totalMeals = stats.reduce((sum, s) => sum + s.mealCount, 0);
   const avgSodium = Math.round(stats.reduce((sum, s) => sum + s.sodiumMg, 0) / stats.length);
+  const sodiumExceedDays = stats.filter((s) => s.sodiumMg > 1500).length;
+  const daysWithMeals = stats.filter((s) => s.mealCount > 0).length;
   const hasAnyData = totalMeals > 0 || totalTaken > 0;
+
+  const aiSummary = buildWeeklySummary({
+    totalMeals,
+    daysWithMeals,
+    sodiumExceedDays,
+    adherenceRate,
+  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -155,6 +207,13 @@ export default function GuardianReportScreen() {
             복약 이행률: {adherenceRate !== null ? `${adherenceRate}%` : '등록된 약 없음'}
           </Text>
         </View>
+
+        {hasAnyData && (
+          <View style={styles.aiCard}>
+            <Text style={styles.aiLabel}>AI 요약</Text>
+            <Text style={styles.aiText}>{aiSummary}</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -185,6 +244,22 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   cardSub: { fontSize: fontSize.meta, fontFamily: fontFamily.regular, color: colors.textMuted, marginTop: spacing.xs },
+  aiCard: {
+    backgroundColor: colors.nextMedBg,
+    borderWidth: 1.5,
+    borderColor: colors.profileHighlightBorder,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  aiLabel: { fontSize: fontSize.small, fontFamily: fontFamily.extrabold, color: colors.secondaryAccent },
+  aiText: {
+    fontSize: fontSize.body,
+    fontFamily: fontFamily.medium,
+    color: colors.text,
+    lineHeight: 26,
+    marginTop: spacing.xs,
+  },
   statLine: { fontSize: fontSize.body, fontFamily: fontFamily.regular, color: colors.text, marginTop: spacing.xs, alignSelf: 'flex-start' },
   loadingText: {
     fontSize: fontSize.body,
