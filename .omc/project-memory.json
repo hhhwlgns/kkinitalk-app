@@ -123,56 +123,68 @@
   "hotPaths": [
     {
       "path": "app\\elderly\\onboarding\\index.tsx",
-      "accessCount": 51,
-      "lastAccessed": 1783921368811,
+      "accessCount": 53,
+      "lastAccessed": 1783948828444,
       "type": "file"
     },
     {
       "path": "app\\elderly\\home.tsx",
-      "accessCount": 41,
-      "lastAccessed": 1783922713132,
+      "accessCount": 44,
+      "lastAccessed": 1783948883793,
       "type": "file"
     },
     {
       "path": "src\\theme\\tokens.ts",
-      "accessCount": 39,
-      "lastAccessed": 1783909911672,
+      "accessCount": 43,
+      "lastAccessed": 1783949388113,
       "type": "file"
     },
     {
       "path": "app\\elderly\\checkin.tsx",
-      "accessCount": 38,
-      "lastAccessed": 1783909287858,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\medications.tsx",
-      "accessCount": 38,
-      "lastAccessed": 1783910277952,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\profile.tsx",
-      "accessCount": 36,
-      "lastAccessed": 1783921699146,
+      "accessCount": 42,
+      "lastAccessed": 1783949403095,
       "type": "file"
     },
     {
       "path": "app",
-      "accessCount": 35,
-      "lastAccessed": 1783922640175,
+      "accessCount": 42,
+      "lastAccessed": 1783949417278,
       "type": "directory"
     },
     {
+      "path": "app\\elderly\\medications.tsx",
+      "accessCount": 41,
+      "lastAccessed": 1783949409545,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\profile.tsx",
+      "accessCount": 38,
+      "lastAccessed": 1783948828761,
+      "type": "file"
+    },
+    {
       "path": "app\\elderly\\camera.tsx",
-      "accessCount": 33,
-      "lastAccessed": 1783922856560,
+      "accessCount": 37,
+      "lastAccessed": 1783949394758,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\onboarding\\done.tsx",
+      "accessCount": 34,
+      "lastAccessed": 1783949374148,
       "type": "file"
     },
     {
       "path": "app\\elderly\\result.tsx",
-      "accessCount": 31,
-      "lastAccessed": 1783922856462,
+      "accessCount": 33,
+      "lastAccessed": 1783948828693,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\history.tsx",
+      "accessCount": 32,
+      "lastAccessed": 1783949408705,
       "type": "file"
     },
     {
@@ -185,18 +197,6 @@
       "path": "src\\domain\\types.ts",
       "accessCount": 30,
       "lastAccessed": 1783923034598,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\history.tsx",
-      "accessCount": 29,
-      "lastAccessed": 1783910196368,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\onboarding\\done.tsx",
-      "accessCount": 29,
-      "lastAccessed": 1783916029758,
       "type": "file"
     },
     {
@@ -243,14 +243,14 @@
     },
     {
       "path": "app\\elderly\\_layout.tsx",
-      "accessCount": 18,
-      "lastAccessed": 1783927558212,
+      "accessCount": 21,
+      "lastAccessed": 1783948779142,
       "type": "file"
     },
     {
       "path": "app\\guardian\\_layout.tsx",
-      "accessCount": 18,
-      "lastAccessed": 1783927562511,
+      "accessCount": 19,
+      "lastAccessed": 1783948400199,
       "type": "file"
     },
     {
