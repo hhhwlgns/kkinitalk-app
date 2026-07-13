@@ -1,0 +1,4 @@
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/4db7d8ee-d830-499c-9a51-51dfd5b06d9c?file=%EB%81%BC%EB%8B%88%ED%86%A1+Prototype.dc.html
+
+Implement: 끼니톡 Prototype.dc.html

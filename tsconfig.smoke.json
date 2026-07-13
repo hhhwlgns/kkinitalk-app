@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
+    "target": "es2020",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "outDir": ".smoke-tmp",
+    "rootDir": "."
+  },
+  "include": [
+    "scripts/smoke-msw.ts",
+    "scripts/smoke-db.ts",
+    "scripts/smoke-onboarding.ts",
+    "scripts/smoke-checkin.ts",
+    "scripts/smoke-meal.ts",
+    "scripts/smoke-suggestion.ts",
+    "scripts/smoke-medication.ts",
+    "scripts/smoke-history.ts",
+    "scripts/smoke-profile.ts",
+    "scripts/smoke-guardian.ts",
+    "scripts/smoke-consent.ts",
+    "src/mocks/**/*.ts",
+    "src/api/**/*.ts",
+    "src/domain/**/*.ts"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "name": "kkinitalk-app",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@tanstack/react-query": "^5.101.2",
+    "axios": "^1.18.1",
+    "expo": "~57.0.4",
+    "expo-camera": "~57.0.1",
+    "expo-constants": "~57.0.3",
+    "expo-font": "~57.0.0",
+    "expo-image-picker": "~57.0.2",
+    "expo-linking": "~57.0.2",
+    "expo-notifications": "~57.0.3",
+    "expo-router": "~57.0.4",
+    "expo-status-bar": "~57.0.0",
+    "react": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-svg": "15.15.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/react": "~19.2.2",
+    "msw": "^2.15.0",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "smoke:msw": "tsc -p tsconfig.smoke.json && node .smoke-tmp/scripts/smoke-msw.js && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:db": "tsc -p tsconfig.smoke.json && node scripts/smoke-db-runner.cjs write && node scripts/smoke-db-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:onboarding": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-onboarding-runner.cjs write && node scripts/smoke-onboarding-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:checkin": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-checkin-runner.cjs write && node scripts/smoke-checkin-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:meal": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-meal-runner.cjs write && node scripts/smoke-meal-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:suggestion": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node .smoke-tmp/scripts/smoke-suggestion.js && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:medication": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-medication-runner.cjs write && node scripts/smoke-medication-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:history": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-history-runner.cjs write && node scripts/smoke-history-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:profile": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-profile-runner.cjs write && node scripts/smoke-profile-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:guardian": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-guardian-runner.cjs write && node scripts/smoke-guardian-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:consent": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-consent-runner.cjs write && node scripts/smoke-consent-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\""
+  },
+  "private": true
+}

@@ -1,0 +1,171 @@
+{
+  "project": "kkinitalk-frontend-mvp",
+  "planRef": ".omc/plans/kkinitalk-frontend-mvp-plan.md",
+  "stories": [
+    {
+      "id": "US-000",
+      "title": "Phase 0: 프로젝트 스캐폴딩",
+      "priority": 1,
+      "passes": true,
+      "acceptanceCriteria": [
+        "Expo + TypeScript 프로젝트가 package.json/app.json과 함께 루트에 생성된다",
+        "Expo Router 기반 app/ 디렉토리와 src/ 디렉토리(api, hooks, mocks, domain, state, components, theme)가 존재한다",
+        "app/index.tsx에 역할 선택 화면(어르신으로 시작 / 보호자로 시작 버튼)이 렌더링된다",
+        "npx expo start (또는 expo export)가 빌드 에러 없이 성공한다"
+      ]
+    },
+    {
+      "id": "US-001",
+      "title": "Phase 1: MSW-in-RN 스파이크",
+      "priority": 2,
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/mocks/setup.native.ts가 msw/native(또는 검증된 대체 수단)로 초기화된다",
+        "__DEV__ && USE_MOCKS 조건으로 게이팅된다",
+        "더미 엔드포인트 GET /api/v1/_ping 호출 시 목업 응답이 정상 수신됨을 확인하는 스모크 테스트/스크립트가 존재하고 통과한다",
+        "실패 시 대체 수단(axios-mock-adapter 등)으로 전환한 근거와 결정이 progress.txt에 기록된다"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Phase 2: 목업 DB 계층 및 도메인 타입",
+      "priority": 3,
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/domain/types.ts에 HealthProfile, Meal, Medication, CheckIn, GuardianLink 타입이 정의된다",
+        "src/mocks/db/store.ts가 AsyncStorage 기반 컬렉션 get/set CRUD 유틸을 제공한다",
+        "src/mocks/db/seed.ts가 최초 시드 데이터를 생성한다",
+        "앱을 재시작(reload)해도 store에 쓴 데이터가 유지됨을 확인하는 테스트가 통과한다"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Phase 3: 노인 온보딩 음성 상담 (목업)",
+      "priority": 4,
+      "passes": true,
+      "acceptanceCriteria": [
+        "app/elderly/onboarding/index.tsx에서 문진 항목(지병, 복약, 연하, 기피 음식, 최근 체중/식욕)을 순차 질문으로 시뮬레이션한다",
+        "온보딩 완료 시 HealthProfile이 생성되어 목업 DB에 저장된다",
+        "app/elderly/onboarding/done.tsx에서 생성된 프로필 요약이 표시된다",
+        "앱 재시작 후에도 생성된 프로필이 유지되고 조회된다 (PRD 기능1 수용기준 1)"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Phase 4: 노인 홈 + 아침 체크인",
+      "priority": 5,
+      "passes": true,
+      "acceptanceCriteria": [
+        "app/elderly/home.tsx가 오늘의 요약(추천 식단, 복약, 체크인 상태)을 보여준다",
+        "app/elderly/checkin.tsx에서 컨디션/식사 여부 입력 시 CheckIn 레코드가 생성/저장된다",
+        "체크인 이력이 날짜별로 조회 가능하다 (PRD 기능1 수용기준 2,3)",
+        "재시작 후에도 체크인 이력이 유지된다"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Phase 5: 사진 촬영 + 목업 영양 분석",
+      "priority": 6,
+      "passes": true,
+      "acceptanceCriteria": [
+        "app/elderly/camera.tsx에서 사진 촬영(또는 갤러리 선택) 후 분석중 상태를 거쳐 결과로 이동한다",
+        "app/elderly/result.tsx가 목업 분석 결과(음식 항목, 칼로리/탄수화물/단백질/지방/나트륨)를 표시한다",
+        "분석 결과가 Meal 레코드로 목업 DB에 저장되고 히스토리에 누적된다 (PRD 기능2 수용기준 1,2,3)",
+        "하루 누적 영양 섭취 합계를 조회할 수 있다"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Phase 6: 식단 적합도 피드백 및 다음 끼니 추천",
+      "priority": 7,
+      "passes": true,
+      "acceptanceCriteria": [
+        "분석 완료 후 적합/주의 피드백과 개선 팁이 표시된다 (PRD 기능3 수용기준 1)",
+        "HealthProfile(지병/연하/기피 음식)을 반영한 다음 끼니 추천이 표시된다 (PRD 기능3 수용기준 2)",
+        "최근 식사 기록을 반영하여 추천이 달라진다 (PRD 기능3 수용기준 3)"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "Phase 7: 복약 알림/이행 기록/충돌 경고",
+      "priority": 8,
+      "passes": true,
+      "acceptanceCriteria": [
+        "app/elderly/medications.tsx에서 복약 일정을 등록하면 expo-notifications로 지정 시간 알림이 스케줄된다 (PRD 기능4 수용기준 1)",
+        "먹었어요 버튼 클릭 시 Medication 이행 기록(날짜/시간)이 저장된다 (PRD 기능4 수용기준 2)",
+        "src/domain/conflictRules.ts의 룰(자몽 등)에 매칭되는 음식 섭취 시 경고가 표시된다 (PRD 기능4 수용기준 3)",
+        "복약/충돌 경고 화면에 DisclaimerBanner(의료행위 아님, 임의 중단 금지 안내)가 표시된다"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "Phase 8: 기록 히스토리 + 캘린더",
+      "priority": 9,
+      "passes": true,
+      "acceptanceCriteria": [
+        "app/elderly/history.tsx에서 날짜를 선택하면 해당 날짜의 식사/복약/체크인 기록이 표시된다",
+        "캘린더 뷰에서 기록이 있는 날짜가 시각적으로 구분된다",
+        "재시작 후에도 히스토리 데이터가 그대로 조회된다"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Phase 9: 내 정보 프로필 편집 + 보호자 초대코드 생성",
+      "priority": 10,
+      "passes": true,
+      "acceptanceCriteria": [
+        "app/elderly/profile.tsx에서 건강 프로필을 조회/수정할 수 있고 수정 내용이 저장된다",
+        "프로필 화면에서 보호자 연결용 초대코드를 생성할 수 있다",
+        "생성된 초대코드가 목업 DB의 GuardianLink 후보로 저장된다"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Phase 10: 보호자 역할 전체 플로우",
+      "priority": 11,
+      "passes": true,
+      "acceptanceCriteria": [
+        "app/guardian/connect.tsx에서 초대코드를 입력하면 GuardianLink가 생성되고 해당 노인 데이터에 접근 가능해진다 (PRD 기능5 수용기준 2)",
+        "app/guardian/home.tsx가 연결된 노인의 요약 카드/알림 배너/타임라인을 표시한다",
+        "app/guardian/alerts.tsx에서 알림 목록 조회 및 코멘트 전송이 가능하다",
+        "app/guardian/report.tsx가 주간 리포트(차트/통계)를 표시한다",
+        "app/guardian/medications.tsx에서 복약 일정을 추가/삭제할 수 있다"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "Phase 11: 컴플라이언스 - 동의 플로우 및 배너",
+      "priority": 12,
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/state/ConsentContext.tsx가 고위험 공유 동의 상태를 관리한다",
+        "동의 없이는 고위험 경고가 보호자 알림으로 전달되지 않는다 (PRD 리스크 섹션 요구사항)",
+        "온보딩 또는 설정 화면에서 동의를 받는 UI 플로우가 존재한다",
+        "DisclaimerBanner가 온보딩/결과/복약충돌/보호자알림 화면에 공통 적용된다"
+      ]
+    },
+    {
+      "id": "US-012",
+      "title": "Phase 12: 접근성/폴리싱",
+      "priority": 13,
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/theme/tokens.ts에 노인 친화적 큰 글씨/고대비 색상 토큰이 정의되고 노인 화면 전반에 적용된다",
+        "노인 화면의 주요 액션 버튼(BigButton)이 충분히 크게 렌더링된다",
+        "빈 상태(기록 없음)와 에러 상태 UI가 노인/보호자 화면 모두에 존재한다"
+      ]
+    },
+    {
+      "id": "US-013",
+      "title": "Phase 13: 전체 플로우 검증",
+      "priority": 14,
+      "passes": true,
+      "acceptanceCriteria": [
+        "plan 문서의 Acceptance Criteria 10개 항목을 모두 수동/코드로 검증하고 결과를 progress.txt에 기록한다",
+        "앱을 강제 종료 후 재시작해도 온보딩 프로필/체크인/식사/복약 기록이 모두 유지됨을 확인한다",
+        "TypeScript 컴파일(tsc --noEmit)이 에러 없이 통과한다",
+        "expo export 또는 expo start 빌드가 에러 없이 성공한다"
+      ]
+    }
+  ]
+}

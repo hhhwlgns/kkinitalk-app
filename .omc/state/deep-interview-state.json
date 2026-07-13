@@ -1,0 +1,15 @@
+{
+  "active": false,
+  "current_phase": "handed_off_to_omc-plan",
+  "interview_id": "kkinitalk-design-impl-2026-07-12",
+  "spec_path": ".omc/specs/deep-interview-kkinitalk-frontend-mvp.md",
+  "final_ambiguity": 0.15,
+  "threshold": 0.2,
+  "handoff": "omc-plan",
+  "_meta": {
+    "mode": "deep-interview",
+    "sessionId": null,
+    "updatedAt": "2026-07-12T14:07:05.243Z",
+    "updatedBy": "state_write_tool"
+  }
+}

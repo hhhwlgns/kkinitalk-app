@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body { background: #F6F0E6; }
+    a { color: #B4540A; text-decoration: none; }
+    a:hover { color: #8C3F06; }
+    @keyframes kkPulse { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.85); opacity: 0; } }
+    @keyframes kkSpin { to { transform: rotate(360deg); } }
+    @keyframes kkBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+    @keyframes kkScreen { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes kkPop { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes kkDrop { from { transform: translateY(-130%); opacity: 0; } to { transform: none; opacity: 1; } }
+  </style>
+</helmet>
+
+<div style="min-height: 100vh; font-family: 'Pretendard Variable', Pretendard, sans-serif; background: radial-gradient(1200px 600px at 50% -100px, #FDF8EF 0%, #F6F0E6 70%); color: #3B3025; display: flex; flex-direction: column; align-items: center; padding: 44px 24px 90px; box-sizing: border-box;">
+
+  <!-- ───────── Page header: logo + view tabs ───────── -->
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 36px;">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <svg width="54" height="54" viewBox="0 0 48 48" fill="none" style="filter: drop-shadow(0 5px 10px rgba(232,98,44,0.35));">
+        <rect x="3" y="6" width="42" height="32" rx="15" fill="#E8622C"></rect>
+        <path d="M13 36l-3.5 9.5 12-8z" fill="#E8622C"></path>
+        <circle cx="17.5" cy="19.5" r="3" fill="#FFF6EC"></circle>
+        <circle cx="30.5" cy="19.5" r="3" fill="#FFF6EC"></circle>
+        <path d="M17.5 26.5c3 3.4 10 3.4 13 0" stroke="#FFF6EC" stroke-width="3" stroke-linecap="round" fill="none"></path>
+      </svg>
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-size: 30px; font-weight: 800; letter-spacing: -0.5px;">끼니톡</div>
+        <div style="font-size: 14px; color: #8A7B6C; font-weight: 500;">말하고, 찍기만 하세요 — AI 식단·복약 관리</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; background: #EFE6D7; padding: 6px; border-radius: 999px;">
+      <button onClick="{{ tabMobile }}" style="border: none; cursor: pointer; padding: 12px 22px; border-radius: 999px; font-family: inherit; font-size: 15px; font-weight: 700; background: {{ tabMobileBg }}; color: {{ tabMobileColor }}; box-shadow: {{ tabMobileShadow }};">모바일 앱 · 어르신/보호자</button>
+      <button onClick="{{ tabFacility }}" style="border: none; cursor: pointer; padding: 12px 22px; border-radius: 999px; font-family: inherit; font-size: 15px; font-weight: 700; background: {{ tabFacilityBg }}; color: {{ tabFacilityColor }}; box-shadow: {{ tabFacilityShadow }};">요양시설 웹 대시보드</button>
+    </div>
+  </div>
+
+  <!-- ═════════ MOBILE APP ═════════ -->
+  <sc-if value="{{ isMobileTab }}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 18px;">
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+        <div style="height: 100%; display: flex; flex-direction: column; background: #FBF6EC; font-family: 'Pretendard Variable', Pretendard, sans-serif; color: #3B3025; position: relative;">
+
+          <!-- ── 역할 선택 ── -->
+          <sc-if value="{{ isRole }}" hint-placeholder-val="{{ true }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; display: flex; flex-direction: column; align-items: center; padding: 108px 28px 40px; box-sizing: border-box; gap: 0;">
+              <svg width="104" height="104" viewBox="0 0 48 48" fill="none" style="filter: drop-shadow(0 10px 20px rgba(232,98,44,0.35));">
+                <rect x="3" y="6" width="42" height="32" rx="15" fill="#E8622C"></rect>
+                <path d="M13 36l-3.5 9.5 12-8z" fill="#E8622C"></path>
+                <circle cx="17.5" cy="19.5" r="3" fill="#FFF6EC"></circle>
+                <circle cx="30.5" cy="19.5" r="3" fill="#FFF6EC"></circle>
+                <path d="M17.5 26.5c3 3.4 10 3.4 13 0" stroke="#FFF6EC" stroke-width="3" stroke-linecap="round" fill="none"></path>
+              </svg>
+              <div style="font-size: 44px; font-weight: 800; letter-spacing: -1px; margin-top: 22px;">끼니톡</div>
+              <div style="font-size: 19px; color: #8A7B6C; margin-top: 8px; font-weight: 500;">말하고, 찍기만 하세요</div>
+              <div style="display: flex; flex-direction: column; gap: 14px; width: 100%; margin-top: 52px;">
+                <button onClick="{{ startSenior }}" style="border: none; cursor: pointer; width: 100%; border-radius: 24px; background: #E8622C; color: #FFF9F2; padding: 26px 24px; text-align: left; font-family: inherit; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">
+                  <div style="font-size: 27px; font-weight: 800;">{{ seniorBtnTitle }}</div>
+                  <div style="font-size: 17px; opacity: 0.9; margin-top: 6px; font-weight: 500;">{{ seniorBtnSub }}</div>
+                </button>
+                <button onClick="{{ startGuardian }}" style="border: 1.5px solid #E3D7C3; cursor: pointer; width: 100%; border-radius: 24px; background: #FFFFFF; color: #3B3025; padding: 26px 24px; text-align: left; font-family: inherit;" style-hover="border-color: #E8622C;">
+                  <div style="font-size: 27px; font-weight: 800;">보호자로 시작</div>
+                  <div style="font-size: 17px; color: #8A7B6C; margin-top: 6px; font-weight: 500;">부모님 식사·복약 지켜보기</div>
+                </button>
+              </div>
+              <div style="margin-top: auto; font-size: 13px; color: #B3A590; text-align: center; line-height: 1.5;">본 서비스는 의료행위가 아니며,<br>진단·처방을 대체하지 않습니다.</div>
+            </div>
+          </sc-if>
+
+          <!-- ── 온보딩 음성 상담 ── -->
+          <sc-if value="{{ isOb }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; display: flex; flex-direction: column; padding: 84px 26px 40px; box-sizing: border-box;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 7px;">
+                  <sc-for list="{{ obDots }}" as="dot" hint-placeholder-count="4">
+                    <div style="width: 30px; height: 8px; border-radius: 4px; background: {{ dot.color }};"></div>
+                  </sc-for>
+                </div>
+                <button onClick="{{ obSkip }}" style="border: none; background: none; cursor: pointer; font-family: inherit; font-size: 16px; color: #B3A590; font-weight: 600;">건너뛰기</button>
+              </div>
+              <div style="margin-top: 40px; display: flex; flex-direction: column; align-items: center;">
+                <div style="position: relative; width: 108px; height: 108px; display: flex; align-items: center; justify-content: center;">
+                  <div style="position: absolute; inset: 0; border-radius: 50%; background: #E8622C; animation: kkPulse 1.8s ease-out infinite;"></div>
+                  <div style="position: absolute; inset: 0; border-radius: 50%; background: #E8622C; animation: kkPulse 1.8s ease-out infinite; animation-delay: 0.6s;"></div>
+                  <div style="position: relative; width: 108px; height: 108px; border-radius: 50%; background: #E8622C; box-shadow: 0 10px 26px rgba(232,98,44,0.4); display: flex; align-items: center; justify-content: center;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#FFF6EC"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0" stroke="#FFF6EC" stroke-width="2" stroke-linecap="round" fill="none"></path><line x1="12" y1="17.5" x2="12" y2="21" stroke="#FFF6EC" stroke-width="2" stroke-linecap="round"></line></svg>
+                  </div>
+                </div>
+                <div style="margin-top: 18px; font-size: 15px; font-weight: 700; color: #E8622C; letter-spacing: 2px; animation: kkBlink 1.6s ease-in-out infinite;">듣고 있어요</div>
+              </div>
+              <div style="margin-top: 34px; background: #FFFFFF; border-radius: 24px 24px 24px 6px; padding: 24px 24px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 8px;">
+                  <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
+                    <rect x="3" y="6" width="42" height="32" rx="15" fill="#E8622C"></rect>
+                    <path d="M13 36l-3.5 9.5 12-8z" fill="#E8622C"></path>
+                    <circle cx="17.5" cy="19.5" r="3" fill="#FFF6EC"></circle>
+                    <circle cx="30.5" cy="19.5" r="3" fill="#FFF6EC"></circle>
+                    <path d="M17.5 26.5c3 3.4 10 3.4 13 0" stroke="#FFF6EC" stroke-width="3" stroke-linecap="round" fill="none"></path>
+                  </svg>
+                  <div style="font-size: 15px; font-weight: 700; color: #E8622C;">끼니 AI</div>
+                </div>
+                <div style="font-size: 25px; font-weight: 700; line-height: 1.45; letter-spacing: -0.3px;">{{ obQuestion }}</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 24px;">
+                <sc-for list="{{ obOptions }}" as="opt" hint-placeholder-count="3">
+                  <button onClick="{{ opt.onPick }}" style="border: 1.5px solid #E3D7C3; background: #FFFFFF; cursor: pointer; border-radius: 18px; padding: 19px 22px; font-family: inherit; font-size: 22px; font-weight: 700; color: #3B3025; text-align: left; min-height: 60px;" style-hover="border-color: #E8622C; background: #FDEFE6;">{{ opt.label }}</button>
+                </sc-for>
+              </div>
+              <div style="margin-top: auto; text-align: center; font-size: 15px; color: #B3A590; font-weight: 500;">말씀하시거나, 버튼을 눌러주세요</div>
+            </div>
+          </sc-if>
+
+          <!-- ── 온보딩 완료: 건강 프로필 ── -->
+          <sc-if value="{{ isObDone }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; display: flex; flex-direction: column; padding: 96px 26px 44px; box-sizing: border-box;">
+              <div style="width: 62px; height: 62px; border-radius: 50%; background: #2E7D5B; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              <div style="font-size: 30px; font-weight: 800; text-align: center; margin-top: 18px; letter-spacing: -0.5px;">건강 프로필이<br>만들어졌어요</div>
+              <div style="font-size: 17px; color: #8A7B6C; text-align: center; margin-top: 10px; font-weight: 500;">매일 아침 체크인으로 계속 업데이트돼요</div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 8px 24px; margin-top: 28px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <sc-for list="{{ profileRows }}" as="row" hint-placeholder-count="4">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 17px 0; border-bottom: 1px solid #F1E9DB; gap: 16px;">
+                    <div style="font-size: 18px; color: #8A7B6C; font-weight: 600; flex-shrink: 0;">{{ row.k }}</div>
+                    <div style="font-size: 19px; font-weight: 700; text-align: right;">{{ row.v }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <button onClick="{{ goHome }}" style="margin-top: auto; border: none; cursor: pointer; width: 100%; border-radius: 22px; background: #E8622C; color: #FFF9F2; padding: 22px; font-family: inherit; font-size: 24px; font-weight: 800; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">끼니톡 시작하기</button>
+            </div>
+          </sc-if>
+
+          <!-- ── 어르신 홈 ── -->
+          <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 84px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <div style="font-size: 17px; color: #8A7B6C; font-weight: 600;">7월 13일 월요일</div>
+                <div style="font-size: 31px; font-weight: 800; letter-spacing: -0.5px; margin-top: 4px;">순자 님,<br>점심 잘 드셨어요?</div>
+              </div>
+              <sc-if value="{{ ckNotDone }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ goCheckin }}" style="border: none; cursor: pointer; width: 100%; text-align: left; border-radius: 20px; background: #FFFFFF; border: 1.5px solid #E3D7C3; padding: 18px 20px; font-family: inherit; display: flex; align-items: center; gap: 14px;" style-hover="border-color: #E8622C;">
+                  <div style="width: 46px; height: 46px; border-radius: 50%; background: #FDEFE6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#E8622C"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0" stroke="#E8622C" stroke-width="2" stroke-linecap="round" fill="none"></path><line x1="12" y1="17.5" x2="12" y2="21" stroke="#E8622C" stroke-width="2" stroke-linecap="round"></line></svg>
+                  </div>
+                  <div style="flex: 1;">
+                    <div style="font-size: 20px; font-weight: 800; color: #3B3025;">아침 체크인 하기</div>
+                    <div style="font-size: 16px; color: #8A7B6C; font-weight: 600; margin-top: 2px;">30초면 돼요 · 말로 대답하세요</div>
+                  </div>
+                  <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="#E8622C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </button>
+              </sc-if>
+              <sc-if value="{{ ckDone }}" hint-placeholder-val="{{ false }}">
+                <div style="border-radius: 20px; background: #EAF4EE; border: 1.5px solid #BFDCCB; padding: 16px 20px; display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 34px; height: 34px; border-radius: 50%; background: #2E7D5B; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                  <div style="font-size: 18px; font-weight: 800; color: #2E7D5B;">오늘 체크인 완료 — 컨디션 좋음</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ hasGuardianMsg }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFFFFF; border: 1.5px solid #E3D7C3; border-radius: 20px; padding: 18px 20px; display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 46px; height: 46px; border-radius: 50%; background: #EFE6D7; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 800; color: #A6947C; flex-shrink: 0;">딸</div>
+                  <div style="flex: 1;">
+                    <div style="font-size: 15px; color: #8A7B6C; font-weight: 700;">따님이 보낸 한마디</div>
+                    <div style="font-size: 19px; font-weight: 800; margin-top: 2px;">"엄마, 저녁은 좀 싱겁게 드세요!"</div>
+                  </div>
+                  <button onClick="{{ playMsg }}" style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 16px; font-weight: 800; white-space: nowrap;" style-hover="background: #D5551F;">{{ msgBtnLabel }}</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ hasNextMed }}" hint-placeholder-val="{{ true }}">
+                <div style="background: #FFF3E9; border: 1.5px solid #F5D9C4; border-radius: 20px; padding: 18px 20px; display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 46px; height: 46px; border-radius: 14px; background: #E8622C; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="8" y="3" width="8" height="18" rx="4" stroke="#FFF6EC" stroke-width="2"></rect><line x1="8" y1="12" x2="16" y2="12" stroke="#FFF6EC" stroke-width="2"></line></svg>
+                  </div>
+                  <div style="flex: 1;">
+                    <div style="font-size: 16px; color: #B4540A; font-weight: 700;">다음 약 · {{ nextMedTime }}</div>
+                    <div style="font-size: 20px; font-weight: 800; margin-top: 2px;">{{ nextMedName }}</div>
+                  </div>
+                  <button onClick="{{ goMeds }}" style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 17px; font-weight: 800;" style-hover="background: #D5551F;">보기</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ homeMedsAllDone }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #EAF4EE; border: 1.5px solid #BFDCCB; border-radius: 20px; padding: 16px 20px; display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 34px; height: 34px; border-radius: 50%; background: #2E7D5B; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                  <div style="font-size: 18px; font-weight: 800; color: #2E7D5B;">오늘 약을 모두 드셨어요</div>
+                </div>
+              </sc-if>
+              <button onClick="{{ goCam }}" style="border: none; cursor: pointer; width: 100%; border-radius: 24px; background: #E8622C; color: #FFF9F2; padding: 26px; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 14px; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="19" height="14" rx="4" stroke="#FFF9F2" stroke-width="2"></rect><path d="M8.5 6l1.5-2.5h4L15.5 6" stroke="#FFF9F2" stroke-width="2" stroke-linejoin="round"></path><circle cx="12" cy="13" r="4" stroke="#FFF9F2" stroke-width="2"></circle></svg>
+                <span style="font-size: 26px; font-weight: 800;">식사 사진 찍기</span>
+              </button>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="font-size: 17px; font-weight: 800; color: #8A7B6C;">오늘 드신 것</div>
+                  <div style="font-size: 16px; font-weight: 700; color: #2E7D5B;">{{ homeMealCount }}</div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 14px;">
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                    <div style="font-size: 15px; color: #8A7B6C; font-weight: 600;">칼로리</div>
+                    <div style="font-size: 21px; font-weight: 800; margin-top: 3px;">{{ homeKcal }}</div>
+                  </div>
+                  <div style="flex: 1; background: {{ homeSodiumBg }}; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                    <div style="font-size: 15px; color: #8A7B6C; font-weight: 600;">나트륨</div>
+                    <div style="font-size: 21px; font-weight: 800; color: {{ homeSodiumColor }}; margin-top: 3px;">{{ homeSodium }}</div>
+                  </div>
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                    <div style="font-size: 15px; color: #8A7B6C; font-weight: 600;">단백질</div>
+                    <div style="font-size: 21px; font-weight: 800; margin-top: 3px;">좋음</div>
+                  </div>
+                </div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="font-size: 17px; font-weight: 800; color: #8A7B6C;">오늘 저녁 추천</div>
+                <div style="font-size: 23px; font-weight: 800; margin-top: 6px;">{{ recName }}</div>
+                <div style="font-size: 17px; color: #2E7D5B; font-weight: 700; margin-top: 4px;">{{ recWhy }}</div>
+                <div style="margin-top: 14px; height: 86px; border-radius: 14px; overflow: hidden;">
+                  <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="rec-photo" shape="rounded" radius="14" placeholder="추천 식단 사진을 끌어다 놓으세요" hint-size="100%,86px"></x-import>
+                </div>
+                <div style="font-size: 14px; color: #B3A590; font-weight: 600; margin-top: 12px;">{{ recBasis }}</div>
+                <button onClick="{{ nextRec }}" style="margin-top: 10px; border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 14px; padding: 14px; width: 100%; font-family: inherit; font-size: 18px; font-weight: 800; color: #3B3025; min-height: 52px;" style-hover="border-color: #E8622C; color: #E8622C;">다른 추천 받기</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ── 아침 체크인 ── -->
+          <sc-if value="{{ isCheckin }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; display: flex; flex-direction: column; padding: 84px 26px 40px; box-sizing: border-box;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="font-size: 18px; font-weight: 800; color: #8A7B6C;">아침 체크인 · {{ ckProgress }}</div>
+                <button onClick="{{ goHome }}" style="border: none; background: none; cursor: pointer; font-family: inherit; font-size: 16px; color: #B3A590; font-weight: 600;">다음에 하기</button>
+              </div>
+              <div style="margin-top: 46px; display: flex; flex-direction: column; align-items: center;">
+                <div style="position: relative; width: 108px; height: 108px; display: flex; align-items: center; justify-content: center;">
+                  <div style="position: absolute; inset: 0; border-radius: 50%; background: #E8622C; animation: kkPulse 1.8s ease-out infinite;"></div>
+                  <div style="position: absolute; inset: 0; border-radius: 50%; background: #E8622C; animation: kkPulse 1.8s ease-out infinite; animation-delay: 0.6s;"></div>
+                  <div style="position: relative; width: 108px; height: 108px; border-radius: 50%; background: #E8622C; box-shadow: 0 10px 26px rgba(232,98,44,0.4); display: flex; align-items: center; justify-content: center;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" fill="#FFF6EC"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0" stroke="#FFF6EC" stroke-width="2" stroke-linecap="round" fill="none"></path><line x1="12" y1="17.5" x2="12" y2="21" stroke="#FFF6EC" stroke-width="2" stroke-linecap="round"></line></svg>
+                  </div>
+                </div>
+                <div style="margin-top: 18px; font-size: 15px; font-weight: 700; color: #E8622C; letter-spacing: 2px; animation: kkBlink 1.6s ease-in-out infinite;">듣고 있어요</div>
+              </div>
+              <div style="margin-top: 34px; background: #FFFFFF; border-radius: 24px 24px 24px 6px; padding: 24px 24px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="display: flex; align-items: center; gap: 7px; margin-bottom: 8px;">
+                  <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
+                    <rect x="3" y="6" width="42" height="32" rx="15" fill="#E8622C"></rect>
+                    <path d="M13 36l-3.5 9.5 12-8z" fill="#E8622C"></path>
+                    <circle cx="17.5" cy="19.5" r="3" fill="#FFF6EC"></circle>
+                    <circle cx="30.5" cy="19.5" r="3" fill="#FFF6EC"></circle>
+                    <path d="M17.5 26.5c3 3.4 10 3.4 13 0" stroke="#FFF6EC" stroke-width="3" stroke-linecap="round" fill="none"></path>
+                  </svg>
+                  <div style="font-size: 15px; font-weight: 700; color: #E8622C;">끼니 AI</div>
+                </div>
+                <div style="font-size: 25px; font-weight: 700; line-height: 1.45; letter-spacing: -0.3px;">{{ ckQuestion }}</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 24px;">
+                <sc-for list="{{ ckOptions }}" as="opt" hint-placeholder-count="3">
+                  <button onClick="{{ opt.onPick }}" style="border: 1.5px solid #E3D7C3; background: #FFFFFF; cursor: pointer; border-radius: 18px; padding: 19px 22px; font-family: inherit; font-size: 22px; font-weight: 700; color: #3B3025; text-align: left; min-height: 60px;" style-hover="border-color: #E8622C; background: #FDEFE6;">{{ opt.label }}</button>
+                </sc-for>
+              </div>
+              <div style="margin-top: auto; text-align: center; font-size: 15px; color: #B3A590; font-weight: 500;">말씀하시거나, 버튼을 눌러주세요</div>
+            </div>
+          </sc-if>
+
+          <!-- ── 카메라 ── -->
+          <sc-if value="{{ isCam }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; display: flex; flex-direction: column; background: #17130E; padding: 84px 0 46px; box-sizing: border-box;">
+              <div style="text-align: center; color: #FFF6EC; font-size: 24px; font-weight: 800; padding: 0 30px;">식사가 잘 보이게<br>찍어주세요</div>
+              <div style="flex: 1; margin: 24px 22px; border-radius: 24px; border: 2px dashed rgba(255,246,236,0.35); background: repeating-linear-gradient(45deg, #221C14, #221C14 12px, #2A2318 12px, #2A2318 24px); display: flex; align-items: center; justify-content: center; position: relative;">
+                <div style="position: absolute; inset: 0;">
+                  <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="cam-photo" shape="rounded" radius="22" placeholder="식사 사진을 여기에 끌어다 놓으세요" hint-size="100%,100%" style="position: absolute; inset: 0;"></x-import>
+                </div>
+                <sc-if value="{{ analyzing }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; inset: 0; border-radius: 22px; background: rgba(23,19,14,0.88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;">
+                    <div style="width: 54px; height: 54px; border-radius: 50%; border: 5px solid rgba(232,98,44,0.25); border-top-color: #E8622C; animation: kkSpin 0.9s linear infinite;"></div>
+                    <div style="color: #FFF6EC; font-size: 21px; font-weight: 700;">AI가 분석하고 있어요…</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: center; gap: 44px;">
+                <button onClick="{{ goHome }}" style="border: none; background: none; cursor: pointer; color: rgba(255,246,236,0.7); font-family: inherit; font-size: 19px; font-weight: 700;">취소</button>
+                <button onClick="{{ shutter }}" style="cursor: pointer; width: 84px; height: 84px; border-radius: 50%; background: #FFF6EC; border: 5px solid rgba(255,246,236,0.35); box-shadow: 0 0 0 3px #17130E inset;" style-hover="background: #FFE9D6;"></button>
+                <div style="width: 42px;"></div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ── 분석 결과 ── -->
+          <sc-if value="{{ isResult }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 84px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 74px; height: 74px; border-radius: 18px; flex-shrink: 0; overflow: hidden;">
+                  <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="meal-photo" shape="rounded" radius="18" placeholder="사진" hint-size="74px,74px" style="width: 74px; height: 74px;"></x-import>
+                </div>
+                <div>
+                  <div style="font-size: 17px; color: #8A7B6C; font-weight: 600;">점심 · 오후 12시 40분</div>
+                  <div style="font-size: 24px; font-weight: 800; margin-top: 2px;">된장찌개 한 상</div>
+                </div>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <sc-for list="{{ foods }}" as="food" hint-placeholder-count="4">
+                  <button onClick="{{ food.onChip }}" style="background: #FFFFFF; cursor: pointer; white-space: nowrap; border: 1.5px solid {{ food.chipBorder }}; border-radius: 999px; padding: 9px 16px; font-family: inherit; font-size: 17px; font-weight: 700; color: #3B3025;">{{ food.name }}{{ food.mark }}</button>
+                </sc-for>
+              </div>
+              <sc-if value="{{ isEditFoods }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; gap: 8px;">
+                  <input value="{{ newFoodText }}" onChange="{{ onFoodInput }}" onKeyDown="{{ onFoodKey }}" placeholder="빠진 음식 이름 입력 (예: 김치)" style="flex: 1; border: 1.5px solid #E3D7C3; border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 17px; font-weight: 600; color: #3B3025; background: #FFFFFF; outline: none; min-width: 0;" style-focus="border-color: #E8622C;">
+                  <button onClick="{{ addFood }}" style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 14px; padding: 0 20px; font-family: inherit; font-size: 16px; font-weight: 800; white-space: nowrap; min-height: 48px;" style-hover="background: #D5551F;">추가</button>
+                </div>
+              </sc-if>
+              <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 18px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; align-items: center; gap: 12px;">
+                <div style="flex: 1; font-size: 15px; color: #8A7B6C; font-weight: 600; line-height: 1.4;">{{ editHint }}</div>
+                <button onClick="{{ toggleEdit }}" style="border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 12px; padding: 12px 14px; font-family: inherit; font-size: 15px; font-weight: 800; color: #B4540A; white-space: nowrap; min-height: 46px;" style-hover="border-color: #E8622C;">{{ editLabel }}</button>
+                <button onClick="{{ goCam }}" style="border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 12px; padding: 12px 14px; font-family: inherit; font-size: 15px; font-weight: 800; color: #8A7B6C; white-space: nowrap; min-height: 46px;" style-hover="border-color: #E8622C;">다시 찍기</button>
+              </div>
+              <div style="background: {{ verdictBg }}; border: 1.5px solid {{ verdictBorder }}; border-radius: 22px; padding: 20px 22px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="animation: kkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both; background: {{ verdictChipBg }}; color: #FFF9F2; border-radius: 999px; padding: 6px 14px; font-size: 16px; font-weight: 800;">{{ verdictChip }}</div>
+                  <div style="font-size: 22px; font-weight: 800; color: {{ verdictTitleColor }};">{{ verdictTitle }}</div>
+                </div>
+                <div style="font-size: 19px; line-height: 1.5; margin-top: 12px; font-weight: 500;">{{ verdictText }}</div>
+                <button onClick="{{ replay }}" style="margin-top: 14px; border: none; cursor: pointer; background: #B4540A; color: #FFF9F2; border-radius: 14px; padding: 13px 18px; font-family: inherit; font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px;" style-hover="background: #9A4405;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#FFF9F2"></path><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="#FFF9F2" stroke-width="2" stroke-linecap="round" fill="none"></path></svg>
+                  <span>{{ replayLabel }}</span>
+                </button>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; flex-direction: column; gap: 15px;">
+                <div style="font-size: 17px; font-weight: 800; color: #8A7B6C;">이번 식사 영양</div>
+                <sc-for list="{{ nutrients }}" as="n" hint-placeholder-count="4">
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                      <div style="font-size: 18px; font-weight: 700;">{{ n.name }}</div>
+                      <div style="font-size: 17px; font-weight: 800; color: {{ n.color }};">{{ n.val }}</div>
+                    </div>
+                    <div style="height: 12px; border-radius: 6px; background: #F1E9DB; margin-top: 7px; overflow: hidden;">
+                      <div style="height: 100%; border-radius: 6px; background: {{ n.color }}; width: {{ n.pct }};"></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <button onClick="{{ saveRecord }}" style="border: none; cursor: pointer; width: 100%; border-radius: 22px; background: #E8622C; color: #FFF9F2; padding: 21px; font-family: inherit; font-size: 23px; font-weight: 800; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">기록 저장하기</button>
+              <div style="font-size: 14px; color: #B3A590; text-align: center; line-height: 1.5; font-weight: 500;">이 안내는 참고용이에요. 진단·처방을 대체하지 않으니<br>궁금한 점은 의사·약사와 상담하세요.</div>
+            </div>
+          </sc-if>
+
+          <!-- ── 복약 ── -->
+          <sc-if value="{{ isMeds }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 84px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="font-size: 31px; font-weight: 800; letter-spacing: -0.5px;">오늘의 약</div>
+                <button onClick="{{ goMedAdd }}" style="border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 999px; padding: 13px 18px; font-family: inherit; font-size: 17px; font-weight: 800; color: #B4540A; white-space: nowrap; min-height: 48px; display: flex; align-items: center; gap: 7px;" style-hover="border-color: #E8622C;">
+                  <span style="font-size: 21px; line-height: 1;">+</span>
+                  <span>약 추가</span>
+                </button>
+              </div>
+              <div style="font-size: 18px; color: #8A7B6C; font-weight: 600; margin-top: -6px;">{{ medsSummary }}</div>
+              <sc-for list="{{ meds }}" as="med" hint-placeholder-count="3">
+                <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); border: 1.5px solid {{ med.border }};">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                    <div>
+                      <div style="font-size: 16px; font-weight: 700; color: {{ med.timeColor }};">{{ med.time }}</div>
+                      <div style="font-size: 23px; font-weight: 800; margin-top: 3px;">{{ med.name }}</div>
+                      <div style="font-size: 17px; color: #8A7B6C; font-weight: 500; margin-top: 3px;">{{ med.desc }}</div>
+                    </div>
+                    <button onClick="{{ med.onToggle }}" style="border: none; cursor: pointer; flex-shrink: 0; border-radius: 18px; padding: 18px 20px; font-family: inherit; font-size: 19px; font-weight: 800; min-width: 116px; min-height: 60px; background: {{ med.btnBg }}; color: {{ med.btnColor }};">{{ med.btnLabel }}</button>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ showConflict }}" hint-placeholder-val="{{ true }}">
+                <div style="background: #FDEBE6; border: 1.5px solid #EFB4A3; border-radius: 22px; padding: 20px 22px; display: flex; gap: 14px; align-items: flex-start;">
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: #B03A21; color: #FFF6EC; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; flex-shrink: 0;">!</div>
+                  <div>
+                    <div style="font-size: 21px; font-weight: 800; color: #B03A21;">자몽은 피해주세요</div>
+                    <div style="font-size: 18px; line-height: 1.5; margin-top: 6px; font-weight: 500;">드시는 혈압약과 자몽이 만나면 약효가 너무 세질 수 있어요. 궁금하면 약사님께 여쭤보세요.</div>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="font-size: 14px; color: #B3A590; text-align: center; line-height: 1.5; font-weight: 500; margin-top: 4px;">이 안내는 참고용이에요. 경고만 보고 약을 끊거나 바꾸지 마시고,<br>꼭 의사·약사와 상담하세요.</div>
+            </div>
+          </sc-if>
+
+          <!-- ── 어르신 기록 ── -->
+          <sc-if value="{{ isHist }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 84px 22px 130px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+              <div style="font-size: 31px; font-weight: 800; letter-spacing: -0.5px;">드신 기록</div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <sc-for list="{{ histTabs }}" as="ht" hint-placeholder-count="4">
+                  <button onClick="{{ ht.onPick }}" style="cursor: pointer; white-space: nowrap; background: {{ ht.bg }}; color: {{ ht.color }}; border: 1.5px solid {{ ht.border }}; border-radius: 999px; padding: 12px 20px; font-family: inherit; font-size: 18px; font-weight: 800; min-height: 48px;">{{ ht.label }}</button>
+                </sc-for>
+                <button onClick="{{ calToggle }}" style="cursor: pointer; white-space: nowrap; background: {{ calBtnBg }}; color: {{ calBtnColor }}; border: 1.5px solid {{ calBtnBorder }}; border-radius: 999px; padding: 12px 16px; font-family: inherit; font-size: 18px; font-weight: 800; min-height: 48px; display: flex; align-items: center; gap: 7px;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2.2"></rect><line x1="4" y1="10" x2="20" y2="10" stroke="currentColor" stroke-width="2.2"></line><line x1="9" y1="3" x2="9" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></line><line x1="15" y1="3" x2="15" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></line></svg>
+                  <span>달력</span>
+                </button>
+              </div>
+              <sc-if value="{{ calOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFFFFF; border-radius: 22px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                  <div style="font-size: 18px; font-weight: 800; text-align: center;">2026년 7월</div>
+                  <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; text-align: center;">
+                    <div style="font-size: 14px; font-weight: 800; color: #C0453A; padding: 4px 0;">일</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #B3A590; padding: 4px 0;">월</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #B3A590; padding: 4px 0;">화</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #B3A590; padding: 4px 0;">수</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #B3A590; padding: 4px 0;">목</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #B3A590; padding: 4px 0;">금</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #4A6FA5; padding: 4px 0;">토</div>
+                    <sc-for list="{{ calCells }}" as="cd" hint-placeholder-count="7">
+                      <button onClick="{{ cd.onPick }}" style="border: none; font-family: inherit; background: {{ cd.bg }}; color: {{ cd.color }}; cursor: {{ cd.cursor }}; border-radius: 50%; aspect-ratio: 1; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center;">{{ cd.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="font-size: 17px; color: #8A7B6C; font-weight: 700;">{{ histDate }} · {{ histMealCount }}</div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; gap: 10px;">
+                <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                  <div style="font-size: 15px; color: #8A7B6C; font-weight: 600;">칼로리</div>
+                  <div style="font-size: 21px; font-weight: 800; margin-top: 3px;">{{ histKcal }}</div>
+                </div>
+                <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                  <div style="font-size: 15px; color: #8A7B6C; font-weight: 600;">나트륨</div>
+                  <div style="font-size: 21px; font-weight: 800; margin-top: 3px; color: {{ histSodiumColor }};">{{ histSodium }}</div>
+                </div>
+                <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                  <div style="font-size: 15px; color: #8A7B6C; font-weight: 600;">단백질</div>
+                  <div style="font-size: 21px; font-weight: 800; margin-top: 3px; color: {{ histProteinColor }};">{{ histProtein }}</div>
+                </div>
+              </div>
+              <div style="font-size: 17px; font-weight: 800; color: #8A7B6C; margin-top: 6px;">이날의 식사</div>
+              <sc-for list="{{ histMeals }}" as="hm" hint-placeholder-count="3">
+                <div style="background: #FFFFFF; border-radius: 22px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 62px; height: 62px; border-radius: 16px; flex-shrink: 0; background: repeating-linear-gradient(45deg, #F1E9DB, #F1E9DB 8px, #F7F1E5 8px, #F7F1E5 16px); display: flex; align-items: center; justify-content: center;">
+                    <span style="font-family: ui-monospace, monospace; font-size: 10px; color: #A6947C;">사진</span>
+                  </div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 15px; color: #8A7B6C; font-weight: 700;">{{ hm.time }}</div>
+                    <div style="font-size: 20px; font-weight: 800; margin-top: 2px;">{{ hm.name }}</div>
+                    <div style="font-size: 15px; color: #8A7B6C; font-weight: 500; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ hm.foods }}</div>
+                  </div>
+                  <span style="background: {{ hm.vBg }}; color: {{ hm.vColor }}; border-radius: 999px; padding: 7px 14px; font-size: 15px; font-weight: 800; flex-shrink: 0;">{{ hm.verdict }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ histMissing }}" hint-placeholder-val="{{ false }}">
+                <div style="border: 1.5px dashed #E3D7C3; border-radius: 22px; padding: 18px 20px; text-align: center; font-size: 17px; color: #B3A590; font-weight: 600;">기록하지 않은 끼니가 있어요</div>
+              </sc-if>
+              <div style="font-size: 17px; font-weight: 800; color: #8A7B6C; margin-top: 6px;">이날의 약</div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 6px 20px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <sc-for list="{{ histMeds }}" as="hmed" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 15px 0; border-bottom: 1px solid #F1E9DB;">
+                    <div style="flex: 1;">
+                      <div style="font-size: 15px; color: #8A7B6C; font-weight: 700;">{{ hmed.time }}</div>
+                      <div style="font-size: 19px; font-weight: 800; margin-top: 2px;">{{ hmed.name }}</div>
+                    </div>
+                    <span style="background: {{ hmed.statusBg }}; color: {{ hmed.statusColor }}; border-radius: 999px; padding: 7px 14px; font-size: 15px; font-weight: 800; white-space: nowrap;">{{ hmed.statusLabel }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="font-size: 17px; font-weight: 800; color: #8A7B6C; margin-top: 6px;">이날의 체크인</div>
+              <div style="background: {{ histCheckinBg }}; border-radius: 22px; padding: 18px 20px; display: flex; align-items: center; gap: 12px;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="{{ histCheckinColor }}" stroke-width="2.2"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0" stroke="{{ histCheckinColor }}" stroke-width="2.2" stroke-linecap="round" fill="none"></path><line x1="12" y1="17.5" x2="12" y2="21" stroke="{{ histCheckinColor }}" stroke-width="2.2" stroke-linecap="round"></line></svg>
+                <div style="font-size: 18px; font-weight: 800; color: {{ histCheckinColor }};">{{ histCheckinText }}</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ── 어르신 내 정보 ── -->
+          <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 84px 22px 130px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 68px; height: 68px; border-radius: 50%; background: #EFE6D7; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #A6947C; flex-shrink: 0;">순</div>
+                <div>
+                  <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">박순자</div>
+                  <div style="font-size: 17px; color: #8A7B6C; font-weight: 600; margin-top: 2px;">84세 · 끼니톡과 32일째</div>
+                </div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <div style="font-size: 17px; font-weight: 800; color: #8A7B6C;">이번 주 요약</div>
+                  <button onClick="{{ playReport }}" style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 14px; padding: 12px 16px; font-family: inherit; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 7px;" style-hover="background: #D5551F;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#FFF9F2"></path><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="#FFF9F2" stroke-width="2" stroke-linecap="round" fill="none"></path></svg>
+                    <span>{{ reportBtnLabel }}</span>
+                  </button>
+                </div>
+                <div style="font-size: 22px; font-weight: 800; line-height: 1.5; margin-top: 12px;">이번 주 열여덟 끼 드셨고,<br>약도 잘 챙기셨어요. 참 잘하셨어요!</div>
+                <div style="display: flex; gap: 10px; margin-top: 14px;">
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                    <div style="font-size: 15px; color: #8A7B6C; font-weight: 600;">식사</div>
+                    <div style="font-size: 21px; font-weight: 800; margin-top: 3px;">18끼</div>
+                  </div>
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                    <div style="font-size: 15px; color: #8A7B6C; font-weight: 600;">복약</div>
+                    <div style="font-size: 21px; font-weight: 800; margin-top: 3px; color: #2E7D5B;">86%</div>
+                  </div>
+                  <div style="flex: 1; background: #FDF0E2; border-radius: 14px; padding: 13px 8px; text-align: center;">
+                    <div style="font-size: 15px; color: #B4540A; font-weight: 600;">싱겁게</div>
+                    <div style="font-size: 21px; font-weight: 800; margin-top: 3px; color: #B4540A;">3일 주의</div>
+                  </div>
+                </div>
+              </div>
+              <div style="background: #FFF3E9; border: 1.5px solid #F5D9C4; border-radius: 20px; padding: 16px 20px; font-size: 17px; line-height: 1.5; font-weight: 600; color: #B4540A;">아래 내용을 바탕으로 식단을 추천해 드려요. 바뀐 게 있으면 고쳐주세요.</div>
+              <sc-for list="{{ profItems }}" as="pi" hint-placeholder-count="5">
+                <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                  <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="flex: 1;">
+                      <div style="font-size: 16px; color: #8A7B6C; font-weight: 700;">{{ pi.label }}</div>
+                      <div style="font-size: 21px; font-weight: 800; margin-top: 4px;">{{ pi.value }}</div>
+                    </div>
+                    <button onClick="{{ pi.onEdit }}" style="border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 14px; padding: 13px 18px; font-family: inherit; font-size: 16px; font-weight: 800; color: #B4540A; white-space: nowrap; min-height: 48px;" style-hover="border-color: #E8622C;">{{ pi.editLabel }}</button>
+                  </div>
+                  <sc-if value="{{ pi.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #F1E9DB;">
+                      <sc-for list="{{ pi.opts }}" as="po" hint-placeholder-count="3">
+                        <button onClick="{{ po.onPick }}" style="cursor: pointer; white-space: nowrap; background: {{ po.bg }}; color: {{ po.color }}; border: 1.5px solid {{ po.border }}; border-radius: 999px; padding: 13px 18px; font-family: inherit; font-size: 17px; font-weight: 700; min-height: 48px;">{{ po.label }}</button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; align-items: center; gap: 14px;">
+                <div style="flex: 1;">
+                  <div style="font-size: 16px; color: #8A7B6C; font-weight: 700;">보호자 초대 코드</div>
+                  <div style="font-size: 26px; font-weight: 800; letter-spacing: 4px; margin-top: 4px; color: #B4540A;">K39271</div>
+                </div>
+                <div style="font-size: 14px; color: #B3A590; font-weight: 600; text-align: right; line-height: 1.5;">가족에게 알려주시면<br>기록을 함께 볼 수 있어요</div>
+              </div>
+              <div style="font-size: 14px; color: #B3A590; text-align: center; line-height: 1.5; font-weight: 500; margin-top: 4px;">고친 내용은 다음 식단 추천부터 바로 반영돼요.</div>
+            </div>
+          </sc-if>
+
+          <!-- ── 어르신 약 추가 ── -->
+          <sc-if value="{{ isMedAdd }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 84px 22px 130px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button onClick="{{ goMeds }}" style="border: 1.5px solid #E3D7C3; background: #FFFFFF; cursor: pointer; border-radius: 999px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="10" height="17" viewBox="0 0 8 14"><path d="M7 1L1 7l6 6" stroke="#8A7B6C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <div style="font-size: 29px; font-weight: 800; letter-spacing: -0.5px;">약 추가하기</div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="font-size: 20px; font-weight: 800;">약 사진을 찍어주세요</div>
+                <div style="font-size: 16px; color: #8A7B6C; font-weight: 600; margin-top: 3px;">무슨 약인지 AI가 알려드려요</div>
+                <div style="position: relative; height: 170px; border-radius: 18px; overflow: hidden; background: #F1E9DB; margin-top: 14px;">
+                  <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="senior-med-photo" shape="rounded" radius="18" placeholder="약봉투 사진을 끌어다 놓으세요" hint-size="100%,170px" style="position: absolute; inset: 0;"></x-import>
+                  <sc-if value="{{ scanBusy }}" hint-placeholder-val="{{ false }}">
+                    <div style="position: absolute; inset: 0; background: rgba(43,36,27,0.82); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 5;">
+                      <div style="width: 44px; height: 44px; border-radius: 50%; border: 4px solid rgba(232,98,44,0.25); border-top-color: #E8622C; animation: kkSpin 0.9s linear infinite;"></div>
+                      <div style="color: #FFF6EC; font-size: 18px; font-weight: 700;">약을 확인하고 있어요…</div>
+                    </div>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ scanIdle }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ scanStart }}" style="margin-top: 14px; width: 100%; border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 18px; padding: 19px; font-family: inherit; font-size: 21px; font-weight: 800; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">무슨 약인지 알아보기</button>
+                </sc-if>
+                <sc-if value="{{ scanDone }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top: 14px; background: #EAF4EE; border: 1.5px solid #BFDCCB; border-radius: 18px; padding: 18px 20px;">
+                    <div style="animation: kkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; display: inline-block; background: #2E7D5B; color: #FFFFFF; border-radius: 999px; padding: 6px 14px; font-size: 15px; font-weight: 800;">찾았어요</div>
+                    <div style="font-size: 24px; font-weight: 800; margin-top: 10px;">아모디핀정 5mg</div>
+                    <div style="font-size: 18px; color: #8A7B6C; font-weight: 600; margin-top: 3px;">혈압약 · 하루 1번</div>
+                    <div style="background: #FDEBE6; border-radius: 14px; padding: 13px 16px; margin-top: 12px; font-size: 17px; line-height: 1.5; font-weight: 600; color: #B03A21;">자몽하고 같이 드시면 안 돼요.</div>
+                  </div>
+                  <div style="font-size: 17px; font-weight: 800; color: #8A7B6C; margin-top: 16px; margin-bottom: 8px;">언제 드세요?</div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <sc-for list="{{ timeOpts }}" as="sto" hint-placeholder-count="3">
+                      <button onClick="{{ sto.onPick }}" style="cursor: pointer; white-space: nowrap; background: {{ sto.bg }}; border: 1.5px solid {{ sto.border }}; color: {{ sto.color }}; border-radius: 999px; padding: 14px 20px; font-family: inherit; font-size: 18px; font-weight: 800; min-height: 52px;">{{ sto.label }}</button>
+                    </sc-for>
+                  </div>
+                  <button onClick="{{ scanAdd }}" style="margin-top: 14px; width: 100%; border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 18px; padding: 19px; font-family: inherit; font-size: 21px; font-weight: 800; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">이 약 넣기</button>
+                  <button onClick="{{ scanReset }}" style="margin-top: 10px; width: 100%; border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 16px; padding: 15px; font-family: inherit; font-size: 17px; font-weight: 800; color: #8A7B6C;">다시 찍기</button>
+                </sc-if>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="font-size: 20px; font-weight: 800;">직접 고르기</div>
+                <div style="font-size: 17px; font-weight: 800; color: #8A7B6C; margin-top: 14px; margin-bottom: 8px;">무슨 약이에요?</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <sc-for list="{{ nameOpts }}" as="sno" hint-placeholder-count="3">
+                    <button onClick="{{ sno.onPick }}" style="cursor: pointer; white-space: nowrap; background: {{ sno.bg }}; border: 1.5px solid {{ sno.border }}; color: {{ sno.color }}; border-radius: 999px; padding: 14px 20px; font-family: inherit; font-size: 18px; font-weight: 800; min-height: 52px;">{{ sno.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="font-size: 17px; font-weight: 800; color: #8A7B6C; margin-top: 16px; margin-bottom: 8px;">언제 드세요?</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <sc-for list="{{ timeOpts }}" as="sto2" hint-placeholder-count="3">
+                    <button onClick="{{ sto2.onPick }}" style="cursor: pointer; white-space: nowrap; background: {{ sto2.bg }}; border: 1.5px solid {{ sto2.border }}; color: {{ sto2.color }}; border-radius: 999px; padding: 14px 20px; font-family: inherit; font-size: 18px; font-weight: 800; min-height: 52px;">{{ sto2.label }}</button>
+                  </sc-for>
+                </div>
+                <button onClick="{{ seniorAddMed }}" style="margin-top: 16px; width: 100%; border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 18px; padding: 19px; font-family: inherit; font-size: 21px; font-weight: 800; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">약 넣기</button>
+              </div>
+              <div style="font-size: 14px; color: #B3A590; text-align: center; line-height: 1.5; font-weight: 500;">사진으로 찾은 약이 실제와 다를 수 있어요.<br>헷갈리면 가족이나 약사님께 여쭤보세요.</div>
+            </div>
+          </sc-if>
+
+          <!-- ── 복약 알림 배너 ── -->
+          <sc-if value="{{ showNotif }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; top: 58px; left: 14px; right: 14px; z-index: 60; background: #2B241B; color: #FFF6EC; border-radius: 22px; padding: 16px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 14px 30px rgba(43,36,27,0.4); animation: kkDrop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.05);">
+              <div style="width: 42px; height: 42px; border-radius: 13px; background: #E8622C; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 7H4c0-1 2-2 2-7z" stroke="#FFF6EC" stroke-width="2" stroke-linejoin="round"></path><path d="M10 19a2 2 0 0 0 4 0" stroke="#FFF6EC" stroke-width="2" stroke-linecap="round"></path></svg>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 14px; font-weight: 700; color: #F5A263;">약 드실 시간이에요</div>
+                <div style="font-size: 18px; font-weight: 800; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ notifText }}</div>
+              </div>
+              <button onClick="{{ notifTake }}" style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 13px; padding: 13px 15px; font-family: inherit; font-size: 16px; font-weight: 800; white-space: nowrap;" style-hover="background: #D5551F;">먹었어요</button>
+              <button onClick="{{ notifLater }}" style="border: none; cursor: pointer; background: none; color: #B8AB97; font-family: inherit; font-size: 14px; font-weight: 700; padding: 6px 2px;">나중에</button>
+            </div>
+          </sc-if>
+
+          <!-- ── 어르신 하단 내비 ── -->
+          <sc-if value="{{ showSeniorNav }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #FFFFFF; border-top: 1px solid #F1E9DB; display: flex; align-items: center; justify-content: space-around; padding: 12px 18px 36px; z-index: 40;">
+              <button onClick="{{ goHome }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 66px; min-height: 56px; color: {{ navHomeColor }};">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"></path></svg>
+                <span style="font-size: 15px; font-weight: 800;">홈</span>
+              </button>
+              <button onClick="{{ goHist }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 66px; min-height: 56px; color: {{ navHistColor }};">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2.2"></rect><line x1="4" y1="10" x2="20" y2="10" stroke="currentColor" stroke-width="2.2"></line><line x1="9" y1="3" x2="9" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></line><line x1="15" y1="3" x2="15" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></line></svg>
+                <span style="font-size: 15px; font-weight: 800;">기록</span>
+              </button>
+              <button onClick="{{ goCam }}" style="border: none; cursor: pointer; width: 68px; height: 68px; border-radius: 50%; background: #E8622C; box-shadow: 0 8px 18px rgba(232,98,44,0.4); display: flex; align-items: center; justify-content: center; margin-top: -30px;" style-hover="background: #D5551F;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="19" height="14" rx="4" stroke="#FFF9F2" stroke-width="2"></rect><path d="M8.5 6l1.5-2.5h4L15.5 6" stroke="#FFF9F2" stroke-width="2" stroke-linejoin="round"></path><circle cx="12" cy="13" r="4" stroke="#FFF9F2" stroke-width="2"></circle></svg>
+              </button>
+              <button onClick="{{ goMeds }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 66px; min-height: 56px; color: {{ navMedsColor }};">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="8" y="3" width="8" height="18" rx="4" stroke="currentColor" stroke-width="2.2"></rect><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2.2"></line></svg>
+                <span style="font-size: 15px; font-weight: 800;">약</span>
+              </button>
+              <button onClick="{{ goProfile }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 66px; min-height: 56px; color: {{ navProfileColor }};">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2.2"></circle><path d="M4.5 20.5c1.5-3.5 4.2-5 7.5-5s6 1.5 7.5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"></path></svg>
+                <span style="font-size: 15px; font-weight: 800;">내 정보</span>
+              </button>
+            </div>
+          </sc-if>
+
+          <!-- ── 보호자 초대 코드 연결 ── -->
+          <sc-if value="{{ isGConnect }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; display: flex; flex-direction: column; align-items: center; padding: 120px 28px 44px; box-sizing: border-box;">
+              <div style="width: 68px; height: 68px; border-radius: 50%; background: #EFE6D7; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #A6947C;">순</div>
+              <div style="font-size: 27px; font-weight: 800; letter-spacing: -0.5px; margin-top: 20px; text-align: center;">부모님과 연결하기</div>
+              <div style="font-size: 16px; color: #8A7B6C; font-weight: 500; margin-top: 8px; text-align: center; line-height: 1.5;">어르신 앱의 '내 정보'에 있는<br>초대 코드 6자리를 입력하세요</div>
+              <div style="display: flex; gap: 8px; margin-top: 32px;">
+                <div style="width: 46px; height: 58px; border-radius: 14px; background: #FFFFFF; border: 1.5px solid #E8622C; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">K</div>
+                <div style="width: 46px; height: 58px; border-radius: 14px; background: #FFFFFF; border: 1.5px solid #E8622C; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">3</div>
+                <div style="width: 46px; height: 58px; border-radius: 14px; background: #FFFFFF; border: 1.5px solid #E8622C; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">9</div>
+                <div style="width: 46px; height: 58px; border-radius: 14px; background: #FFFFFF; border: 1.5px solid #E8622C; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">2</div>
+                <div style="width: 46px; height: 58px; border-radius: 14px; background: #FFFFFF; border: 1.5px solid #E8622C; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">7</div>
+                <div style="width: 46px; height: 58px; border-radius: 14px; background: #FFFFFF; border: 1.5px solid #E8622C; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">1</div>
+              </div>
+              <div style="background: #EAF4EE; border-radius: 14px; padding: 12px 18px; margin-top: 22px; display: flex; align-items: center; gap: 9px;">
+                <div style="width: 22px; height: 22px; border-radius: 50%; background: #2E7D5B; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <div style="font-size: 15px; font-weight: 700; color: #2E7D5B;">박순자 님(84세)을 찾았어요</div>
+              </div>
+              <button onClick="{{ connectGo }}" style="margin-top: auto; border: none; cursor: pointer; width: 100%; border-radius: 22px; background: #E8622C; color: #FFF9F2; padding: 20px; font-family: inherit; font-size: 21px; font-weight: 800; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">연결하고 시작하기</button>
+              <div style="font-size: 13px; color: #B3A590; font-weight: 500; margin-top: 14px; text-align: center;">연결하면 어르신의 동의 아래 식사·복약 기록을 볼 수 있어요</div>
+            </div>
+          </sc-if>
+
+          <!-- ── 보호자 홈 ── -->
+          <sc-if value="{{ isGHome }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 80px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <div style="display: flex; gap: 7px;">
+                  <sc-for list="{{ parentChips }}" as="pc" hint-placeholder-count="2">
+                    <button onClick="{{ pc.onPick }}" style="cursor: pointer; white-space: nowrap; background: {{ pc.bg }}; color: {{ pc.color }}; border: 1.5px solid {{ pc.border }}; border-radius: 999px; padding: 10px 18px; font-family: inherit; font-size: 15px; font-weight: 800;">{{ pc.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="font-size: 14px; color: #8A7B6C; font-weight: 600;">7월 13일 월요일</div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="width: 54px; height: 54px; border-radius: 50%; background: #EFE6D7; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #A6947C;">{{ gAvatarInitial }}</div>
+                  <div style="flex: 1;">
+                    <div style="font-size: 21px; font-weight: 800;">{{ gName }} <span style="font-size: 15px; color: #8A7B6C; font-weight: 600;">{{ gAge }}</span></div>
+                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+                      <div style="width: 9px; height: 9px; border-radius: 50%; background: {{ gStatusColor }};"></div>
+                      <div style="font-size: 15px; color: {{ gStatusColor }}; font-weight: 700;">{{ gStatusText }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 16px;">
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 12px 8px; text-align: center;">
+                    <div style="font-size: 13px; color: #8A7B6C; font-weight: 600;">오늘 식사</div>
+                    <div style="font-size: 19px; font-weight: 800; margin-top: 2px;">{{ gMealCount }}</div>
+                  </div>
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 14px; padding: 12px 8px; text-align: center;">
+                    <div style="font-size: 13px; color: #8A7B6C; font-weight: 600;">복약</div>
+                    <div style="font-size: 19px; font-weight: 800; margin-top: 2px;">{{ gMedCount }}</div>
+                  </div>
+                  <div style="flex: 1; background: {{ gSodiumBg }}; border-radius: 14px; padding: 12px 8px; text-align: center;">
+                    <div style="font-size: 13px; color: {{ gSodiumLabelColor }}; font-weight: 600;">나트륨</div>
+                    <div style="font-size: 19px; font-weight: 800; color: {{ gSodiumColor }}; margin-top: 2px;">{{ gSodiumLabel }}</div>
+                  </div>
+                </div>
+              </div>
+              <sc-if value="{{ showMomAlert }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ goGAlerts }}" style="border: 1.5px solid #EFB4A3; cursor: pointer; background: #FDEBE6; border-radius: 18px; padding: 16px 18px; font-family: inherit; display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;" style-hover="border-color: #B03A21;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #B03A21; color: #FFF6EC; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0;">!</div>
+                <div style="flex: 1;">
+                  <div style="font-size: 16px; font-weight: 800; color: #B03A21;">나트륨 3일 연속 초과</div>
+                  <div style="font-size: 14px; color: #8A7B6C; font-weight: 500; margin-top: 2px;">알림 2건 · 눌러서 확인</div>
+                </div>
+                <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="#B03A21" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+              </sc-if>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px 8px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="font-size: 15px; font-weight: 800; color: #8A7B6C;">오늘 기록</div>
+                <div style="margin-top: 8px;">
+                  <sc-for list="{{ timeline }}" as="t" hint-placeholder-count="4">
+                    <div style="display: flex; gap: 14px; padding: 13px 0; border-bottom: 1px solid #F1E9DB;">
+                      <div style="width: 44px; flex-shrink: 0; font-size: 14px; font-weight: 700; color: #8A7B6C; padding-top: 2px;">{{ t.time }}</div>
+                      <div style="width: 10px; height: 10px; border-radius: 50%; background: {{ t.dot }}; flex-shrink: 0; margin-top: 5px;"></div>
+                      <div style="flex: 1;">
+                        <div style="font-size: 16px; font-weight: 700;">{{ t.title }}</div>
+                        <div style="font-size: 14px; color: #8A7B6C; font-weight: 500; margin-top: 2px;">{{ t.desc }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ── 보호자 알림 ── -->
+          <sc-if value="{{ isGAlerts }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 80px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">알림</div>
+              <sc-for list="{{ alerts }}" as="al" hint-placeholder-count="3">
+                <div style="background: #FFFFFF; border-radius: 20px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); border-left: 5px solid {{ al.color }};">
+                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <div style="font-size: 14px; font-weight: 800; color: {{ al.color }};">{{ al.level }}</div>
+                    <div style="font-size: 13px; color: #B3A590; font-weight: 600;">{{ al.time }}</div>
+                  </div>
+                  <div style="font-size: 18px; font-weight: 800; margin-top: 5px;">{{ al.title }}</div>
+                  <div style="font-size: 15px; color: #8A7B6C; font-weight: 500; margin-top: 4px; line-height: 1.5;">{{ al.desc }}</div>
+                </div>
+              </sc-for>
+              <div style="background: #FFFFFF; border-radius: 20px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="font-size: 15px; font-weight: 800; color: #8A7B6C;">엄마께 한마디</div>
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                  <div style="flex: 1; border: 1.5px solid #E3D7C3; border-radius: 14px; padding: 13px 16px; font-size: 15px; color: {{ commentColor }}; font-weight: 500;">{{ commentText }}</div>
+                  <button onClick="{{ sendComment }}" style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 14px; padding: 0 18px; font-family: inherit; font-size: 15px; font-weight: 800;" style-hover="background: #D5551F;">보내기</button>
+                </div>
+                <div style="font-size: 13px; color: #B3A590; font-weight: 500; margin-top: 8px;">엄마 앱에서 음성으로 읽어드려요</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ── 보호자 주간 리포트 ── -->
+          <sc-if value="{{ isGReport }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 80px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+              <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">주간 리포트</div>
+              <div style="font-size: 14px; color: #8A7B6C; font-weight: 600; margin-top: -8px;">7월 7일 – 7월 13일</div>
+              <div style="background: #FFFFFF; border-radius: 22px; padding: 20px 22px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <div style="font-size: 15px; font-weight: 800; color: #8A7B6C;">하루 식사 기록 횟수</div>
+                <div style="display: flex; align-items: flex-end; gap: 10px; height: 110px; margin-top: 16px;">
+                  <sc-for list="{{ weekBars }}" as="b" hint-placeholder-count="7">
+                    <div style="animation: kkScreen 0.3s ease; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end;">
+                      <div style="width: 100%; border-radius: 8px 8px 4px 4px; background: {{ b.color }}; height: {{ b.h }};"></div>
+                      <div style="font-size: 12px; font-weight: 700; color: #8A7B6C;">{{ b.day }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <div style="flex: 1; background: #FFFFFF; border-radius: 18px; padding: 16px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                  <div style="font-size: 13px; color: #8A7B6C; font-weight: 700;">복약 이행률</div>
+                  <div style="font-size: 26px; font-weight: 800; margin-top: 4px;">86%</div>
+                  <div style="font-size: 13px; color: #2E7D5B; font-weight: 700; margin-top: 2px;">지난주보다 +9%</div>
+                </div>
+                <div style="flex: 1; background: #FFFFFF; border-radius: 18px; padding: 16px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                  <div style="font-size: 13px; color: #8A7B6C; font-weight: 700;">나트륨 초과일</div>
+                  <div style="font-size: 26px; font-weight: 800; color: #B03A21; margin-top: 4px;">3일</div>
+                  <div style="font-size: 13px; color: #B03A21; font-weight: 700; margin-top: 2px;">저염 반찬 추천 중</div>
+                </div>
+              </div>
+              <div style="background: #FFF3E9; border: 1.5px solid #F5D9C4; border-radius: 20px; padding: 18px 20px;">
+                <div style="font-size: 15px; font-weight: 800; color: #B4540A;">AI 요약</div>
+                <div style="font-size: 16px; line-height: 1.6; font-weight: 500; margin-top: 8px;">이번 주 식사는 꾸준했지만 국·찌개로 나트륨이 자주 초과됐어요. 저녁 복약을 잊는 날이 있어 알림 시간을 저녁 7시로 옮기는 것을 권해요.</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ── 보호자 식사 기록 ── -->
+          <sc-if value="{{ isGHist }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 80px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">식사 기록</div>
+              <div style="display: flex; gap: 7px; flex-wrap: wrap; align-items: center;">
+                <sc-for list="{{ histTabs }}" as="ht" hint-placeholder-count="4">
+                  <button onClick="{{ ht.onPick }}" style="cursor: pointer; white-space: nowrap; background: {{ ht.bg }}; color: {{ ht.color }}; border: 1.5px solid {{ ht.border }}; border-radius: 999px; padding: 9px 16px; font-family: inherit; font-size: 14px; font-weight: 800;">{{ ht.label }}</button>
+                </sc-for>
+                <button onClick="{{ calToggle }}" style="cursor: pointer; white-space: nowrap; background: {{ calBtnBg }}; color: {{ calBtnColor }}; border: 1.5px solid {{ calBtnBorder }}; border-radius: 999px; padding: 9px 13px; font-family: inherit; font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 5px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2.2"></rect><line x1="4" y1="10" x2="20" y2="10" stroke="currentColor" stroke-width="2.2"></line><line x1="9" y1="3" x2="9" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></line><line x1="15" y1="3" x2="15" y2="7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></line></svg>
+                  <span>달력</span>
+                </button>
+              </div>
+              <sc-if value="{{ calOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                  <div style="font-size: 15px; font-weight: 800; text-align: center;">2026년 7월</div>
+                  <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 10px; text-align: center;">
+                    <div style="font-size: 11px; font-weight: 800; color: #C0453A; padding: 3px 0;">일</div>
+                    <div style="font-size: 11px; font-weight: 800; color: #B3A590; padding: 3px 0;">월</div>
+                    <div style="font-size: 11px; font-weight: 800; color: #B3A590; padding: 3px 0;">화</div>
+                    <div style="font-size: 11px; font-weight: 800; color: #B3A590; padding: 3px 0;">수</div>
+                    <div style="font-size: 11px; font-weight: 800; color: #B3A590; padding: 3px 0;">목</div>
+                    <div style="font-size: 11px; font-weight: 800; color: #B3A590; padding: 3px 0;">금</div>
+                    <div style="font-size: 11px; font-weight: 800; color: #4A6FA5; padding: 3px 0;">토</div>
+                    <sc-for list="{{ calCells }}" as="cd" hint-placeholder-count="7">
+                      <button onClick="{{ cd.onPick }}" style="border: none; font-family: inherit; background: {{ cd.bg }}; color: {{ cd.color }}; cursor: {{ cd.cursor }}; border-radius: 50%; aspect-ratio: 1; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center;">{{ cd.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="font-size: 14px; color: #8A7B6C; font-weight: 700;">{{ histDate }} · {{ histMealCount }}</div>
+              <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; gap: 8px;">
+                <div style="flex: 1; background: #FBF6EC; border-radius: 12px; padding: 11px 8px; text-align: center;">
+                  <div style="font-size: 12px; color: #8A7B6C; font-weight: 700;">칼로리</div>
+                  <div style="font-size: 17px; font-weight: 800; margin-top: 2px;">{{ histKcal }}</div>
+                </div>
+                <div style="flex: 1; background: #FBF6EC; border-radius: 12px; padding: 11px 8px; text-align: center;">
+                  <div style="font-size: 12px; color: #8A7B6C; font-weight: 700;">나트륨</div>
+                  <div style="font-size: 17px; font-weight: 800; margin-top: 2px; color: {{ histSodiumColor }};">{{ histSodium }}</div>
+                </div>
+                <div style="flex: 1; background: #FBF6EC; border-radius: 12px; padding: 11px 8px; text-align: center;">
+                  <div style="font-size: 12px; color: #8A7B6C; font-weight: 700;">단백질</div>
+                  <div style="font-size: 17px; font-weight: 800; margin-top: 2px; color: {{ histProteinColor }};">{{ histProtein }}</div>
+                </div>
+              </div>
+              <div style="font-size: 14px; font-weight: 800; color: #8A7B6C; margin-top: 4px;">식사</div>
+              <sc-for list="{{ histMeals }}" as="hm" hint-placeholder-count="3">
+                <div style="background: #FFFFFF; border-radius: 18px; padding: 14px 16px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0; background: repeating-linear-gradient(45deg, #F1E9DB, #F1E9DB 8px, #F7F1E5 8px, #F7F1E5 16px); display: flex; align-items: center; justify-content: center;">
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; color: #A6947C;">사진</span>
+                  </div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12px; color: #8A7B6C; font-weight: 700;">{{ hm.time }}</div>
+                    <div style="font-size: 16px; font-weight: 800; margin-top: 1px;">{{ hm.name }}</div>
+                    <div style="font-size: 12px; color: #8A7B6C; font-weight: 500; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ hm.foods }}</div>
+                  </div>
+                  <span style="background: {{ hm.vBg }}; color: {{ hm.vColor }}; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 800; flex-shrink: 0;">{{ hm.verdict }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ histMissing }}" hint-placeholder-val="{{ false }}">
+                <div style="border: 1.5px dashed #E3D7C3; border-radius: 18px; padding: 14px 16px; text-align: center; font-size: 14px; color: #B3A590; font-weight: 600;">기록되지 않은 끼니가 있어요</div>
+              </sc-if>
+              <div style="font-size: 14px; font-weight: 800; color: #8A7B6C; margin-top: 4px;">복약</div>
+              <div style="background: #FFFFFF; border-radius: 18px; padding: 4px 16px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                <sc-for list="{{ histMeds }}" as="hmed" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid #F1E9DB;">
+                    <div style="flex: 1;">
+                      <div style="font-size: 12px; color: #8A7B6C; font-weight: 700;">{{ hmed.time }}</div>
+                      <div style="font-size: 15px; font-weight: 800; margin-top: 1px;">{{ hmed.name }}</div>
+                    </div>
+                    <span style="background: {{ hmed.statusBg }}; color: {{ hmed.statusColor }}; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 800; white-space: nowrap;">{{ hmed.statusLabel }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="font-size: 14px; font-weight: 800; color: #8A7B6C; margin-top: 4px;">체크인</div>
+              <div style="background: {{ histCheckinBg }}; border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="{{ histCheckinColor }}" stroke-width="2.2"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0" stroke="{{ histCheckinColor }}" stroke-width="2.2" stroke-linecap="round" fill="none"></path><line x1="12" y1="17.5" x2="12" y2="21" stroke="{{ histCheckinColor }}" stroke-width="2.2" stroke-linecap="round"></line></svg>
+                <div style="font-size: 14px; font-weight: 800; color: {{ histCheckinColor }};">{{ histCheckinText }}</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ── 보호자 복약 일정 관리 ── -->
+          <sc-if value="{{ isGMeds }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 80px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">복약 일정</div>
+              <div style="font-size: 14px; color: #8A7B6C; font-weight: 600; margin-top: -6px;">여기서 등록하면 어머니 앱에 바로 반영돼요</div>
+              <sc-for list="{{ gMedRows }}" as="gm" hint-placeholder-count="3">
+                <div style="background: #FFFFFF; border-radius: 18px; padding: 15px 18px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; align-items: center; gap: 12px;">
+                  <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 700; color: #8A7B6C;">{{ gm.time }}</div>
+                    <div style="font-size: 17px; font-weight: 800; margin-top: 2px;">{{ gm.name }}</div>
+                  </div>
+                  <span style="background: {{ gm.statusBg }}; color: {{ gm.statusColor }}; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 800; white-space: nowrap;">{{ gm.status }}</span>
+                  <button onClick="{{ gm.onRemove }}" style="border: none; cursor: pointer; background: none; font-family: inherit; font-size: 13px; font-weight: 700; color: #B3A590; padding: 8px 4px;" style-hover="color: #B03A21;">삭제</button>
+                </div>
+              </sc-for>
+              <div style="background: #FFFFFF; border-radius: 20px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(59,48,37,0.06); display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div style="font-size: 15px; font-weight: 800; color: #8A7B6C;">약 추가</div>
+                  <button onClick="{{ goMedScan }}" style="border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 999px; padding: 9px 14px; font-family: inherit; font-size: 13px; font-weight: 800; color: #B4540A; display: flex; align-items: center; gap: 6px;" style-hover="border-color: #E8622C;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="19" height="14" rx="4" stroke="currentColor" stroke-width="2"></rect><path d="M8.5 6l1.5-2.5h4L15.5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"></circle></svg>
+                    <span>사진으로 등록</span>
+                  </button>
+                </div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #B3A590; margin-bottom: 7px;">약 종류</div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <sc-for list="{{ nameOpts }}" as="no" hint-placeholder-count="3">
+                      <button onClick="{{ no.onPick }}" style="cursor: pointer; background: {{ no.bg }}; border: 1.5px solid {{ no.border }}; color: {{ no.color }}; border-radius: 999px; padding: 9px 16px; font-family: inherit; font-size: 14px; font-weight: 800;">{{ no.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #B3A590; margin-bottom: 7px;">복용 시간</div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <sc-for list="{{ timeOpts }}" as="to" hint-placeholder-count="3">
+                      <button onClick="{{ to.onPick }}" style="cursor: pointer; background: {{ to.bg }}; border: 1.5px solid {{ to.border }}; color: {{ to.color }}; border-radius: 999px; padding: 9px 16px; font-family: inherit; font-size: 14px; font-weight: 800;">{{ to.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <button onClick="{{ addMed }}" style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 14px; padding: 15px; font-family: inherit; font-size: 16px; font-weight: 800;" style-hover="background: #D5551F;">일정 추가하기</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ── 보호자 약 사진 등록 ── -->
+          <sc-if value="{{ isGMedScan }}" hint-placeholder-val="{{ false }}">
+            <div style="animation: kkScreen 0.3s ease; flex: 1; overflow: auto; padding: 80px 22px 120px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <button onClick="{{ goGMeds }}" style="border: 1px solid #E3D7C3; background: #FFFFFF; cursor: pointer; border-radius: 999px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg width="8" height="14" viewBox="0 0 8 14"><path d="M7 1L1 7l6 6" stroke="#8A7B6C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">약 사진으로 등록</div>
+              </div>
+              <div style="font-size: 14px; color: #8A7B6C; font-weight: 600; margin-top: -4px;">약봉투나 알약 포장이 잘 보이게 찍어주세요</div>
+              <div style="position: relative; height: 210px; border-radius: 20px; overflow: hidden; background: #F1E9DB;">
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="med-photo" shape="rounded" radius="20" placeholder="약 사진을 끌어다 놓으세요" hint-size="100%,210px" style="position: absolute; inset: 0;"></x-import>
+                <sc-if value="{{ scanBusy }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; inset: 0; background: rgba(43,36,27,0.82); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 5;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; border: 4px solid rgba(232,98,44,0.25); border-top-color: #E8622C; animation: kkSpin 0.9s linear infinite;"></div>
+                    <div style="color: #FFF6EC; font-size: 16px; font-weight: 700;">AI가 약을 확인하고 있어요…</div>
+                  </div>
+                </sc-if>
+              </div>
+              <sc-if value="{{ scanIdle }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ scanStart }}" style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 16px; padding: 17px; font-family: inherit; font-size: 17px; font-weight: 800; box-shadow: 0 8px 20px rgba(232,98,44,0.3);" style-hover="background: #D5551F;">사진 분석하기</button>
+              </sc-if>
+              <sc-if value="{{ scanDone }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFFFFF; border-radius: 20px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(59,48,37,0.06);">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="animation: kkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; background: #E3F0E9; color: #2E7D5B; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 800;">인식 완료</div>
+                    <div style="font-size: 12px; color: #B3A590; font-weight: 600;">신뢰도 높음</div>
+                  </div>
+                  <div style="font-size: 20px; font-weight: 800; margin-top: 10px;">아모디핀정 5mg</div>
+                  <div style="font-size: 14px; color: #8A7B6C; font-weight: 600; margin-top: 3px;">혈압약 (칼슘채널차단제) · 1일 1회</div>
+                  <div style="background: #FDEBE6; border-radius: 12px; padding: 11px 14px; margin-top: 12px; font-size: 13px; line-height: 1.5; font-weight: 600; color: #B03A21;">자몽 주스와 함께 드시면 약효가 강해질 수 있어요.</div>
+                  <div style="font-size: 13px; font-weight: 700; color: #B3A590; margin-top: 14px; margin-bottom: 7px;">복용 시간</div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <sc-for list="{{ timeOpts }}" as="to2" hint-placeholder-count="3">
+                      <button onClick="{{ to2.onPick }}" style="cursor: pointer; white-space: nowrap; background: {{ to2.bg }}; border: 1.5px solid {{ to2.border }}; color: {{ to2.color }}; border-radius: 999px; padding: 9px 16px; font-family: inherit; font-size: 14px; font-weight: 800;">{{ to2.label }}</button>
+                    </sc-for>
+                  </div>
+                  <div style="display: flex; gap: 8px; margin-top: 14px;">
+                    <button onClick="{{ scanAdd }}" style="flex: 1; border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 14px; padding: 15px; font-family: inherit; font-size: 16px; font-weight: 800;" style-hover="background: #D5551F;">이 약 등록하기</button>
+                    <button onClick="{{ scanReset }}" style="border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 14px; padding: 15px 16px; font-family: inherit; font-size: 14px; font-weight: 800; color: #8A7B6C;">다시</button>
+                  </div>
+                </div>
+                <div style="font-size: 12px; color: #B3A590; text-align: center; line-height: 1.5; font-weight: 500;">인식 결과가 실제 약과 다를 수 있어요. 등록 전 꼭 확인해 주세요.</div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- ── 보호자 하단 내비 ── -->
+          <sc-if value="{{ showGuardianNav }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #FFFFFF; border-top: 1px solid #F1E9DB; display: flex; align-items: center; justify-content: space-around; padding: 12px 18px 36px; z-index: 40;">
+              <button onClick="{{ goGHome }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 60px; min-height: 50px; color: {{ gNavHomeColor }};">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>
+                <span style="font-size: 13px; font-weight: 800;">홈</span>
+              </button>
+              <button onClick="{{ goGAlerts }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 60px; min-height: 50px; color: {{ gNavAlertsColor }}; position: relative;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 7H4c0-1 2-2 2-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                <span style="font-size: 13px; font-weight: 800;">알림</span>
+                <div style="position: absolute; top: -2px; right: 12px; min-width: 18px; height: 18px; border-radius: 9px; background: #B03A21; color: #FFF6EC; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center;">2</div>
+              </button>
+              <button onClick="{{ goGHist }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 60px; min-height: 50px; color: {{ gNavHistColor }};">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"></rect><line x1="4" y1="10" x2="20" y2="10" stroke="currentColor" stroke-width="2"></line><line x1="9" y1="3" x2="9" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line><line x1="15" y1="3" x2="15" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line></svg>
+                <span style="font-size: 13px; font-weight: 800;">기록</span>
+              </button>
+              <button onClick="{{ goGMeds }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 60px; min-height: 50px; color: {{ gNavMedsColor }};">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="8" y="3" width="8" height="18" rx="4" stroke="currentColor" stroke-width="2"></rect><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2"></line></svg>
+                <span style="font-size: 13px; font-weight: 800;">복약</span>
+              </button>
+              <button onClick="{{ goGReport }}" style="border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 60px; min-height: 50px; color: {{ gNavReportColor }};">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="12" width="4" height="8" rx="1" stroke="currentColor" stroke-width="2"></rect><rect x="10" y="7" width="4" height="13" rx="1" stroke="currentColor" stroke-width="2"></rect><rect x="16" y="4" width="4" height="16" rx="1" stroke="currentColor" stroke-width="2"></rect></svg>
+                <span style="font-size: 13px; font-weight: 800;">리포트</span>
+              </button>
+            </div>
+          </sc-if>
+
+        </div>
+      </x-import>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="font-size: 14px; color: #A6947C; font-weight: 500;">화면을 직접 눌러보세요 — 온보딩 → 홈 → 사진 촬영 → 분석 → 복약까지 이어집니다</div>
+        <sc-if value="{{ showBackToRole }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ backToRole }}" style="white-space: nowrap; border: 1px solid #E3D7C3; background: #FFFFFF; cursor: pointer; border-radius: 999px; padding: 8px 16px; font-family: inherit; font-size: 13px; font-weight: 700; color: #8A7B6C;" style-hover="color: #E8622C; border-color: #E8622C;">역할 다시 선택</button>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ═════════ 요양시설 웹 대시보드 ═════════ -->
+  <sc-if value="{{ isFacilityTab }}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; align-items: safe center; gap: 18px; max-width: 100%; overflow-x: auto; padding: 4px 4px 24px;">
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ dashW }}" height="{{ dashH }}" url="kkinitalk.care/facility" hint-size="1280px,800px">
+        <div style="display: flex; height: 100%; background: #F6F1E8; font-family: 'Pretendard Variable', Pretendard, sans-serif; color: #3B3025;">
+
+          <!-- sidebar -->
+          <div style="width: 216px; flex-shrink: 0; background: #2B241B; color: #EFE6D7; display: flex; flex-direction: column; padding: 22px 14px; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px;">
+              <div style="width: 32px; height: 32px; border-radius: 10px; background: #E8622C; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; box-sizing: border-box;">
+                <div style="width: 16px; height: 8px; background: #FFF6EC; border-radius: 0 0 8px 8px;"></div>
+              </div>
+              <div>
+                <div style="font-size: 17px; font-weight: 800;">끼니톡</div>
+                <div style="font-size: 11px; color: #A6947C; font-weight: 600;">요양시설 대시보드</div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 28px;">
+              <div style="padding: 11px 12px; border-radius: 12px; background: rgba(232,98,44,0.18); color: #F5A263; font-size: 14px; font-weight: 800;">대시보드</div>
+              <div style="padding: 11px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; color: #B8AB97; cursor: pointer;" style-hover="background: rgba(255,255,255,0.06);">입소자 관리</div>
+              <div style="padding: 11px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; color: #B8AB97; cursor: pointer;" style-hover="background: rgba(255,255,255,0.06);">식단 계획</div>
+              <div style="padding: 11px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; color: #B8AB97; cursor: pointer;" style-hover="background: rgba(255,255,255,0.06);">리포트</div>
+              <div style="padding: 11px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; color: #B8AB97; cursor: pointer;" style-hover="background: rgba(255,255,255,0.06);">설정</div>
+            </div>
+            <div style="margin-top: auto; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); font-size: 12px; line-height: 1.5; color: #B8AB97;">본 대시보드는 참고용 안내이며 의료적 판단을 대체하지 않습니다.</div>
+          </div>
+
+          <!-- main -->
+          <div style="flex: 1; overflow: auto; padding: 26px 28px; box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">햇살요양원 · 오늘 현황</div>
+                <div style="font-size: 14px; color: #8A7B6C; font-weight: 600; margin-top: 3px;">2026년 7월 11일 토요일 · 오후 1시 20분 기준</div>
+              </div>
+              <button style="border: none; cursor: pointer; background: #E8622C; color: #FFF9F2; border-radius: 12px; padding: 12px 18px; font-family: inherit; font-size: 14px; font-weight: 800;" style-hover="background: #D5551F;">주간 리포트 출력</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px;">
+              <div style="background: #FFFFFF; border-radius: 18px; padding: 18px 20px; box-shadow: 0 3px 10px rgba(59,48,37,0.05);">
+                <div style="font-size: 13px; color: #8A7B6C; font-weight: 700;">전체 입소자</div>
+                <div style="font-size: 30px; font-weight: 800; margin-top: 6px;">42<span style="font-size: 15px; color: #8A7B6C; font-weight: 600;">명</span></div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 18px; padding: 18px 20px; box-shadow: 0 3px 10px rgba(59,48,37,0.05);">
+                <div style="font-size: 13px; color: #8A7B6C; font-weight: 700;">오늘 식사 기록률</div>
+                <div style="font-size: 30px; font-weight: 800; margin-top: 6px;">87<span style="font-size: 15px; color: #8A7B6C; font-weight: 600;">%</span></div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 18px; padding: 18px 20px; box-shadow: 0 3px 10px rgba(59,48,37,0.05);">
+                <div style="font-size: 13px; color: #8A7B6C; font-weight: 700;">복약 이행률</div>
+                <div style="font-size: 30px; font-weight: 800; margin-top: 6px;">94<span style="font-size: 15px; color: #8A7B6C; font-weight: 600;">%</span></div>
+              </div>
+              <div style="background: #FDEBE6; border-radius: 18px; padding: 18px 20px; box-shadow: 0 3px 10px rgba(59,48,37,0.05);">
+                <div style="font-size: 13px; color: #B03A21; font-weight: 700;">영양 위험군</div>
+                <div style="font-size: 30px; font-weight: 800; color: #B03A21; margin-top: 6px;">5<span style="font-size: 15px; font-weight: 600;">명</span></div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-top: 16px; align-items: start;">
+              <!-- residents table -->
+              <div style="background: #FFFFFF; border-radius: 18px; box-shadow: 0 3px 10px rgba(59,48,37,0.05); overflow: hidden;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #F1E9DB;">
+                  <div style="font-size: 16px; font-weight: 800;">입소자 현황</div>
+                  <div style="font-size: 13px; color: #8A7B6C; font-weight: 600;">이름을 누르면 상세를 볼 수 있어요</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 1fr; padding: 10px 20px; font-size: 12px; font-weight: 800; color: #A6947C; border-bottom: 1px solid #F1E9DB;">
+                  <div>이름</div><div>호실</div><div>오늘 식사</div><div>복약</div><div>영양 위험</div>
+                </div>
+                <sc-for list="{{ residents }}" as="r" hint-placeholder-count="7">
+                  <div onClick="{{ r.onSelect }}" style="display: grid; grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 1fr; padding: 13px 20px; font-size: 14px; align-items: center; cursor: pointer; border-bottom: 1px solid #F7F1E5; background: {{ r.rowBg }};" style-hover="background: #FBF4E9;">
+                    <div style="font-weight: 800;">{{ r.name }}</div>
+                    <div style="color: #8A7B6C; font-weight: 600;">{{ r.room }}</div>
+                    <div style="font-weight: 700; color: {{ r.mealColor }};">{{ r.meal }}</div>
+                    <div style="font-weight: 700; color: {{ r.medColor }};">{{ r.med }}</div>
+                    <div><span style="background: {{ r.riskBg }}; color: {{ r.riskColor }}; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 800;">{{ r.risk }}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <!-- detail panel -->
+              <div style="background: #FFFFFF; border-radius: 18px; box-shadow: 0 3px 10px rgba(59,48,37,0.05); padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 46px; height: 46px; border-radius: 50%; background: #EFE6D7; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #A6947C;">{{ rInitial }}</div>
+                  <div>
+                    <div style="font-size: 18px; font-weight: 800;">{{ rName }} <span style="font-size: 13px; color: #8A7B6C; font-weight: 600;">{{ rAge }}</span></div>
+                    <div style="font-size: 13px; color: #8A7B6C; font-weight: 600;">{{ rRoom }} · {{ rCond }}</div>
+                  </div>
+                  <span style="margin-left: auto; background: {{ rRiskBg }}; color: {{ rRiskColor }}; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 800;">{{ rRisk }}</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 12px; padding: 11px 8px; text-align: center;">
+                    <div style="font-size: 11px; color: #8A7B6C; font-weight: 700;">오늘 식사</div>
+                    <div style="font-size: 17px; font-weight: 800; margin-top: 2px;">{{ rMeal }}</div>
+                  </div>
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 12px; padding: 11px 8px; text-align: center;">
+                    <div style="font-size: 11px; color: #8A7B6C; font-weight: 700;">복약</div>
+                    <div style="font-size: 17px; font-weight: 800; margin-top: 2px;">{{ rMed }}</div>
+                  </div>
+                  <div style="flex: 1; background: #FBF6EC; border-radius: 12px; padding: 11px 8px; text-align: center;">
+                    <div style="font-size: 11px; color: #8A7B6C; font-weight: 700;">체크인</div>
+                    <div style="font-size: 17px; font-weight: 800; margin-top: 2px;">{{ rCheckin }}</div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 800; color: #8A7B6C;">최근 7일 나트륨</div>
+                  <div style="display: flex; align-items: flex-end; gap: 6px; height: 64px; margin-top: 10px;">
+                    <sc-for list="{{ rSodium }}" as="sb" hint-placeholder-count="7">
+                      <div style="flex: 1; border-radius: 5px 5px 2px 2px; background: {{ sb.color }}; height: {{ sb.h }};"></div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="background: #FBF6EC; border-radius: 12px; padding: 13px 14px;">
+                  <div style="font-size: 12px; font-weight: 800; color: #8A7B6C;">AI 메모</div>
+                  <div style="font-size: 13px; line-height: 1.55; font-weight: 500; margin-top: 5px;">{{ rNote }}</div>
+                </div>
+                <button style="border: 1.5px solid #E3D7C3; cursor: pointer; background: #FFFFFF; border-radius: 12px; padding: 12px; font-family: inherit; font-size: 13px; font-weight: 800; color: #3B3025;" style-hover="border-color: #E8622C; color: #E8622C;">개인별 주간 리포트 보기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-size: 14px; color: #A6947C; font-weight: 500;">표에서 입소자 이름을 누르면 오른쪽 상세 패널이 바뀝니다</div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1500, &quot;height&quot;: 1100}, &quot;startScreen&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;역할 선택&quot;, &quot;어르신 홈&quot;, &quot;보호자 홈&quot;], &quot;default&quot;: &quot;역할 선택&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;프로토타입&quot;}, &quot;grapefruitWarning&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;기능&quot;}}">
+class Component extends DCLogic {
+  state = {
+    tab: 'mobile',
+    view: null,          // null → startScreen prop
+    obStep: 0,
+    obAnswers: {},
+    analyzing: false,
+    replayed: false,
+    commentSent: false,
+    resident: 'r1',
+    ckStep: 0,
+    ckDone: false,
+    recIndex: 0,
+    editFoods: false,
+    removed: {},
+    addedFoods: [],
+    newFoodText: '',
+    medList: [
+      { id: 'm1', time: '아침 8:00', name: '혈압약 1알', desc: '식사 후 30분', taken: true },
+      { id: 'm2', time: '점심 12:30', name: '당뇨약 1알', desc: '식사 직후', taken: false },
+      { id: 'm3', time: '저녁 7:00', name: '혈압약 1알', desc: '식사 후 30분', taken: false },
+    ],
+    newMedName: '혈압약',
+    newMedTime: '저녁 7:00',
+    histDay: 0,
+    calOpen: false,
+    calDay: null,
+    profEdit: null,
+    avoidFood: '새우 · 게 (알레르기)',
+    savedLunch: false,
+    msgPlaying: false,
+    notifReady: false,
+    notifDismissed: false,
+    gParent: 'mom',
+    scanState: 0,
+    reportPlaying: false,
+    obStarted: false,
+    obCompleted: false,
+  };
+
+  componentDidMount() {
+    this._notifTimer = setTimeout(() => this.setState({ notifReady: true }), 6000);
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._notifTimer);
+  }
+
+  addFood() {
+    const name = (this.state.newFoodText || '').trim();
+    if (!name) return;
+    const removed = { ...this.state.removed };
+    delete removed[name];
+    const addedFoods = this.state.addedFoods.includes(name) ? this.state.addedFoods : [...this.state.addedFoods, name];
+    this.setState({ addedFoods, removed, newFoodText: '' });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const p = this.props;
+    const go = (view) => () => this.setState({ view, analyzing: false });
+    const startMap = { '역할 선택': 'role', '어르신 홈': 'home', '보호자 홈': 'g-home' };
+    const view = s.view ?? (startMap[p.startScreen] ?? 'role');
+
+    // ── palette
+    const ORANGE = '#E8622C', GREEN = '#2E7D5B', RED = '#B03A21', AMBER = '#B4540A', MUTE = '#B3A590', INK = '#3B3025';
+
+    // ── onboarding
+    const obQuestions = [
+      { q: '안녕하세요, 순자 님! 요즘 앓고 계신 지병이 있으세요?', opts: ['고혈압이 있어요', '당뇨가 있어요', '둘 다 있어요', '없어요'] },
+      { q: '드시고 계신 약이 있으면 알려주세요.', opts: ['혈압약 (아침·저녁)', '당뇨약 (점심)', '여러 가지예요', '없어요'] },
+      { q: '음식을 삼키기 불편하실 때가 있나요?', opts: ['자주 있어요', '가끔 있어요', '괜찮아요'] },
+      { q: '요즘 입맛은 어떠세요?', opts: ['좋아요', '그저 그래요', '통 없어요'] },
+    ];
+    const step = Math.min(s.obStep, obQuestions.length - 1);
+    const obQ = obQuestions[step];
+    const medMap = {
+      '혈압약 (아침·저녁)': [
+        { id: 'm1', time: '아침 8:00', name: '혈압약 1알', desc: '식사 후 30분', taken: true },
+        { id: 'm3', time: '저녁 7:00', name: '혈압약 1알', desc: '식사 후 30분', taken: false },
+      ],
+      '당뇨약 (점심)': [
+        { id: 'm2', time: '점심 12:30', name: '당뇨약 1알', desc: '식사 직후', taken: false },
+      ],
+      '여러 가지예요': [
+        { id: 'm1', time: '아침 8:00', name: '혈압약 1알', desc: '식사 후 30분', taken: true },
+        { id: 'm2', time: '점심 12:30', name: '당뇨약 1알', desc: '식사 직후', taken: false },
+        { id: 'm3', time: '저녁 7:00', name: '혈압약 1알', desc: '식사 후 30분', taken: false },
+      ],
+      '없어요': [],
+    };
+    const obOptions = obQ.opts.map((label) => ({
+      label,
+      onPick: () => {
+        const obAnswers = { ...s.obAnswers, [step]: label };
+        const extra = step === 1 && medMap[label] ? { medList: medMap[label] } : {};
+        if (step >= obQuestions.length - 1) this.setState({ obAnswers, view: 'obDone', obCompleted: true, ...extra });
+        else this.setState({ obAnswers, obStep: step + 1, ...extra });
+      },
+    }));
+    const obDots = obQuestions.map((q, i) => ({ color: i <= step ? ORANGE : '#E7DCCB' }));
+    const a = s.obAnswers;
+    const profileRows = [
+      { k: '지병', v: a[0] ?? '고혈압 · 당뇨' },
+      { k: '복약', v: a[1] ?? '혈압약 (아침·저녁)' },
+      { k: '삼킴(연하)', v: a[2] ?? '가끔 불편' },
+      { k: '요즘 입맛', v: a[3] ?? '보통' },
+    ];
+
+    // ── profile screen (editable)
+    const profDefs = [
+      { key: '0', label: '지병', value: a[0] ?? '고혈압 · 당뇨', opts: obQuestions[0].opts },
+      { key: '1', label: '드시는 약', value: a[1] ?? '혈압약 (아침·저녁)', opts: obQuestions[1].opts },
+      { key: '2', label: '삼킴(연하)', value: a[2] ?? '가끔 불편해요', opts: obQuestions[2].opts },
+      { key: '3', label: '요즘 입맛', value: a[3] ?? '그저 그래요', opts: obQuestions[3].opts },
+      { key: 'avoid', label: '피해야 할 음식', value: s.avoidFood, opts: ['새우 · 게 (알레르기)', '유제품', '자몽', '없어요'] },
+    ];
+    const profItems = profDefs.map((d) => ({
+      label: d.label,
+      value: d.value,
+      open: s.profEdit === d.key,
+      editLabel: s.profEdit === d.key ? '접기' : '고치기',
+      onEdit: () => this.setState({ profEdit: s.profEdit === d.key ? null : d.key }),
+      opts: d.opts.map((o) => ({
+        label: o,
+        bg: o === d.value ? '#FDEFE6' : '#FFFFFF',
+        border: o === d.value ? ORANGE : '#E3D7C3',
+        color: o === d.value ? '#B4540A' : '#3B3025',
+        onPick: () => {
+          if (d.key === 'avoid') this.setState({ avoidFood: o, profEdit: null });
+          else this.setState({ obAnswers: { ...s.obAnswers, [d.key]: o }, profEdit: null });
+        },
+      })),
+    }));
+
+    // ── meds (shared: senior app + guardian admin)
+    const meds = s.medList.map((m) => {
+      const overdue = !m.taken && (m.time.includes('아침') || m.time.includes('점심'));
+      return {
+        ...m,
+        time: m.taken ? m.time + ' · 완료' : overdue ? m.time + ' · 시간 지남' : m.time,
+        timeColor: m.taken ? GREEN : overdue ? RED : AMBER,
+        border: m.taken ? '#CBE3D6' : overdue ? '#EFB4A3' : '#F5D9C4',
+        btnBg: m.taken ? '#E3F0E9' : ORANGE,
+        btnColor: m.taken ? GREEN : '#FFF9F2',
+        btnLabel: m.taken ? '복용 완료 ✓' : '먹었어요',
+        onToggle: () => this.setState({ medList: s.medList.map((x) => (x.id === m.id ? { ...x, taken: !x.taken } : x)) }),
+      };
+    });
+    const remaining = s.medList.filter((m) => !m.taken).length;
+    const gMedRows = s.medList.map((m) => ({
+      ...m,
+      status: m.taken ? '복용 완료' : '대기',
+      statusBg: m.taken ? '#E3F0E9' : '#FDF0E2',
+      statusColor: m.taken ? GREEN : AMBER,
+      onRemove: () => this.setState({ medList: s.medList.filter((x) => x.id !== m.id) }),
+    }));
+    const nameOpts = ['혈압약', '당뇨약', '영양제'].map((n) => ({
+      label: n,
+      bg: s.newMedName === n ? '#FDEFE6' : '#FFFFFF',
+      border: s.newMedName === n ? ORANGE : '#E3D7C3',
+      color: s.newMedName === n ? '#B4540A' : '#8A7B6C',
+      onPick: () => this.setState({ newMedName: n }),
+    }));
+    const timeOpts = ['아침 8:00', '점심 12:30', '저녁 7:00'].map((t) => ({
+      label: t,
+      bg: s.newMedTime === t ? '#FDEFE6' : '#FFFFFF',
+      border: s.newMedTime === t ? ORANGE : '#E3D7C3',
+      color: s.newMedTime === t ? '#B4540A' : '#8A7B6C',
+      onPick: () => this.setState({ newMedTime: t }),
+    }));
+    const medsSummary = s.medList.length === 0
+      ? '등록된 약이 없어요. 보호자 앱에서 등록할 수 있어요.'
+      : remaining === 0 ? '오늘 약을 모두 드셨어요. 잘하셨어요!' : '남은 약 ' + remaining + '개 · 시간에 맞춰 알려드릴게요';
+
+    // ── analysis (editable food list + confidence)
+    const allFoods = ['된장찌개', '현미밥', '시금치나물', '고등어구이', ...s.addedFoods];
+    const activeFoods = allFoods.filter((f) => !s.removed[f]);
+    const soup = !s.removed['된장찌개'];
+    const foods = activeFoods.map((name) => ({
+      name,
+      mark: s.editFoods ? '  ✕' : '',
+      chipBorder: s.editFoods ? '#EFB4A3' : '#E3D7C3',
+      onChip: () => { if (s.editFoods) this.setState({ removed: { ...s.removed, [name]: true } }); },
+    }));
+    const nutrients = [
+      { name: '칼로리', val: soup ? '640 kcal' : '520 kcal', pct: soup ? '46%' : '37%', color: INK },
+      { name: '나트륨', val: soup ? '1,450 mg · 많음' : '620 mg · 적당', pct: soup ? '88%' : '38%', color: soup ? RED : GREEN },
+      { name: '단백질', val: '28 g · 좋음', pct: '62%', color: GREEN },
+      { name: '탄수화물', val: '84 g', pct: '55%', color: '#A6947C' },
+    ];
+
+    // ── recommendation (cycle)
+    const recs = [
+      { name: '두부조림과 잡곡밥', why: '싱겁게 · 순자 님 혈압에 좋아요' },
+      { name: '닭가슴살 미역국밥', why: '부드러워서 삼키기 편해요' },
+      { name: '연두부 달걀탕과 보리밥', why: '단백질 보충 · 저염이에요' },
+    ];
+    const rec = recs[s.recIndex % recs.length];
+
+    // ── meal history (senior + guardian)
+    const GREEN2 = '#2E7D5B';
+    const historyDefs = [
+      {
+        label: '오늘', date: '7월 13일 월요일',
+        totals: { kcal: '1,140', sodium: '높음', sodiumColor: RED, protein: '좋음', proteinColor: GREEN2 },
+        meals: [
+          { time: '아침 8:10', name: '누룽지와 계란찜', foods: '누룽지 · 계란찜 · 김', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+          { time: '점심 12:40', name: '된장찌개 한 상', foods: '된장찌개 · 현미밥 · 시금치나물 · 고등어구이', verdict: '주의', vBg: '#FDF0E2', vColor: AMBER },
+        ],
+      },
+      {
+        label: '어제', date: '7월 12일 일요일',
+        totals: { kcal: '1,480', sodium: '높음', sodiumColor: RED, protein: '부족', proteinColor: AMBER },
+        meals: [
+          { time: '아침 8:00', name: '흰죽과 장조림', foods: '흰죽 · 장조림 · 물김치', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+          { time: '점심 13:00', name: '김치찌개 한 상', foods: '김치찌개 · 쌀밥 · 계란말이', verdict: '주의', vBg: '#FDF0E2', vColor: AMBER },
+          { time: '저녁 18:30', name: '잔치국수', foods: '잔치국수 · 단무지', verdict: '주의', vBg: '#FDF0E2', vColor: AMBER },
+        ],
+      },
+    ];
+    if (!s.savedLunch) {
+      historyDefs[0].meals = historyDefs[0].meals.slice(0, 1);
+      historyDefs[0].totals = { kcal: '420', sodium: '적당', sodiumColor: GREEN2, protein: '부족', proteinColor: AMBER };
+    }
+    historyDefs[0].checkin = { text: s.ckDone ? '컨디션 좋음 · 오전 체크인 완료' : '아직 체크인 전이에요', done: s.ckDone };
+    historyDefs[0].meds = s.medList.map((m) => ({ time: m.time, name: m.name, taken: m.taken, past: false }));
+    historyDefs[1].checkin = { text: '컨디션 보통 · "조금 피곤해요"', done: true };
+    historyDefs[1].meds = [
+      { time: '아침 8:00', name: '혈압약 1알', taken: true, past: true },
+      { time: '점심 12:30', name: '당뇨약 1알', taken: true, past: true },
+      { time: '저녁 7:00', name: '혈압약 1알', taken: false, past: true },
+    ];
+    const weekdayOf = (d) => ['수', '목', '금', '토', '일', '월', '화'][(d - 1) % 7];
+    const genDay = (d) => {
+      const pools = [
+        {
+          totals: { kcal: '1,260', sodium: '적당', sodiumColor: GREEN2, protein: '좋음', proteinColor: GREEN2 },
+          meals: [
+            { time: '아침 8:10', name: '야채죽', foods: '야채죽 · 물김치', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+            { time: '점심 12:30', name: '생선구이 한 상', foods: '조기구이 · 잡곡밥 · 나물', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+            { time: '저녁 18:40', name: '두부전골', foods: '두부전골 · 쌀밥', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+          ],
+        },
+        {
+          totals: { kcal: '1,020', sodium: '높음', sodiumColor: RED, protein: '부족', proteinColor: AMBER },
+          meals: [
+            { time: '아침 8:30', name: '누룽지', foods: '누룽지 · 김', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+            { time: '저녁 18:00', name: '순두부찌개', foods: '순두부찌개 · 쌀밥', verdict: '주의', vBg: '#FDF0E2', vColor: AMBER },
+          ],
+        },
+        {
+          totals: { kcal: '1,390', sodium: '적당', sodiumColor: GREEN2, protein: '좋음', proteinColor: GREEN2 },
+          meals: [
+            { time: '아침 8:00', name: '두유와 달걀', foods: '두유 · 삶은 달걀 · 바나나', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+            { time: '점심 12:50', name: '들깨수제비', foods: '들깨수제비 · 겉절이', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+            { time: '저녁 19:00', name: '닭백숙', foods: '닭백숙 · 부추무침', verdict: '적합', vBg: '#E3F0E9', vColor: GREEN2 },
+          ],
+        },
+      ];
+      const p = pools[d % 3];
+      const checkins = [
+        { text: '컨디션 좋음 · "밥맛이 좋아요"', done: true },
+        { text: '컨디션 보통 · "무릎이 조금 아파요"', done: true },
+        { text: '체크인 안 함', done: false },
+      ];
+      const medPatterns = [
+        [{ time: '아침 8:00', name: '혈압약 1알', taken: true, past: true }, { time: '점심 12:30', name: '당뇨약 1알', taken: true, past: true }, { time: '저녁 7:00', name: '혈압약 1알', taken: true, past: true }],
+        [{ time: '아침 8:00', name: '혈압약 1알', taken: true, past: true }, { time: '점심 12:30', name: '당뇨약 1알', taken: false, past: true }, { time: '저녁 7:00', name: '혈압약 1알', taken: true, past: true }],
+      ];
+      return {
+        label: '7/' + d, date: '7월 ' + d + '일 ' + weekdayOf(d) + '요일',
+        totals: p.totals, meals: p.meals,
+        checkin: checkins[d % 3], meds: medPatterns[d % 2],
+      };
+    };
+    const hd = s.calDay ? genDay(s.calDay) : historyDefs[Math.min(s.histDay, historyDefs.length - 1)];
+    const histTabs = historyDefs.map((d, i) => ({
+      label: d.label,
+      bg: !s.calDay && i === s.histDay ? ORANGE : '#FFFFFF',
+      color: !s.calDay && i === s.histDay ? '#FFF9F2' : '#8A7B6C',
+      border: !s.calDay && i === s.histDay ? ORANGE : '#E3D7C3',
+      onPick: () => this.setState({ histDay: i, calDay: null, calOpen: false }),
+    }));
+    if (s.calDay) histTabs.push({ label: '7/' + s.calDay, bg: ORANGE, color: '#FFF9F2', border: ORANGE, onPick: () => {} });
+    const histMissing = hd.meals.length < 3;
+    const calCells = [];
+    for (let i = 0; i < 3; i++) calCells.push({ label: '', blank: true, bg: 'transparent', color: 'transparent', cursor: 'default', onPick: () => {} });
+    for (let d = 1; d <= 31; d++) {
+      const future = d > 13;
+      const selected = s.calDay === d || (!s.calDay && d === 13 - s.histDay && d >= 12);
+      calCells.push({
+        label: String(d),
+        bg: selected ? ORANGE : 'transparent',
+        color: future ? '#DCD2C0' : selected ? '#FFF9F2' : '#3B3025',
+        cursor: future ? 'default' : 'pointer',
+        onPick: () => {
+          if (future) return;
+          if (d >= 12) this.setState({ histDay: 13 - d, calDay: null, calOpen: false });
+          else this.setState({ calDay: d, calOpen: false });
+        },
+      });
+    }
+
+    // ── morning check-in
+    const ckQs = [
+      { q: '순자 님, 좋은 아침이에요! 아침 식사 하셨어요?', opts: ['네, 먹었어요', '아직이요', '입맛이 없어요'] },
+      { q: '오늘 몸 상태는 어떠세요?', opts: ['좋아요', '그저 그래요', '기운이 없어요'] },
+    ];
+    const ck = ckQs[Math.min(s.ckStep, ckQs.length - 1)];
+    const ckOptions = ck.opts.map((label) => ({
+      label,
+      onPick: () => {
+        if (s.ckStep >= ckQs.length - 1) this.setState({ ckDone: true, ckStep: 0, view: 'home' });
+        else this.setState({ ckStep: s.ckStep + 1 });
+      },
+    }));
+
+    // ── guardian
+    const timelineAll = [
+      { time: '8:10', dot: GREEN, title: '아침 식사 기록', desc: '누룽지, 계란찜 · 적합' },
+      { time: '8:30', dot: GREEN, title: '혈압약 복용', desc: '알림 후 3분 만에 확인' },
+      { time: '9:00', dot: ORANGE, title: '아침 체크인', desc: '"컨디션 좋아요" · 음성 30초' },
+      { time: '12:40', dot: RED, title: '점심 식사 기록', desc: '된장찌개 한 상 · 나트륨 주의', lunch: true },
+      { time: '12:30', dot: MUTE, title: '점심 당뇨약', desc: '아직 확인 안 됨' },
+    ];
+    const isMom = s.gParent !== 'dad';
+    const dadTimeline = [
+      { time: '7:40', dot: GREEN, title: '아침 식사 기록', desc: '토스트, 우유 · 적합' },
+      { time: '8:00', dot: GREEN, title: '아침 혈압약 복용', desc: '알림 후 바로 확인' },
+      { time: '9:10', dot: ORANGE, title: '아침 체크인', desc: '"허리가 좀 뻐근해요"' },
+      { time: '12:20', dot: GREEN, title: '점심 식사 기록', desc: '비빔밥 · 적합' },
+    ];
+    const timeline = isMom ? timelineAll.filter((t) => !t.lunch || s.savedLunch) : dadTimeline;
+    const parentChips = [
+      { id: 'mom', label: '엄마' },
+      { id: 'dad', label: '아버지' },
+    ].map((pc) => {
+      const active = isMom ? pc.id === 'mom' : pc.id === 'dad';
+      return {
+        label: pc.label,
+        bg: active ? '#3B3025' : '#FFFFFF',
+        color: active ? '#FFF9F2' : '#8A7B6C',
+        border: active ? '#3B3025' : '#E3D7C3',
+        onPick: () => this.setState({ gParent: pc.id }),
+      };
+    });
+    const alerts = [
+      { level: '위험', color: RED, time: '오후 12:45', title: '나트륨 3일 연속 초과', desc: '국·찌개 위주 식사가 이어지고 있어요. 저염 식단 추천을 강화했어요.' },
+      { level: '주의', color: AMBER, time: '오후 12:35', title: '점심 당뇨약 미확인', desc: '알림을 다시 보냈어요. 30분 뒤에도 확인이 없으면 전화 안내를 권해요.' },
+      { level: '안내', color: GREEN, time: '오전 9:00', title: '아침 체크인 완료', desc: '"컨디션 좋아요" — 식욕도 평소와 같다고 하셨어요.' },
+    ];
+    const counts = [3, 3, 2, 3, 1, 2, 2];
+    const weekBars = ['일', '월', '화', '수', '목', '금', '토'].map((day, i) => ({
+      day,
+      h: Math.round((counts[i] / 3) * 100) + '%',
+      color: counts[i] <= 1 ? RED : counts[i] === 2 ? '#E8A462' : GREEN,
+    }));
+
+    // ── facility
+    const residentDefs = [
+      { id: 'r1', name: '박순자', room: '302호', age: '84세', meal: '2 / 3', med: '1 / 3', risk: '주의', cond: '고혈압 · 당뇨', checkin: '30분 전', note: '나트륨 섭취가 3일 연속 권장치를 초과했습니다. 저녁 식단을 저염식으로 조정하는 것을 권합니다.', sodium: [70, 85, 60, 92, 96, 80, 88] },
+      { id: 'r2', name: '김영호', room: '305호', age: '79세', meal: '3 / 3', med: '2 / 2', risk: '양호', cond: '고지혈증', checkin: '2시간 전', note: '식사·복약 모두 안정적입니다. 단백질 섭취가 소폭 부족하니 간식으로 보충을 권합니다.', sodium: [55, 60, 48, 62, 58, 50, 54] },
+      { id: 'r3', name: '이금례', room: '308호', age: '88세', meal: '1 / 3', med: '0 / 2', risk: '위험', cond: '당뇨 · 연하곤란', checkin: '어제 저녁', note: '오늘 아침 식사와 복약 기록이 없습니다. 직접 방문 확인이 필요합니다.', sodium: [40, 35, 30, 45, 20, 15, 10] },
+      { id: 'r4', name: '최달수', room: '310호', age: '81세', meal: '2 / 3', med: '2 / 2', risk: '양호', cond: '고혈압', checkin: '1시간 전', note: '복약 이행이 우수합니다. 수분 섭취를 조금 늘리도록 안내해 주세요.', sodium: [60, 58, 66, 55, 62, 59, 61] },
+      { id: 'r5', name: '정옥분', room: '311호', age: '86세', meal: '2 / 3', med: '1 / 2', risk: '주의', cond: '골다공증', checkin: '45분 전', note: '단백질 섭취가 일주일째 권장치의 60% 수준입니다. 고단백 반찬 추가를 권합니다.', sodium: [50, 45, 52, 48, 55, 42, 47] },
+      { id: 'r6', name: '한복남', room: '314호', age: '77세', meal: '3 / 3', med: '2 / 2', risk: '양호', cond: '관절염', checkin: '1시간 전', note: '전반적으로 양호합니다. 이번 주 체중 변화 없음.', sodium: [58, 52, 60, 56, 54, 57, 55] },
+      { id: 'r7', name: '오말순', room: '316호', age: '90세', meal: '1 / 3', med: '1 / 2', risk: '위험', cond: '연하곤란', checkin: '4시간 전', note: '삼킴 곤란으로 식사량이 줄고 있습니다. 연하식(다짐식) 전환 검토를 권합니다.', sodium: [35, 30, 38, 25, 28, 22, 20] },
+    ];
+    const riskStyle = (risk) =>
+      risk === '위험' ? { bg: '#FDEBE6', c: RED } : risk === '주의' ? { bg: '#FDF0E2', c: AMBER } : { bg: '#E3F0E9', c: GREEN };
+    const residents = residentDefs.map((r) => {
+      const rs = riskStyle(r.risk);
+      return {
+        ...r,
+        riskBg: rs.bg, riskColor: rs.c,
+        mealColor: r.meal.startsWith('1') ? RED : INK,
+        medColor: r.med.startsWith('0') ? RED : INK,
+        rowBg: s.resident === r.id ? '#FDF0E2' : 'transparent',
+        onSelect: () => this.setState({ resident: r.id }),
+      };
+    });
+    const R = residentDefs.find((r) => r.id === s.resident) ?? residentDefs[0];
+    const Rs = riskStyle(R.risk);
+    const rSodium = R.sodium.map((v) => ({ h: v + '%', color: v >= 85 ? RED : v >= 70 ? '#E8A462' : '#D8C9AF' }));
+
+    const is = (v) => view === v;
+    const seniorMain = is('home') || is('meds') || is('result') || is('hist') || is('profile') || is('med-add');
+    const guardianMain = is('g-home') || is('g-alerts') || is('g-report') || is('g-meds') || is('g-hist') || is('g-medscan');
+
+    return {
+      // tabs
+      isMobileTab: s.tab === 'mobile',
+      isFacilityTab: s.tab === 'facility',
+      tabMobile: () => this.setState({ tab: 'mobile' }),
+      tabFacility: () => this.setState({ tab: 'facility' }),
+      tabMobileBg: s.tab === 'mobile' ? '#FFFFFF' : 'transparent',
+      tabMobileColor: s.tab === 'mobile' ? INK : '#8A7B6C',
+      tabMobileShadow: s.tab === 'mobile' ? '0 2px 8px rgba(59,48,37,0.12)' : 'none',
+      tabFacilityBg: s.tab === 'facility' ? '#FFFFFF' : 'transparent',
+      tabFacilityColor: s.tab === 'facility' ? INK : '#8A7B6C',
+      tabFacilityShadow: s.tab === 'facility' ? '0 2px 8px rgba(59,48,37,0.12)' : 'none',
+      dashW: 1280, dashH: 800,
+
+      // screens
+      isRole: is('role'), isOb: is('ob'), isObDone: is('obDone'), isCheckin: is('checkin'),
+      isHome: is('home'), isCam: is('cam'), isResult: is('result'), isMeds: is('meds'),
+      isGHome: is('g-home'), isGAlerts: is('g-alerts'), isGReport: is('g-report'), isGMeds: is('g-meds'),
+      isHist: is('hist'), isGHist: is('g-hist'), isProfile: is('profile'), isGMedScan: is('g-medscan'),
+      showSeniorNav: seniorMain,
+      showGuardianNav: guardianMain,
+      showBackToRole: !is('role'),
+      analyzing: s.analyzing,
+
+      // nav
+      startSenior: () => this.setState({ view: s.obCompleted ? 'home' : 'ob', obStarted: true }),
+      seniorBtnTitle: s.obCompleted ? '어르신으로 계속' : s.obStarted ? '상담 이어서 하기' : '어르신으로 시작',
+      seniorBtnSub: s.obCompleted ? '순자 님 홈으로 바로 가요' : s.obStarted ? '하시던 건강 상담을 이어서 해요' : '혼자서도 쉬워요 · 큰 글씨와 음성',
+      startGuardian: go('g-connect'),
+      isGConnect: is('g-connect'),
+      connectGo: go('g-home'),
+      backToRole: () => this.setState({ view: 'role' }),
+      goHome: go('home'), goCam: go('cam'), goMeds: go('meds'),
+      goGHome: go('g-home'), goGAlerts: go('g-alerts'), goGReport: go('g-report'), goGMeds: go('g-meds'),
+      goCheckin: go('checkin'),
+      goHist: go('hist'), goGHist: go('g-hist'), goProfile: go('profile'),
+      navHomeColor: is('home') || is('result') ? ORANGE : MUTE,
+      navMedsColor: is('meds') ? ORANGE : MUTE,
+      navHistColor: is('hist') ? ORANGE : MUTE,
+      navProfileColor: is('profile') ? ORANGE : MUTE,
+      profItems,
+      playReport: () => {
+        this.setState({ reportPlaying: true });
+        setTimeout(() => this.setState({ reportPlaying: false }), 2400);
+      },
+      reportBtnLabel: s.reportPlaying ? '읽어드리는 중…' : '소리로 듣기',
+      gNavHistColor: is('g-hist') ? ORANGE : MUTE,
+      gNavHomeColor: is('g-home') ? ORANGE : MUTE,
+      gNavAlertsColor: is('g-alerts') ? ORANGE : MUTE,
+      gNavReportColor: is('g-report') ? ORANGE : MUTE,
+      gNavMedsColor: is('g-meds') ? ORANGE : MUTE,
+
+      // onboarding
+      obQuestion: obQ.q, obOptions, obDots, profileRows,
+      obSkip: () => this.setState({ view: 'obDone', obCompleted: true }),
+
+      // med notification banner (drops in after a few seconds on home)
+      showNotif: s.notifReady && !s.notifDismissed && is('home') && s.medList.some((m) => !m.taken),
+      notifText: (s.medList.find((m) => !m.taken) || {}).name ?? '',
+      notifTake: () => {
+        const first = s.medList.find((m) => !m.taken);
+        this.setState({ notifDismissed: true, medList: s.medList.map((x) => (first && x.id === first.id ? { ...x, taken: true } : x)) });
+      },
+      notifLater: () => this.setState({ notifDismissed: true }),
+
+      // home med banner (next untaken med from medList)
+      hasNextMed: s.medList.some((m) => !m.taken),
+      nextMedTime: (s.medList.find((m) => !m.taken) || {}).time ?? '',
+      nextMedName: (s.medList.find((m) => !m.taken) || {}).name ?? '',
+      homeMedsAllDone: s.medList.length > 0 && s.medList.every((m) => m.taken),
+
+      // home (meal progress reflects saved analysis)
+      homeMealCount: s.savedLunch ? '2끼 기록됨' : '1끼 기록됨',
+      homeKcal: s.savedLunch ? '1,140' : '420',
+      homeSodium: s.savedLunch ? '높음' : '적당',
+      homeSodiumColor: s.savedLunch ? RED : GREEN,
+      homeSodiumBg: s.savedLunch ? '#FDEBE6' : '#FBF6EC',
+      saveRecord: () => this.setState({ savedLunch: true, view: 'home' }),
+      hasGuardianMsg: s.commentSent,
+      playMsg: () => {
+        this.setState({ msgPlaying: true });
+        setTimeout(() => this.setState({ msgPlaying: false }), 2200);
+      },
+      msgBtnLabel: s.msgPlaying ? '읽어드리는 중…' : '듣기',
+
+      // camera / analysis
+      shutter: () => {
+        if (s.analyzing) return;
+        this.setState({ analyzing: true });
+        setTimeout(() => this.setState({ analyzing: false, view: 'result' }), 1500);
+      },
+      foods, nutrients,
+      verdictChip: soup ? '주의' : '적합',
+      verdictChipBg: soup ? '#B4540A' : GREEN,
+      verdictBg: soup ? '#FDF0E2' : '#EAF4EE',
+      verdictBorder: soup ? '#EFCB9E' : '#BFDCCB',
+      verdictTitleColor: soup ? INK : GREEN,
+      verdictTitle: soup ? '국이 조금 짜요' : '골고루 잘 드셨어요',
+      verdictText: soup ? '순자 님은 혈압이 있으셔서, 저녁에는 국물을 싱겁게 드시는 게 좋아요.' : '나트륨도 적당해요. 이대로만 드시면 아주 좋아요.',
+      toggleEdit: () => this.setState({ editFoods: !s.editFoods, newFoodText: '' }),
+      isEditFoods: s.editFoods,
+      newFoodText: s.newFoodText,
+      onFoodInput: (e) => this.setState({ newFoodText: e.target.value }),
+      onFoodKey: (e) => { if (e.key === 'Enter') this.addFood(); },
+      addFood: () => this.addFood(),
+      editLabel: s.editFoods ? '고치기 완료' : '음식 고치기',
+      editHint: s.editFoods ? '잘못 인식된 음식을 누르면 빠져요' : 'AI 분석 신뢰도 보통 · 잘못 인식된 음식은 고칠 수 있어요',
+
+      // recommendation
+      recName: rec.name, recWhy: rec.why,
+      recBasis: '근거: 고혈압 · 오늘 나트륨 88% · 어제 단백질 부족',
+      nextRec: () => this.setState({ recIndex: s.recIndex + 1 }),
+
+      // check-in
+      ckQuestion: ck.q, ckOptions,
+      ckProgress: (Math.min(s.ckStep, ckQs.length - 1) + 1) + ' / ' + ckQs.length,
+      ckDone: s.ckDone,
+      ckNotDone: !s.ckDone,
+      replay: () => {
+        this.setState({ replayed: true });
+        setTimeout(() => this.setState({ replayed: false }), 2200);
+      },
+      replayLabel: s.replayed ? '읽어드리는 중…' : '다시 듣기',
+
+      // meds
+      meds, medsSummary,
+      gMedRows, nameOpts, timeOpts,
+      goMedScan: () => this.setState({ view: 'g-medscan', scanState: 0 }),
+      scanIdle: s.scanState === 0,
+      scanBusy: s.scanState === 1,
+      scanDone: s.scanState === 2,
+      scanStart: () => {
+        if (s.scanState === 1) return;
+        this.setState({ scanState: 1 });
+        setTimeout(() => this.setState({ scanState: 2 }), 1600);
+      },
+      scanReset: () => this.setState({ scanState: 0 }),
+      scanAdd: () => this.setState({
+        view: is('med-add') ? 'meds' : 'g-meds', scanState: 0,
+        medList: [...s.medList, { id: 'm' + Date.now(), time: s.newMedTime, name: '아모디핀정 5mg', desc: '사진으로 등록 · 혈압약', taken: false }],
+      }),
+      isMedAdd: is('med-add'),
+      goMedAdd: () => this.setState({ view: 'med-add', scanState: 0 }),
+      seniorAddMed: () => this.setState({
+        view: 'meds',
+        medList: [...s.medList, { id: 'm' + Date.now(), time: s.newMedTime, name: s.newMedName + ' 1알', desc: '직접 등록', taken: false }],
+      }),
+      addMed: () => this.setState({
+        medList: [...s.medList, { id: 'm' + Date.now(), time: s.newMedTime, name: s.newMedName + ' 1알', desc: '보호자가 등록', taken: false }],
+      }),
+      showConflict: (p.grapefruitWarning ?? true) && s.medList.some((m) => m.name.includes('혈압')),
+
+      // history
+      histTabs, histMeals: hd.meals, histDate: hd.date,
+      histKcal: hd.totals.kcal,
+      histSodium: hd.totals.sodium, histSodiumColor: hd.totals.sodiumColor,
+      histProtein: hd.totals.protein, histProteinColor: hd.totals.proteinColor,
+      histMealCount: hd.meals.length + '끼 기록',
+      histMissing,
+      histCheckinText: hd.checkin.text,
+      histCheckinColor: hd.checkin.done ? GREEN2 : '#B3A590',
+      histCheckinBg: hd.checkin.done ? '#EAF4EE' : '#F3EDE1',
+      histMeds: hd.meds.map((m) => ({
+        ...m,
+        statusLabel: m.taken ? '복용 완료' : m.past ? '놓침' : '대기',
+        statusBg: m.taken ? '#E3F0E9' : m.past ? '#FDEBE6' : '#FDF0E2',
+        statusColor: m.taken ? GREEN2 : m.past ? RED : AMBER,
+      })),
+      calOpen: s.calOpen,
+      calToggle: () => this.setState({ calOpen: !s.calOpen }),
+      calCells,
+      calBtnBg: s.calOpen ? '#FDEFE6' : '#FFFFFF',
+      calBtnBorder: s.calOpen || s.calDay ? ORANGE : '#E3D7C3',
+      calBtnColor: s.calOpen || s.calDay ? '#B4540A' : '#8A7B6C',
+
+      // guardian
+      timeline, alerts, weekBars, parentChips,
+      showMomAlert: isMom,
+      gName: isMom ? '박순자' : '김철수',
+      gAge: isMom ? '84세' : '79세',
+      gAvatarInitial: isMom ? '순' : '철',
+      gStatusText: isMom ? '오늘 컨디션 좋음 · 30분 전 체크인' : '컨디션 보통 · 1시간 전 체크인',
+      gStatusColor: isMom ? GREEN : AMBER,
+      gMealCount: isMom ? (s.savedLunch ? '2 / 3' : '1 / 3') : '3 / 3',
+      gMedCount: isMom ? s.medList.filter((m) => m.taken).length + ' / ' + s.medList.length : '2 / 2',
+      gSodiumLabel: isMom ? (s.savedLunch ? '주의' : '양호') : '양호',
+      gSodiumColor: isMom && s.savedLunch ? RED : GREEN,
+      gSodiumBg: isMom && s.savedLunch ? '#FDEBE6' : '#FBF6EC',
+      gSodiumLabelColor: isMom && s.savedLunch ? RED : '#8A7B6C',
+      sendComment: () => this.setState({ commentSent: true }),
+      commentText: s.commentSent ? '전송했어요 — 엄마 앱에서 읽어드려요 ✓' : '엄마, 저녁은 좀 싱겁게 드세요!',
+      commentColor: s.commentSent ? GREEN : '#8A7B6C',
+
+      // facility
+      residents,
+      rInitial: R.name.charAt(1), rName: R.name, rAge: R.age, rRoom: R.room, rCond: R.cond,
+      rMeal: R.meal, rMed: R.med, rCheckin: R.checkin, rNote: R.note,
+      rRisk: R.risk, rRiskBg: Rs.bg, rRiskColor: Rs.c,
+      rSodium,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"node -e \\\"\\nconst fs = require('fs');\\nconst raw = fs.readFileSync('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\이지훈\\\\\\\\\\\\\\\\.claude\\\\\\\\\\\\\\\\projects\\\\\\\\\\\\\\\\C--kkinitalk-app\\\\\\\\\\\\\\\\a8cac5e4-8ec2-451b-8721-03d7369...",
+  "error": "Exit code 1\nnode:fs:440\r\n    return binding.readFileUtf8(path, stringToFlags(options.flag));\r\n                   ^\r\n\r\nError: ENOENT: no such file or directory, open 'C:\\kkinitalk-app\\Users이지훈.claudeprojectsC--kkinitalk-appa8cac5e4-8ec2-451b-8721-03d7369d2302\tool-results\toolu_01VjmxozuBH3sXRDiGJyba3g.txt'\r\n    at Object.readFileSync (node:fs:440:20)\r\n    at [eval]:3:16\r\n    at runScriptInThisContext (node:internal/vm:219:10)\r\n    at node:internal/process/execution:451:12\r\n    at [eval]-wrapper:6:...",
+  "timestamp": "2026-07-12T17:39:25.706Z",
+  "retry_count": 1
+}

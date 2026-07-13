@@ -1,0 +1,426 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1783866565447,
+  "projectRoot": "C:\\kkinitalk-app",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "19.2.3",
+        "category": "frontend"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npx tsc --noEmit 2>&1 | head -100",
+    "testCommand": "cd C:/kkinitalk-app && grep -iE \"jest\" package.json; ls node_modules | grep -iE \"^jest\" 2>&1",
+    "lintCommand": null,
+    "devCommand": "npm run start",
+    "scripts": {
+      "start": "expo start",
+      "android": "expo start --android",
+      "ios": "expo start --ios",
+      "web": "expo start --web"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "app",
+      "assets",
+      "src"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "app": {
+      "path": "app",
+      "purpose": "Application code",
+      "fileCount": 2,
+      "lastAccessed": 1783866565412,
+      "keyFiles": [
+        "index.tsx",
+        "_layout.tsx"
+      ]
+    },
+    "assets": {
+      "path": "assets",
+      "purpose": "Static assets",
+      "fileCount": 6,
+      "lastAccessed": 1783866565413,
+      "keyFiles": [
+        "android-icon-background.png",
+        "android-icon-foreground.png",
+        "android-icon-monochrome.png",
+        "favicon.png",
+        "icon.png"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1783866565413,
+      "keyFiles": []
+    },
+    "src\\api": {
+      "path": "src\\api",
+      "purpose": "API routes",
+      "fileCount": 1,
+      "lastAccessed": 1783866565426,
+      "keyFiles": [
+        "client.ts"
+      ]
+    },
+    "src\\components": {
+      "path": "src\\components",
+      "purpose": "UI components",
+      "fileCount": 2,
+      "lastAccessed": 1783866565426,
+      "keyFiles": [
+        "BigButton.tsx",
+        "DisclaimerBanner.tsx"
+      ]
+    },
+    "src\\mocks": {
+      "path": "src\\mocks",
+      "purpose": "Mock data",
+      "fileCount": 1,
+      "lastAccessed": 1783866565426,
+      "keyFiles": [
+        "setup.native.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "app\\elderly\\onboarding\\index.tsx",
+      "accessCount": 51,
+      "lastAccessed": 1783921368811,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\home.tsx",
+      "accessCount": 41,
+      "lastAccessed": 1783922713132,
+      "type": "file"
+    },
+    {
+      "path": "src\\theme\\tokens.ts",
+      "accessCount": 39,
+      "lastAccessed": 1783909911672,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\checkin.tsx",
+      "accessCount": 38,
+      "lastAccessed": 1783909287858,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\medications.tsx",
+      "accessCount": 38,
+      "lastAccessed": 1783910277952,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\profile.tsx",
+      "accessCount": 36,
+      "lastAccessed": 1783921699146,
+      "type": "file"
+    },
+    {
+      "path": "app",
+      "accessCount": 35,
+      "lastAccessed": 1783922640175,
+      "type": "directory"
+    },
+    {
+      "path": "app\\elderly\\camera.tsx",
+      "accessCount": 33,
+      "lastAccessed": 1783922856560,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\result.tsx",
+      "accessCount": 31,
+      "lastAccessed": 1783922856462,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 30,
+      "lastAccessed": 1783922502765,
+      "type": "directory"
+    },
+    {
+      "path": "src\\domain\\types.ts",
+      "accessCount": 30,
+      "lastAccessed": 1783923034598,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\history.tsx",
+      "accessCount": 29,
+      "lastAccessed": 1783910196368,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\onboarding\\done.tsx",
+      "accessCount": 29,
+      "lastAccessed": 1783916029758,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\BigButton.tsx",
+      "accessCount": 28,
+      "lastAccessed": 1783908590993,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 26,
+      "lastAccessed": 1783922510186,
+      "type": "file"
+    },
+    {
+      "path": "app\\index.tsx",
+      "accessCount": 24,
+      "lastAccessed": 1783922560334,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\DisclaimerBanner.tsx",
+      "accessCount": 23,
+      "lastAccessed": 1783908591352,
+      "type": "file"
+    },
+    {
+      "path": "src\\mocks\\db\\collections.ts",
+      "accessCount": 22,
+      "lastAccessed": 1783923034512,
+      "type": "file"
+    },
+    {
+      "path": "src\\state\\RoleContext.tsx",
+      "accessCount": 21,
+      "lastAccessed": 1783922387025,
+      "type": "file"
+    },
+    {
+      "path": "app\\_layout.tsx",
+      "accessCount": 21,
+      "lastAccessed": 1783927540003,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\_layout.tsx",
+      "accessCount": 18,
+      "lastAccessed": 1783927558212,
+      "type": "file"
+    },
+    {
+      "path": "app\\guardian\\_layout.tsx",
+      "accessCount": 18,
+      "lastAccessed": 1783927562511,
+      "type": "file"
+    },
+    {
+      "path": "src\\mocks\\db\\store.ts",
+      "accessCount": 17,
+      "lastAccessed": 1783922434437,
+      "type": "file"
+    },
+    {
+      "path": "src\\mocks\\nutritionAnalysis.ts",
+      "accessCount": 17,
+      "lastAccessed": 1783927406557,
+      "type": "file"
+    },
+    {
+      "path": "tsconfig.smoke.json",
+      "accessCount": 16,
+      "lastAccessed": 1783871833408,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\id.ts",
+      "accessCount": 14,
+      "lastAccessed": 1783923054350,
+      "type": "file"
+    },
+    {
+      "path": "src\\mocks\\db\\seed.ts",
+      "accessCount": 13,
+      "lastAccessed": 1783927500017,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\historyView.ts",
+      "accessCount": 10,
+      "lastAccessed": 1783899468866,
+      "type": "file"
+    },
+    {
+      "path": "app.json",
+      "accessCount": 10,
+      "lastAccessed": 1783921087819,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\conflictRules.ts",
+      "accessCount": 10,
+      "lastAccessed": 1783923053199,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-db.ts",
+      "accessCount": 7,
+      "lastAccessed": 1783927532955,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\inviteCode.ts",
+      "accessCount": 6,
+      "lastAccessed": 1783899469443,
+      "type": "file"
+    },
+    {
+      "path": "src\\mocks\\handlers\\index.ts",
+      "accessCount": 6,
+      "lastAccessed": 1783902864204,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-profile.ts",
+      "accessCount": 5,
+      "lastAccessed": 1783927512262,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-meal.ts",
+      "accessCount": 5,
+      "lastAccessed": 1783927512366,
+      "type": "file"
+    },
+    {
+      "path": "src\\api\\client.ts",
+      "accessCount": 4,
+      "lastAccessed": 1783902858991,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\fakeAsyncStorage.cjs",
+      "accessCount": 4,
+      "lastAccessed": 1783922516622,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-onboarding.ts",
+      "accessCount": 4,
+      "lastAccessed": 1783927327101,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-checkin.ts",
+      "accessCount": 4,
+      "lastAccessed": 1783927512206,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-meal-runner.cjs",
+      "accessCount": 3,
+      "lastAccessed": 1783869789473,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-msw.ts",
+      "accessCount": 3,
+      "lastAccessed": 1783899470938,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-db-runner.cjs",
+      "accessCount": 3,
+      "lastAccessed": 1783922510139,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-medication.ts",
+      "accessCount": 3,
+      "lastAccessed": 1783927512417,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-history.ts",
+      "accessCount": 3,
+      "lastAccessed": 1783927512469,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-profile-runner.cjs",
+      "accessCount": 2,
+      "lastAccessed": 1783871069026,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-suggestion.ts",
+      "accessCount": 2,
+      "lastAccessed": 1783872818933,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-onboarding-runner.cjs",
+      "accessCount": 1,
+      "lastAccessed": 1783867797237,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-checkin-runner.cjs",
+      "accessCount": 1,
+      "lastAccessed": 1783867989670,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-medication-runner.cjs",
+      "accessCount": 1,
+      "lastAccessed": 1783869344556,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-history-runner.cjs",
+      "accessCount": 1,
+      "lastAccessed": 1783869794663,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
