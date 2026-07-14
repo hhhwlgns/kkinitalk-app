@@ -15,11 +15,19 @@ export function earliestTime(times: string[]): string {
   return [...times].sort()[0];
 }
 
-export function formatKoreanTime(hhmm: string): string {
-  const [hourStr, minuteStr] = hhmm.split(':');
-  const hour24 = Number(hourStr);
-  const minute = Number(minuteStr);
+// Non-breaking spaces keep "오후 12시 30분" from wrapping mid-phrase in narrow labels.
+function formatKoreanTimeParts(hour24: number, minute: number): string {
   const period = hour24 < 12 ? '오전' : '오후';
   const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  return minute === 0 ? `${period} ${hour12}시` : `${period} ${hour12}시 ${minute}분`;
+  return minute === 0 ? `${period} ${hour12}시` : `${period} ${hour12}시 ${minute}분`;
+}
+
+export function formatKoreanTime(hhmm: string): string {
+  const [hourStr, minuteStr] = hhmm.split(':');
+  return formatKoreanTimeParts(Number(hourStr), Number(minuteStr));
+}
+
+export function formatIsoTime(iso: string): string {
+  const date = new Date(iso);
+  return formatKoreanTimeParts(date.getHours(), date.getMinutes());
 }

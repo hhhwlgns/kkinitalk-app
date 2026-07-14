@@ -8,8 +8,9 @@ import { colors, fontFamily, radius, shadow, spacing, typeElder } from '../../sr
 import { useRole } from '../../src/state/RoleContext';
 import { healthProfilesCollection, mealsCollection } from '../../src/mocks/db/collections';
 import type { FoodItem, HealthProfile, Meal } from '../../src/domain/types';
-import { assessMealFitness, sumNutrients } from '../../src/mocks/nutritionAnalysis';
-import { mealStatus, proteinStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
+import { MEAL_CALORIE_TARGET, assessMealFitness, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { calorieStatus, mealStatus, proteinStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
+import { formatIsoTime } from '../../src/domain/date';
 
 const SLOT_LABEL: Record<Meal['slot'], string> = {
   breakfast: '아침',
@@ -17,15 +18,6 @@ const SLOT_LABEL: Record<Meal['slot'], string> = {
   dinner: '저녁',
   snack: '간식',
 };
-
-function formatTime(iso: string): string {
-  const date = new Date(iso);
-  const hours24 = date.getHours();
-  const period = hours24 < 12 ? '오전' : '오후';
-  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
-  const minutes = date.getMinutes();
-  return minutes === 0 ? `${period} ${hours12}시` : `${period} ${hours12}시 ${minutes}분`;
-}
 
 export default function ResultScreen() {
   const { activeUserId } = useRole();
@@ -104,10 +96,11 @@ export default function ResultScreen() {
   }
 
   const displayName = activeFoods.length > 0 ? `${activeFoods[0].name} 등 ${activeFoods.length}가지` : '식사';
-  const sodiumTile = sodiumStatus(totals.sodiumMg) === 'good' ? 'default' : sodiumStatus(totals.sodiumMg) === 'caution' ? 'caution' : 'danger';
+  const sodiumTile = sodiumStatus(totals.sodiumMg);
   const proteinStat = proteinStatus(totals.proteinG);
-  const proteinTile = proteinStat === 'good' ? 'default' : proteinStat === 'caution' ? 'caution' : 'danger';
+  const proteinTile = proteinStat;
   const proteinLabel = proteinStat === 'good' ? '좋음' : proteinStat === 'caution' ? '보통' : '부족';
+  const calorieTile = calorieStatus(totals.calories, MEAL_CALORIE_TARGET);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -124,7 +117,7 @@ export default function ResultScreen() {
           )}
           <View style={styles.photoBody}>
             <Text style={styles.eyebrow}>
-              {SLOT_LABEL[meal.slot]} · {formatTime(meal.recordedAt)}
+              {SLOT_LABEL[meal.slot]} · {formatIsoTime(meal.recordedAt)}
             </Text>
             <Text style={styles.mealName}>{displayName}</Text>
           </View>
@@ -162,7 +155,7 @@ export default function ResultScreen() {
         </Card>
 
         <View style={styles.statRow}>
-          <StatTile label="칼로리" value={`${Math.round(totals.calories)}kcal`} />
+          <StatTile label="칼로리" value={`${Math.round(totals.calories)}kcal`} tone={calorieTile} />
           <StatTile label="나트륨" value={`${Math.round(totals.sodiumMg).toLocaleString()}mg`} tone={sodiumTile} />
           <StatTile label="단백질" value={proteinLabel} tone={proteinTile} />
         </View>

@@ -22,6 +22,15 @@ export function proteinStatus(proteinG: number): NutrientStatus {
   return 'danger';
 }
 
+// Calories read as a band around a target (per-meal or per-day) rather than a
+// ceiling — too little is as much a concern as too much for this age group.
+export function calorieStatus(calories: number, targetCalories: number): NutrientStatus {
+  const pct = calories / targetCalories;
+  if (pct >= 0.7 && pct <= 1.3) return 'good';
+  if (pct >= 0.5 && pct <= 1.6) return 'caution';
+  return 'danger';
+}
+
 // Overall meal verdict rolled up from the individual nutrients.
 export function mealStatus(totals: NutrientBreakdown): NutrientStatus {
   const s = sodiumStatus(totals.sodiumMg);

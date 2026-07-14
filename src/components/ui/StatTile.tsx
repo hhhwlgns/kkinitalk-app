@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { colors, fontFamily, radius, spacing, type as typeScale } from '../../theme/tokens';
 
-type StatTone = 'default' | 'caution' | 'danger';
+type StatTone = 'default' | 'good' | 'caution' | 'danger';
 
 interface StatTileProps {
   label: string;
@@ -14,12 +14,14 @@ interface StatTileProps {
 
 const VALUE_COLOR: Record<StatTone, string> = {
   default: colors.text,
+  good: colors.good,
   caution: colors.caution,
   danger: colors.danger,
 };
 
 const BG_COLOR: Record<StatTone, string> = {
   default: colors.surfaceSunken,
+  good: colors.goodBg,
   caution: colors.cautionBg,
   danger: colors.dangerBg,
 };

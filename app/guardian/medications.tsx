@@ -43,7 +43,7 @@ export default function GuardianMedicationsScreen() {
     if (!elderlyUserId) return;
 
     const medication: Medication = {
-      id: createId('medication'),
+      id: draft.id ?? createId('medication'),
       userId: elderlyUserId,
       name: draft.name,
       timesOfDay: draft.timesOfDay,

@@ -10,7 +10,7 @@ import { ChevronIcon } from '../../src/components/icons/ChevronIcon';
 import { PillIcon } from '../../src/components/icons/PillIcon';
 import { Card, SectionHeader, StatTile, StatusPill } from '../../src/components/ui';
 import { colors, fontFamily, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
-import { mealStatus, proteinStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
+import { calorieStatus, mealStatus, proteinStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
 import { useRole } from '../../src/state/RoleContext';
 import {
   checkInsCollection,
@@ -21,7 +21,7 @@ import {
 } from '../../src/mocks/db/collections';
 import type { CheckIn, ConditionLevel, HealthProfile, Meal, Medication, MedicationLog } from '../../src/domain/types';
 import { earliestTime, formatDateWithWeekday, formatKoreanTime, todayDate } from '../../src/domain/date';
-import { inferMealSlot, suggestNextMeal, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { DAILY_CALORIE_TARGET, inferMealSlot, suggestNextMeal, sumNutrients } from '../../src/mocks/nutritionAnalysis';
 
 const CONDITION_LABEL: Record<ConditionLevel, string> = {
   good: '좋음',
@@ -116,8 +116,9 @@ export default function ElderlyHomeScreen() {
   const sodiumStat = sodiumStatus(totalNutrients.sodiumMg);
   const proteinStat = proteinStatus(totalNutrients.proteinG);
   const overallStat = mealStatus(totalNutrients);
-  const sodiumTile = !hasMealsToday ? 'default' : sodiumStat === 'good' ? 'default' : sodiumStat === 'caution' ? 'caution' : 'danger';
-  const proteinTile = !hasMealsToday ? 'default' : proteinStat === 'good' ? 'default' : proteinStat === 'caution' ? 'caution' : 'danger';
+  const sodiumTile = !hasMealsToday ? 'default' : sodiumStat;
+  const proteinTile = !hasMealsToday ? 'default' : proteinStat;
+  const calorieTile = !hasMealsToday ? 'default' : calorieStatus(totalNutrients.calories, DAILY_CALORIE_TARGET);
   const proteinLabel = !hasMealsToday ? '–' : proteinStat === 'good' ? '좋음' : proteinStat === 'caution' ? '보통' : '부족';
   const overallWord = overallStat === 'good' ? '균형 좋음' : overallStat === 'caution' ? '주의' : '위험';
   const latestMeal = recentMeals[0] ?? null;
@@ -210,7 +211,11 @@ export default function ElderlyHomeScreen() {
               {hasMealsToday ? <StatusPill status={overallStat} label={overallWord} /> : null}
             </View>
             <View style={styles.statRow}>
-              <StatTile label="칼로리" value={hasMealsToday ? `${Math.round(totalNutrients.calories)}kcal` : '–'} />
+              <StatTile
+                label="칼로리"
+                value={hasMealsToday ? `${Math.round(totalNutrients.calories)}kcal` : '–'}
+                tone={calorieTile}
+              />
               <StatTile
                 label="나트륨"
                 value={hasMealsToday ? `${Math.round(totalNutrients.sodiumMg).toLocaleString()}mg` : '–'}

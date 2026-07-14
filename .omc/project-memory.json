@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1783866565447,
+  "lastScanned": 1783992179399,
   "projectRoot": "C:\\kkinitalk-app",
   "techStack": {
     "languages": [
@@ -32,15 +32,26 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npx tsc --noEmit 2>&1 | head -20 && echo \"===TSC===\" && for s in onboarding checkin meal medication history profile guardian consent; do echo \"--- $s ---\"; npm run smoke:$s 2>&1 | grep -E \"PASSED|FAIL|Error\" | head -2; done",
-    "testCommand": "cd C:/kkinitalk-app && grep -iE \"jest\" package.json; ls node_modules | grep -iE \"^jest\" 2>&1",
+    "buildCommand": "npx tsc --noEmit -p tsconfig.json 2>&1 | head -150",
+    "testCommand": null,
     "lintCommand": null,
     "devCommand": "npm run start",
     "scripts": {
       "start": "expo start",
       "android": "expo start --android",
       "ios": "expo start --ios",
-      "web": "expo start --web"
+      "web": "expo start --web",
+      "smoke:msw": "tsc -p tsconfig.smoke.json && node .smoke-tmp/scripts/smoke-msw.js && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:db": "tsc -p tsconfig.smoke.json && node scripts/smoke-db-runner.cjs write && node scripts/smoke-db-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:onboarding": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-onboarding-runner.cjs write && node scripts/smoke-onboarding-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:checkin": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-checkin-runner.cjs write && node scripts/smoke-checkin-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:meal": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-meal-runner.cjs write && node scripts/smoke-meal-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:suggestion": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node .smoke-tmp/scripts/smoke-suggestion.js && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:medication": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-medication-runner.cjs write && node scripts/smoke-medication-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:history": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-history-runner.cjs write && node scripts/smoke-history-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:profile": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-profile-runner.cjs write && node scripts/smoke-profile-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:guardian": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-guardian-runner.cjs write && node scripts/smoke-guardian-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+      "smoke:consent": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-consent-runner.cjs write && node scripts/smoke-consent-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\""
     }
   },
   "conventions": {
@@ -55,6 +66,7 @@
     "mainDirectories": [
       "app",
       "assets",
+      "scripts",
       "src"
     ],
     "gitBranches": null
@@ -64,9 +76,10 @@
     "app": {
       "path": "app",
       "purpose": "Application code",
-      "fileCount": 2,
-      "lastAccessed": 1783866565412,
+      "fileCount": 3,
+      "lastAccessed": 1783992179329,
       "keyFiles": [
+        "AGENTS.md",
         "index.tsx",
         "_layout.tsx"
       ]
@@ -75,7 +88,7 @@
       "path": "assets",
       "purpose": "Static assets",
       "fileCount": 6,
-      "lastAccessed": 1783866565413,
+      "lastAccessed": 1783992179340,
       "keyFiles": [
         "android-icon-background.png",
         "android-icon-foreground.png",
@@ -84,28 +97,78 @@
         "icon.png"
       ]
     },
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 1,
+      "lastAccessed": 1783992179342,
+      "keyFiles": [
+        "metadata.json"
+      ]
+    },
+    "kkinitalk-design": {
+      "path": "kkinitalk-design",
+      "purpose": null,
+      "fileCount": 8,
+      "lastAccessed": 1783992179343,
+      "keyFiles": [
+        "browser-window.jsx",
+        "design-link.txt",
+        "image-slot.js",
+        "ios-frame.jsx",
+        "support.js"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 22,
+      "lastAccessed": 1783992179345,
+      "keyFiles": [
+        "AGENTS.md",
+        "fakeAsyncStorage.cjs",
+        "smoke-checkin-runner.cjs",
+        "smoke-checkin.ts",
+        "smoke-consent-runner.cjs"
+      ]
+    },
     "src": {
       "path": "src",
       "purpose": "Source code",
-      "fileCount": 0,
-      "lastAccessed": 1783866565413,
-      "keyFiles": []
+      "fileCount": 1,
+      "lastAccessed": 1783992179346,
+      "keyFiles": [
+        "AGENTS.md"
+      ]
+    },
+    "dist\\assets": {
+      "path": "dist\\assets",
+      "purpose": "Static assets",
+      "fileCount": 46,
+      "lastAccessed": 1783992179348,
+      "keyFiles": [
+        "017bc6ba3fc25503e5eb5e53826d48a8",
+        "02bc1fa7c0313217bde2d65ccbff40c9",
+        "069d99eb1fa6712c0b9034a58c6b57dd"
+      ]
     },
     "src\\api": {
       "path": "src\\api",
       "purpose": "API routes",
-      "fileCount": 1,
-      "lastAccessed": 1783866565426,
+      "fileCount": 2,
+      "lastAccessed": 1783992179350,
       "keyFiles": [
+        "AGENTS.md",
         "client.ts"
       ]
     },
     "src\\components": {
       "path": "src\\components",
       "purpose": "UI components",
-      "fileCount": 2,
-      "lastAccessed": 1783866565426,
+      "fileCount": 5,
+      "lastAccessed": 1783992179351,
       "keyFiles": [
+        "AGENTS.md",
         "BigButton.tsx",
         "DisclaimerBanner.tsx"
       ]
@@ -113,312 +176,236 @@
     "src\\mocks": {
       "path": "src\\mocks",
       "purpose": "Mock data",
-      "fileCount": 1,
-      "lastAccessed": 1783866565426,
+      "fileCount": 5,
+      "lastAccessed": 1783992179353,
       "keyFiles": [
-        "setup.native.ts"
+        "AGENTS.md",
+        "medicationScan.ts",
+        "nutritionAnalysis.ts"
       ]
     }
   },
   "hotPaths": [
     {
-      "path": "app\\elderly\\home.tsx",
-      "accessCount": 64,
-      "lastAccessed": 1783962925200,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\onboarding\\index.tsx",
-      "accessCount": 54,
-      "lastAccessed": 1783961760352,
-      "type": "file"
-    },
-    {
-      "path": "src\\theme\\tokens.ts",
-      "accessCount": 51,
-      "lastAccessed": 1783962755606,
+      "path": "src\\components\\medications\\MedicationsView.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1784013281812,
       "type": "file"
     },
     {
       "path": "app\\elderly\\profile.tsx",
-      "accessCount": 45,
-      "lastAccessed": 1783989686508,
+      "accessCount": 8,
+      "lastAccessed": 1784013413873,
       "type": "file"
     },
     {
-      "path": "app\\elderly\\checkin.tsx",
-      "accessCount": 42,
-      "lastAccessed": 1783949403095,
+      "path": "app\\guardian\\home.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1784013156447,
       "type": "file"
     },
     {
-      "path": "app",
-      "accessCount": 42,
-      "lastAccessed": 1783949417278,
-      "type": "directory"
+      "path": "src\\components\\history\\DayHistoryView.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1784013166120,
+      "type": "file"
     },
     {
       "path": "app\\elderly\\result.tsx",
-      "accessCount": 42,
-      "lastAccessed": 1783963279259,
+      "accessCount": 7,
+      "lastAccessed": 1784013175677,
       "type": "file"
     },
     {
-      "path": "app\\elderly\\medications.tsx",
-      "accessCount": 41,
-      "lastAccessed": 1783949409545,
+      "path": "app\\guardian\\alerts.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1783994866635,
       "type": "file"
     },
     {
-      "path": "app\\elderly\\camera.tsx",
-      "accessCount": 41,
-      "lastAccessed": 1783960211688,
+      "path": "app\\elderly\\home.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1784013151893,
       "type": "file"
     },
     {
-      "path": "app\\elderly\\onboarding\\done.tsx",
-      "accessCount": 34,
-      "lastAccessed": 1783949374148,
+      "path": "src\\domain\\date.ts",
+      "accessCount": 5,
+      "lastAccessed": 1783994725999,
       "type": "file"
     },
     {
-      "path": "app\\elderly\\history.tsx",
-      "accessCount": 32,
-      "lastAccessed": 1783949408705,
+      "path": "src\\theme\\tokens.ts",
+      "accessCount": 5,
+      "lastAccessed": 1784013074616,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\ui\\StatTile.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1784013128182,
       "type": "file"
     },
     {
-      "path": "src\\domain\\types.ts",
-      "accessCount": 31,
-      "lastAccessed": 1783959649850,
+      "path": "src\\components\\MultiSelect.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1783994817311,
       "type": "file"
     },
     {
       "path": "",
-      "accessCount": 31,
-      "lastAccessed": 1783989724399,
+      "accessCount": 2,
+      "lastAccessed": 1784012892086,
       "type": "directory"
     },
     {
-      "path": "src\\components\\BigButton.tsx",
-      "accessCount": 29,
-      "lastAccessed": 1783960111931,
-      "type": "file"
+      "path": "app",
+      "accessCount": 2,
+      "lastAccessed": 1784012902149,
+      "type": "directory"
     },
     {
-      "path": "package.json",
-      "accessCount": 27,
-      "lastAccessed": 1783959630003,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\_layout.tsx",
-      "accessCount": 26,
-      "lastAccessed": 1783962174298,
-      "type": "file"
-    },
-    {
-      "path": "app\\index.tsx",
-      "accessCount": 24,
-      "lastAccessed": 1783922560334,
-      "type": "file"
-    },
-    {
-      "path": "src\\components\\DisclaimerBanner.tsx",
-      "accessCount": 24,
-      "lastAccessed": 1783960112015,
-      "type": "file"
-    },
-    {
-      "path": "src\\mocks\\db\\collections.ts",
-      "accessCount": 22,
-      "lastAccessed": 1783923034512,
-      "type": "file"
-    },
-    {
-      "path": "src\\state\\RoleContext.tsx",
-      "accessCount": 21,
-      "lastAccessed": 1783922387025,
-      "type": "file"
-    },
-    {
-      "path": "app\\_layout.tsx",
-      "accessCount": 21,
-      "lastAccessed": 1783927540003,
-      "type": "file"
-    },
-    {
-      "path": "app\\guardian\\_layout.tsx",
-      "accessCount": 20,
-      "lastAccessed": 1783962198721,
+      "path": "src\\domain\\nutrientStatus.ts",
+      "accessCount": 2,
+      "lastAccessed": 1784013133797,
       "type": "file"
     },
     {
       "path": "src\\mocks\\nutritionAnalysis.ts",
-      "accessCount": 19,
-      "lastAccessed": 1783962100905,
-      "type": "file"
-    },
-    {
-      "path": "src\\mocks\\db\\store.ts",
-      "accessCount": 17,
-      "lastAccessed": 1783922434437,
-      "type": "file"
-    },
-    {
-      "path": "tsconfig.smoke.json",
-      "accessCount": 16,
-      "lastAccessed": 1783871833408,
-      "type": "file"
-    },
-    {
-      "path": "src\\domain\\id.ts",
-      "accessCount": 15,
-      "lastAccessed": 1783960084870,
-      "type": "file"
-    },
-    {
-      "path": "src\\mocks\\db\\seed.ts",
-      "accessCount": 13,
-      "lastAccessed": 1783927500017,
-      "type": "file"
-    },
-    {
-      "path": "app.json",
-      "accessCount": 12,
-      "lastAccessed": 1783960018992,
-      "type": "file"
-    },
-    {
-      "path": "src\\domain\\conflictRules.ts",
-      "accessCount": 11,
-      "lastAccessed": 1783959675293,
-      "type": "file"
-    },
-    {
-      "path": "src\\domain\\historyView.ts",
-      "accessCount": 10,
-      "lastAccessed": 1783899468866,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-db.ts",
-      "accessCount": 7,
-      "lastAccessed": 1783927532955,
-      "type": "file"
-    },
-    {
-      "path": "src\\domain\\inviteCode.ts",
-      "accessCount": 6,
-      "lastAccessed": 1783899469443,
-      "type": "file"
-    },
-    {
-      "path": "src\\mocks\\handlers\\index.ts",
-      "accessCount": 6,
-      "lastAccessed": 1783902864204,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-profile.ts",
-      "accessCount": 5,
-      "lastAccessed": 1783927512262,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-meal.ts",
-      "accessCount": 5,
-      "lastAccessed": 1783927512366,
-      "type": "file"
-    },
-    {
-      "path": "src\\api\\client.ts",
-      "accessCount": 4,
-      "lastAccessed": 1783902858991,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\fakeAsyncStorage.cjs",
-      "accessCount": 4,
-      "lastAccessed": 1783922516622,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-onboarding.ts",
-      "accessCount": 4,
-      "lastAccessed": 1783927327101,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-checkin.ts",
-      "accessCount": 4,
-      "lastAccessed": 1783927512206,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-meal-runner.cjs",
-      "accessCount": 3,
-      "lastAccessed": 1783869789473,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-msw.ts",
-      "accessCount": 3,
-      "lastAccessed": 1783899470938,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-db-runner.cjs",
-      "accessCount": 3,
-      "lastAccessed": 1783922510139,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-medication.ts",
-      "accessCount": 3,
-      "lastAccessed": 1783927512417,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-history.ts",
-      "accessCount": 3,
-      "lastAccessed": 1783927512469,
-      "type": "file"
-    },
-    {
-      "path": "scripts\\smoke-profile-runner.cjs",
       "accessCount": 2,
-      "lastAccessed": 1783871069026,
+      "lastAccessed": 1784013138015,
       "type": "file"
     },
     {
-      "path": "scripts\\smoke-suggestion.ts",
+      "path": "app\\elderly\\medications.tsx",
       "accessCount": 2,
-      "lastAccessed": 1783872818933,
+      "lastAccessed": 1784013292207,
       "type": "file"
     },
     {
-      "path": "scripts\\smoke-onboarding-runner.cjs",
-      "accessCount": 1,
-      "lastAccessed": 1783867797237,
+      "path": "app\\guardian\\medications.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1784013293235,
       "type": "file"
     },
     {
-      "path": "scripts\\smoke-checkin-runner.cjs",
+      "path": "app\\elderly\\onboarding\\index.tsx",
       "accessCount": 1,
-      "lastAccessed": 1783867989670,
+      "lastAccessed": 1783992966066,
       "type": "file"
     },
     {
-      "path": "scripts\\smoke-medication-runner.cjs",
+      "path": "src\\components\\ui\\index.ts",
       "accessCount": 1,
-      "lastAccessed": 1783869344556,
+      "lastAccessed": 1783992997832,
       "type": "file"
     },
     {
-      "path": "scripts\\smoke-history-runner.cjs",
+      "path": "src\\components\\voice\\AiQuestionBubble.tsx",
       "accessCount": 1,
-      "lastAccessed": 1783869794663,
+      "lastAccessed": 1783992998271,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\voice\\OptionStack.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1783992998964,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ui\\Card.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1783993004697,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\checkin.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1783993009636,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\icons\\ChevronIcon.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1783994831540,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ui\\SectionHeader.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1783994871832,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\BigButton.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784012889365,
+      "type": "file"
+    },
+    {
+      "path": "src\\components",
+      "accessCount": 1,
+      "lastAccessed": 1784012902949,
+      "type": "directory"
+    },
+    {
+      "path": "app\\guardian\\report.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784012914263,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ui\\Badge.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784013033038,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\camera.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784013688927,
+      "type": "file"
+    },
+    {
+      "path": "app\\guardian\\connect.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784013689833,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\_layout.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784013690352,
+      "type": "file"
+    },
+    {
+      "path": "app\\guardian\\_layout.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784013690808,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\analysis\\MealAnalysisView.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784013699133,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\alertRules.ts",
+      "accessCount": 1,
+      "lastAccessed": 1784013699371,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\medicationReminders.ts",
+      "accessCount": 1,
+      "lastAccessed": 1784013699527,
+      "type": "file"
+    },
+    {
+      "path": "app\\index.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784013699815,
       "type": "file"
     }
   ],

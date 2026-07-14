@@ -65,7 +65,7 @@ export default function MedicationsScreen() {
 
   async function handleSave(draft: MedicationDraft) {
     const medication: Medication = {
-      id: createId('medication'),
+      id: draft.id ?? createId('medication'),
       userId,
       name: draft.name,
       timesOfDay: draft.timesOfDay,

@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
+    marginTop: spacing.lg,
   },
   chip: {
     borderWidth: 2,

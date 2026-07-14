@@ -3,7 +3,6 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 
-import { BigButton } from '../../src/components/BigButton';
 import { toggleOption } from '../../src/components/MultiSelect';
 import { colors, fontFamily, fontSize, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
 import { useRole } from '../../src/state/RoleContext';
@@ -26,7 +25,7 @@ const APPETITE_OPTIONS: { label: string; value: 'low' | 'normal' | 'high' }[] = 
   { label: '입맛이 좋아요', value: 'high' },
 ];
 
-type RowKey = 'basic' | 'conditions' | 'medications' | 'swallowing' | 'avoidedFoods' | 'appetite';
+type RowKey = 'basic' | 'conditions' | 'medications' | 'swallowing' | 'avoidedFoods' | 'appetite' | 'invite' | 'consent';
 
 function daysSince(iso: string): number {
   const created = new Date(iso.slice(0, 10)).getTime();
@@ -305,35 +304,35 @@ export default function ProfileScreen() {
           </View>
         </ProfileRow>
 
-        <View style={styles.inviteCard}>
-          <View style={styles.flex1}>
-            <Text style={styles.rowLabel}>보호자 초대 코드</Text>
-            {primaryLink ? (
-              <Text style={styles.inviteCode}>{primaryLink.inviteCode}</Text>
-            ) : (
-              <Pressable style={styles.editButton} onPress={createInviteCode}>
-                <Text style={styles.editButtonLabel}>코드 만들기</Text>
-              </Pressable>
-            )}
-          </View>
-          <Text style={styles.inviteCaption}>
-            가족에게 알려주시면{'\n'}기록을 함께 볼 수 있어요
-          </Text>
-        </View>
+        <ProfileRow
+          label="보호자 초대 코드"
+          value={primaryLink ? primaryLink.inviteCode : '아직 만들지 않았어요'}
+          open={!!openRows.invite}
+          onToggleOpen={() => toggleRow('invite')}
+        >
+          <Text style={styles.helperText}>가족에게 알려주시면 기록을 함께 볼 수 있어요.</Text>
+          {!primaryLink && (
+            <Pressable style={styles.editButton} onPress={createInviteCode}>
+              <Text style={styles.editButtonLabel}>코드 만들기</Text>
+            </Pressable>
+          )}
+        </ProfileRow>
 
-        <View style={styles.card}>
-          <View style={styles.rowHeader}>
-            <View style={styles.flex1}>
-              <Text style={styles.rowLabel}>고위험 상태 공유 동의</Text>
-              <Text style={styles.helperText}>동의하시면 컨디션이 안 좋을 때 보호자 알림으로 전달돼요.</Text>
-            </View>
+        <ProfileRow
+          label="고위험 상태 공유 동의"
+          value={highRiskSharingConsent ? '동의함' : '동의하지 않음'}
+          open={!!openRows.consent}
+          onToggleOpen={() => toggleRow('consent')}
+        >
+          <Text style={styles.helperText}>동의하시면 컨디션이 안 좋을 때 보호자 알림으로 전달돼요.</Text>
+          <View style={styles.chipWrap}>
+            <Chip
+              label={highRiskSharingConsent ? '동의함 (누르면 취소)' : '동의하지 않음 (누르면 동의)'}
+              selected={!!highRiskSharingConsent}
+              onPress={() => setHighRiskSharingConsent(userId, !highRiskSharingConsent)}
+            />
           </View>
-          <BigButton
-            label={highRiskSharingConsent ? '동의함 (누르면 취소)' : '동의하지 않음 (누르면 동의)'}
-            variant={highRiskSharingConsent ? 'primary' : 'secondary'}
-            onPress={() => setHighRiskSharingConsent(userId, !highRiskSharingConsent)}
-          />
-        </View>
+        </ProfileRow>
 
         <Text style={styles.footerCaption}>고친 내용은 다음 식단 추천부터 바로 반영돼요.</Text>
       </ScrollView>
@@ -428,29 +427,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   helperText: { fontSize: fontSize.small, fontFamily: fontFamily.medium, color: colors.textMuted, marginTop: 4 },
-  inviteCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    ...shadow.card,
-  },
-  inviteCode: {
-    fontSize: 26,
-    fontFamily: fontFamily.extrabold,
-    color: colors.secondaryAccent,
-    letterSpacing: 4,
-    marginTop: 4,
-  },
-  inviteCaption: {
-    ...typeElder.caption,
-    color: colors.textFaint,
-    textAlign: 'right',
-  },
   footerCaption: {
     ...typeElder.caption,
     color: colors.textFaint,

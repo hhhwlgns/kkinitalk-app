@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BigButton } from '../../src/components/BigButton';
 import { DisclaimerBanner } from '../../src/components/DisclaimerBanner';
+import { ChevronIcon } from '../../src/components/icons/ChevronIcon';
 import { Card, EmptyState, StatusPill } from '../../src/components/ui';
 import { colors, fontFamily, fontSize, radius, spacing, type as typeScale } from '../../src/theme/tokens';
 import type { NutrientStatus } from '../../src/domain/nutrientStatus';
@@ -35,6 +36,16 @@ export default function GuardianAlertsScreen() {
 
   const [alerts, setAlerts] = useState<GuardianAlert[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+
+  function toggleOpen(id: string) {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   const load = useCallback(async () => {
     const links = await guardianLinksCollection.getAll();
@@ -87,29 +98,45 @@ export default function GuardianAlertsScreen() {
           alerts.map((alert) => {
             const status = ALERT_STATUS[alert.type];
             const accent = status === 'danger' ? colors.danger : colors.caution;
+            const open = openIds.has(alert.id);
             return (
               <Card key={alert.id} padded={false} style={[styles.card, alert.acknowledged && styles.cardAcknowledged]}>
                 <View style={[styles.accent, { backgroundColor: accent }]} />
                 <View style={styles.cardBody}>
-                  <View style={styles.cardTopRow}>
-                    <StatusPill status={status} size="sm" label={ALERT_TYPE_LABEL[alert.type]} />
-                    {alert.acknowledged && <Text style={styles.doneTag}>확인함</Text>}
-                  </View>
-                  <Text style={styles.cardMessage}>{alert.message}</Text>
-                  <Text style={styles.cardDate}>{alert.createdAt.slice(0, 16).replace('T', ' ')}</Text>
+                  <Pressable onPress={() => toggleOpen(alert.id)} style={styles.summaryPressable}>
+                    <View style={styles.cardTopRow}>
+                      <StatusPill status={status} size="sm" label={ALERT_TYPE_LABEL[alert.type]} />
+                      {alert.acknowledged && <Text style={styles.doneTag}>확인함</Text>}
+                    </View>
+                    <View style={styles.summaryRow}>
+                      <View style={styles.flex1}>
+                        <Text style={styles.cardMessage} numberOfLines={open ? undefined : 2}>
+                          {alert.message}
+                        </Text>
+                        <Text style={styles.cardDate}>{alert.createdAt.slice(0, 16).replace('T', ' ')}</Text>
+                      </View>
+                      <View style={[styles.chevronWrap, open && styles.chevronWrapOpen]}>
+                        <ChevronIcon size={13} color={colors.textFaint} />
+                      </View>
+                    </View>
+                  </Pressable>
 
-                  <TextInput
-                    style={styles.commentInput}
-                    value={drafts[alert.id] ?? ''}
-                    onChangeText={(text) => setDrafts((prev) => ({ ...prev, [alert.id]: text }))}
-                    placeholder="메모를 남겨두면 기록에 함께 저장돼요"
-                    placeholderTextColor={colors.textFaint}
-                    multiline
-                  />
-                  <View style={styles.actions}>
-                    <BigButton label="메모 저장" variant="secondary" onPress={() => saveComment(alert)} />
-                    {!alert.acknowledged && <BigButton label="확인 완료" onPress={() => acknowledge(alert)} />}
-                  </View>
+                  {open && (
+                    <View style={styles.expandedArea}>
+                      <TextInput
+                        style={styles.commentInput}
+                        value={drafts[alert.id] ?? ''}
+                        onChangeText={(text) => setDrafts((prev) => ({ ...prev, [alert.id]: text }))}
+                        placeholder="메모를 남겨두면 기록에 함께 저장돼요"
+                        placeholderTextColor={colors.textFaint}
+                        multiline
+                      />
+                      <View style={styles.actions}>
+                        <BigButton label="메모 저장" variant="secondary" onPress={() => saveComment(alert)} />
+                        {!alert.acknowledged && <BigButton label="확인 완료" onPress={() => acknowledge(alert)} />}
+                      </View>
+                    </View>
+                  )}
                 </View>
               </Card>
             );
@@ -137,10 +164,16 @@ const styles = StyleSheet.create({
   cardAcknowledged: { opacity: 0.6 },
   accent: { width: 5 },
   cardBody: { flex: 1, padding: spacing.md },
-  cardTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
+  flex1: { flex: 1 },
+  summaryPressable: { gap: spacing.sm },
+  cardTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  summaryRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  chevronWrap: { paddingTop: 4, transform: [{ rotate: '90deg' }] },
+  chevronWrapOpen: { transform: [{ rotate: '-90deg' }] },
   doneTag: { ...typeScale.caption, color: colors.good, fontFamily: fontFamily.bold },
   cardMessage: { ...typeScale.body, color: colors.text, marginBottom: 4 },
-  cardDate: { ...typeScale.caption, color: colors.textMuted, marginBottom: spacing.sm },
+  cardDate: { ...typeScale.caption, color: colors.textMuted },
+  expandedArea: { marginTop: spacing.sm },
   commentInput: {
     borderWidth: 1.5,
     borderColor: colors.border,

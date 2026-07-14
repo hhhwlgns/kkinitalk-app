@@ -6,16 +6,19 @@ import { Pressable } from 'react-native';
 
 import { BigButton } from '../BigButton';
 import { DisclaimerBanner } from '../DisclaimerBanner';
+import { ChevronIcon } from '../icons/ChevronIcon';
 import { Card, EmptyState, SectionHeader } from '../ui';
 import { PillIcon } from '../icons/PillIcon';
 import { MedicationScanCard } from './MedicationScanCard';
 import { colors, fontFamily, fontSize, radius, shadow, spacing, type as typeScale } from '../../theme/tokens';
 import type { Medication } from '../../domain/types';
 import type { ConflictWarning } from '../../domain/conflictRules';
+import { earliestTime, formatKoreanTime } from '../../domain/date';
 import { MEDICATION_TIME_PATTERN } from '../../domain/medicationReminders';
 import { MEDICATION_NAME_OPTIONS, MEDICATION_TIME_OPTIONS } from '../../mocks/medicationScan';
 
 export interface MedicationDraft {
+  id?: string;
   name: string;
   timesOfDay: string[];
   conflictFoods: string[];
@@ -30,7 +33,22 @@ interface MedicationsViewProps {
   renderAction: (medication: Medication) => ReactNode;
 }
 
+function SectionToggleRow({ title, open, onPress }: { title: string; open: boolean; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={styles.sectionToggleRow}>
+      <Text style={styles.sectionToggleTitle}>{title}</Text>
+      <View style={[styles.chevronWrap, open && styles.chevronWrapOpen]}>
+        <ChevronIcon size={13} color={colors.textFaint} />
+      </View>
+    </Pressable>
+  );
+}
+
 export function MedicationsView({ title, medications, warnings, compact, onSave, renderAction }: MedicationsViewProps) {
+  const [scanOpen, setScanOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [medOpenIds, setMedOpenIds] = useState<Set<string>>(new Set());
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [nameManual, setNameManual] = useState(false);
   const [timeInput, setTimeInput] = useState('');
@@ -40,6 +58,19 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
   const [conflictFoods, setConflictFoods] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const sortedMedications = [...medications].sort((a, b) =>
+    earliestTime(a.timesOfDay).localeCompare(earliestTime(b.timesOfDay)),
+  );
+
+  function toggleMedOpen(id: string) {
+    setMedOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   function pickName(option: string) {
     setNameManual(false);
@@ -76,6 +107,31 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
     setConflictFoods((prev) => prev.filter((item) => item !== food));
   }
 
+  function startEdit(medication: Medication) {
+    setEditingId(medication.id);
+    setName(medication.name);
+    setNameManual(!MEDICATION_NAME_OPTIONS.includes(medication.name));
+    setTimes([...medication.timesOfDay].sort());
+    setTimeManual(false);
+    setTimeInput('');
+    setConflictFoods([...medication.conflictFoods]);
+    setConflictFoodInput('');
+    setError(null);
+    setManualOpen(true);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setName('');
+    setNameManual(false);
+    setTimes([]);
+    setTimeManual(false);
+    setTimeInput('');
+    setConflictFoods([]);
+    setConflictFoodInput('');
+    setError(null);
+  }
+
   async function saveMedication() {
     if (!name.trim() || times.length === 0) {
       setError('약 이름과 복용 시간을 하나 이상 입력해 주세요.');
@@ -84,13 +140,14 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
     setSaving(true);
     setError(null);
 
-    await onSave({ name: name.trim(), timesOfDay: times, conflictFoods });
+    await onSave({ id: editingId ?? undefined, name: name.trim(), timesOfDay: times, conflictFoods });
 
     setName('');
     setNameManual(false);
     setTimes([]);
     setTimeManual(false);
     setConflictFoods([]);
+    setEditingId(null);
     setSaving(false);
   }
 
@@ -122,140 +179,178 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
             description="아래에서 사진으로 찍거나 직접 추가해 보세요."
           />
         ) : (
-          medications.map((medication) => (
-            <Card key={medication.id} style={styles.medicationCard}>
-              <View style={styles.medicationTop}>
-                <View style={styles.medIconWrap}>
-                  <PillIcon size={20} color={colors.onPrimary} />
-                </View>
-                <View style={styles.flex1}>
-                  <Text style={styles.medicationName}>{medication.name}</Text>
-                  <Text style={styles.medicationTimes}>{medication.timesOfDay.join(' · ')}</Text>
-                  {medication.conflictFoods.length > 0 && (
-                    <Text style={styles.medicationConflicts}>주의 음식: {medication.conflictFoods.join(', ')}</Text>
-                  )}
-                </View>
+          sortedMedications.map((medication) => {
+            const open = medOpenIds.has(medication.id);
+            const nextTime = earliestTime(medication.timesOfDay);
+            const extraCount = medication.timesOfDay.length - 1;
+            return (
+              <Card key={medication.id} style={styles.medicationCard}>
+                <Pressable onPress={() => toggleMedOpen(medication.id)} style={styles.medicationSummary}>
+                  <View style={styles.medIconWrap}>
+                    <PillIcon size={20} color={colors.onPrimary} />
+                  </View>
+                  <View style={styles.flex1}>
+                    <Text style={styles.medicationName}>{medication.name}</Text>
+                    <Text style={styles.medicationTimes}>
+                      {formatKoreanTime(nextTime)}
+                      {extraCount > 0 ? ` 외 ${extraCount}회` : ''}
+                    </Text>
+                  </View>
+                  <View style={[styles.chevronWrap, open && styles.chevronWrapOpen]}>
+                    <ChevronIcon size={13} color={colors.textFaint} />
+                  </View>
+                </Pressable>
+
+                {open && (
+                  <View style={styles.medicationExpand}>
+                    {medication.timesOfDay.length > 1 && (
+                      <Text style={styles.medicationTimesFull}>
+                        {medication.timesOfDay.map((t) => formatKoreanTime(t)).join(' · ')}
+                      </Text>
+                    )}
+                    {medication.conflictFoods.length > 0 && (
+                      <Text style={styles.medicationConflicts}>주의 음식: {medication.conflictFoods.join(', ')}</Text>
+                    )}
+                    <View style={styles.medicationActions}>
+                      <View style={styles.flex1}>
+                        <BigButton label="수정" variant="secondary" onPress={() => startEdit(medication)} />
+                      </View>
+                      <View style={styles.flex1}>{renderAction(medication)}</View>
+                    </View>
+                  </View>
+                )}
+              </Card>
+            );
+          })
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <SectionToggleRow title="사진으로 약 등록" open={scanOpen} onPress={() => setScanOpen((v) => !v)} />
+        {scanOpen && <MedicationScanCard compact={compact} onAdd={onSave} />}
+      </View>
+
+      <View style={styles.section}>
+        <SectionToggleRow title="직접 약 등록" open={manualOpen} onPress={() => setManualOpen((v) => !v)} />
+        {manualOpen && (
+          <>
+            {editingId && (
+              <View style={styles.editingBanner}>
+                <Text style={styles.editingBannerText}>약 정보를 수정하고 있어요</Text>
+                <Pressable onPress={cancelEdit} hitSlop={8}>
+                  <Text style={styles.editingCancelLabel}>취소</Text>
+                </Pressable>
               </View>
-              {renderAction(medication)}
-            </Card>
-          ))
-        )}
-      </View>
+            )}
 
-      <View style={styles.section}>
-        <SectionHeader title="사진으로 약 등록" />
-        <MedicationScanCard compact={compact} onAdd={onSave} />
-      </View>
-
-      <View style={styles.section}>
-        <SectionHeader title="직접 약 등록" />
-
-        <Text style={styles.label}>무슨 약이에요?</Text>
-        <View style={styles.chipRow}>
-          {MEDICATION_NAME_OPTIONS.map((option) => {
-            const active = !nameManual && name === option;
-            return (
+            <Text style={styles.label}>무슨 약이에요?</Text>
+            <View style={styles.chipRow}>
+              {MEDICATION_NAME_OPTIONS.map((option) => {
+                const active = !nameManual && name === option;
+                return (
+                  <Pressable
+                    key={option}
+                    style={[styles.selectChip, active ? styles.selectChipActive : styles.selectChipInactive]}
+                    onPress={() => pickName(option)}
+                  >
+                    <Text style={[styles.selectChipLabel, active ? styles.selectChipLabelActive : styles.selectChipLabelInactive]}>
+                      {option}
+                    </Text>
+                  </Pressable>
+                );
+              })}
               <Pressable
-                key={option}
-                style={[styles.selectChip, active ? styles.selectChipActive : styles.selectChipInactive]}
-                onPress={() => pickName(option)}
+                style={[styles.selectChip, nameManual ? styles.selectChipActive : styles.selectChipInactive]}
+                onPress={() => {
+                  setNameManual(true);
+                  setName('');
+                }}
               >
-                <Text style={[styles.selectChipLabel, active ? styles.selectChipLabelActive : styles.selectChipLabelInactive]}>
-                  {option}
+                <Text style={[styles.selectChipLabel, nameManual ? styles.selectChipLabelActive : styles.selectChipLabelInactive]}>
+                  직접 입력
                 </Text>
               </Pressable>
-            );
-          })}
-          <Pressable
-            style={[styles.selectChip, nameManual ? styles.selectChipActive : styles.selectChipInactive]}
-            onPress={() => {
-              setNameManual(true);
-              setName('');
-            }}
-          >
-            <Text style={[styles.selectChipLabel, nameManual ? styles.selectChipLabelActive : styles.selectChipLabelInactive]}>
-              직접 입력
-            </Text>
-          </Pressable>
-        </View>
-        {nameManual && (
-          <TextInput
-            style={[styles.input, styles.inputSpaced]}
-            value={name}
-            onChangeText={setName}
-            placeholder="예: 관절약"
-          />
-        )}
+            </View>
+            {nameManual && (
+              <TextInput
+                style={[styles.input, styles.inputSpaced]}
+                value={name}
+                onChangeText={setName}
+                placeholder="예: 관절약"
+              />
+            )}
 
-        <Text style={styles.label}>언제 드세요?</Text>
-        <View style={styles.chipRow}>
-          {MEDICATION_TIME_OPTIONS.map((option) => {
-            const active = times.includes(option.value);
-            return (
+            <Text style={styles.label}>언제 드세요?</Text>
+            <View style={styles.chipRow}>
+              {MEDICATION_TIME_OPTIONS.map((option) => {
+                const active = times.includes(option.value);
+                return (
+                  <Pressable
+                    key={option.value}
+                    style={[styles.selectChip, active ? styles.selectChipActive : styles.selectChipInactive]}
+                    onPress={() => toggleTimeChip(option.value)}
+                  >
+                    <Text style={[styles.selectChipLabel, active ? styles.selectChipLabelActive : styles.selectChipLabelInactive]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
               <Pressable
-                key={option.value}
-                style={[styles.selectChip, active ? styles.selectChipActive : styles.selectChipInactive]}
-                onPress={() => toggleTimeChip(option.value)}
+                style={[styles.selectChip, timeManual ? styles.selectChipActive : styles.selectChipInactive]}
+                onPress={() => setTimeManual((v) => !v)}
               >
-                <Text style={[styles.selectChipLabel, active ? styles.selectChipLabelActive : styles.selectChipLabelInactive]}>
-                  {option.label}
+                <Text style={[styles.selectChipLabel, timeManual ? styles.selectChipLabelActive : styles.selectChipLabelInactive]}>
+                  다른 시간
                 </Text>
               </Pressable>
-            );
-          })}
-          <Pressable
-            style={[styles.selectChip, timeManual ? styles.selectChipActive : styles.selectChipInactive]}
-            onPress={() => setTimeManual((v) => !v)}
-          >
-            <Text style={[styles.selectChipLabel, timeManual ? styles.selectChipLabelActive : styles.selectChipLabelInactive]}>
-              다른 시간
-            </Text>
-          </Pressable>
-        </View>
-        {timeManual && (
-          <View style={[styles.row, styles.inputSpaced]}>
-            <TextInput
-              style={[styles.input, styles.rowInput]}
-              value={timeInput}
-              onChangeText={setTimeInput}
-              placeholder="08:00"
-            />
-            <BigButton label="추가" variant="secondary" onPress={addTime} />
-          </View>
-        )}
-        {times.length > 0 && (
-          <View style={styles.selectedTimesRow}>
-            {times.map((time) => (
-              <Pressable key={time} style={styles.pickedChip} onPress={() => removeTime(time)}>
-                <Text style={styles.pickedChipLabel}>{time} ✕</Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
+            </View>
+            {timeManual && (
+              <View style={[styles.row, styles.inputSpaced]}>
+                <TextInput
+                  style={[styles.input, styles.rowInput]}
+                  value={timeInput}
+                  onChangeText={setTimeInput}
+                  placeholder="08:00"
+                />
+                <BigButton label="추가" variant="secondary" onPress={addTime} />
+              </View>
+            )}
+            {times.length > 0 && (
+              <View style={styles.selectedTimesRow}>
+                {times.map((time) => (
+                  <Pressable key={time} style={styles.pickedChip} onPress={() => removeTime(time)}>
+                    <Text style={styles.pickedChipLabel}>{time} ✕</Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
 
-        <Text style={styles.label}>주의 음식 (선택)</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, styles.rowInput]}
-            value={conflictFoodInput}
-            onChangeText={setConflictFoodInput}
-            placeholder="예: 자몽"
-          />
-          <BigButton label="추가" variant="secondary" onPress={addConflictFood} />
-        </View>
-        {conflictFoods.length > 0 && (
-          <View style={styles.selectedTimesRow}>
-            {conflictFoods.map((food) => (
-              <Pressable key={food} style={styles.pickedChip} onPress={() => removeConflictFood(food)}>
-                <Text style={styles.pickedChipLabel}>{food} ✕</Text>
-              </Pressable>
-            ))}
-          </View>
+            <Text style={styles.label}>주의 음식 (선택)</Text>
+            <View style={styles.row}>
+              <TextInput
+                style={[styles.input, styles.rowInput]}
+                value={conflictFoodInput}
+                onChangeText={setConflictFoodInput}
+                placeholder="예: 자몽"
+              />
+              <BigButton label="추가" variant="secondary" onPress={addConflictFood} />
+            </View>
+            {conflictFoods.length > 0 && (
+              <View style={styles.selectedTimesRow}>
+                {conflictFoods.map((food) => (
+                  <Pressable key={food} style={styles.pickedChip} onPress={() => removeConflictFood(food)}>
+                    <Text style={styles.pickedChipLabel}>{food} ✕</Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
+            {error && <Text style={styles.error}>{error}</Text>}
+
+            <BigButton label={editingId ? '수정 완료' : '약 등록하기'} onPress={saveMedication} disabled={saving} />
+          </>
         )}
-
-        {error && <Text style={styles.error}>{error}</Text>}
-
-        <BigButton label="약 등록하기" onPress={saveMedication} disabled={saving} />
       </View>
     </ScrollView>
   );
@@ -270,11 +365,25 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   section: { marginTop: spacing.lg },
+  sectionToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  sectionToggleTitle: {
+    ...typeScale.overline,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
+  chevronWrap: { transform: [{ rotate: '90deg' }] },
+  chevronWrapOpen: { transform: [{ rotate: '-90deg' }] },
   medicationCard: {
     marginBottom: spacing.sm,
-    gap: spacing.sm,
   },
-  medicationTop: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
+  medicationSummary: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
   medIconWrap: {
     width: 40,
     height: 40,
@@ -289,11 +398,22 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 2,
   },
+  medicationExpand: {
+    borderTopWidth: 1,
+    borderTopColor: colors.dividerLight,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    gap: spacing.xs,
+  },
+  medicationTimesFull: {
+    ...typeScale.callout,
+    color: colors.textMuted,
+  },
   medicationConflicts: {
     ...typeScale.caption,
     color: colors.caution,
-    marginTop: 4,
   },
+  medicationActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
   warningCard: {
     backgroundColor: colors.dangerBg,
     borderColor: colors.dangerBorder,
@@ -307,6 +427,18 @@ const styles = StyleSheet.create({
     color: colors.danger,
   },
   warningText: { ...typeScale.body, color: colors.text },
+  editingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.md,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  editingBannerText: { fontSize: fontSize.small, fontFamily: fontFamily.bold, color: colors.secondaryAccent },
+  editingCancelLabel: { fontSize: fontSize.small, fontFamily: fontFamily.extrabold, color: colors.textMuted },
   label: {
     fontSize: fontSize.body,
     fontFamily: fontFamily.bold,

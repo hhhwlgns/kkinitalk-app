@@ -116,6 +116,9 @@ const NUTRIENT_TARGETS = {
   carbsG: 153,
 };
 
+export const DAILY_CALORIE_TARGET = NUTRIENT_TARGETS.calories;
+export const MEAL_CALORIE_TARGET = Math.round(NUTRIENT_TARGETS.calories / 3);
+
 export function nutrientPct(value: number, key: keyof typeof NUTRIENT_TARGETS): number {
   return Math.min(100, Math.round((value / NUTRIENT_TARGETS[key]) * 100));
 }

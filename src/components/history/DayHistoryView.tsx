@@ -7,9 +7,9 @@ import { StatTile, StatusPill } from '../ui';
 import { colors, fontFamily, fontSize, fontSizeCompact, radius, shadow, spacing } from '../../theme/tokens';
 import type { CheckIn, ConditionLevel, Meal, MealSlot, Medication, MedicationLog } from '../../domain/types';
 import { buildDayHistory, collectRecordDates, getMonthGridDates } from '../../domain/historyView';
-import { earliestTime, formatKoreanTime, todayDate } from '../../domain/date';
-import { sumNutrients } from '../../mocks/nutritionAnalysis';
-import { proteinStatus, sodiumStatus } from '../../domain/nutrientStatus';
+import { earliestTime, formatIsoTime, formatKoreanTime, todayDate } from '../../domain/date';
+import { DAILY_CALORIE_TARGET, sumNutrients } from '../../mocks/nutritionAnalysis';
+import { calorieStatus, proteinStatus, sodiumStatus } from '../../domain/nutrientStatus';
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -25,15 +25,6 @@ const CONDITION_LABEL: Record<ConditionLevel, string> = {
   normal: '보통',
   bad: '좋지 않음',
 };
-
-function formatMealTime(iso: string): string {
-  const date = new Date(iso);
-  const hour24 = date.getHours();
-  const minute = date.getMinutes();
-  const period = hour24 < 12 ? '오전' : '오후';
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  return minute === 0 ? `${period} ${hour12}시` : `${period} ${hour12}시 ${minute}분`;
-}
 
 interface DayHistoryViewProps {
   variant: 'elderly' | 'guardian';
@@ -81,8 +72,9 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
   const hasMeals = dayHistory.meals.length > 0;
   const sodiumStat = sodiumStatus(dayNutrients.sodiumMg);
   const proteinStat = proteinStatus(dayNutrients.proteinG);
-  const sodiumTile = !hasMeals ? 'default' : sodiumStat === 'good' ? 'default' : sodiumStat === 'caution' ? 'caution' : 'danger';
-  const proteinTile = !hasMeals ? 'default' : proteinStat === 'good' ? 'default' : proteinStat === 'caution' ? 'caution' : 'danger';
+  const sodiumTile = !hasMeals ? 'default' : sodiumStat;
+  const proteinTile = !hasMeals ? 'default' : proteinStat;
+  const calorieTile = !hasMeals ? 'default' : calorieStatus(dayNutrients.calories, DAILY_CALORIE_TARGET);
 
   const medicationRows = useMemo(
     () =>
@@ -91,7 +83,7 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
         return {
           medication,
           taken: Boolean(log),
-          time: log ? formatMealTime(log.takenAt) : formatKoreanTime(earliestTime(medication.timesOfDay)),
+          time: log ? formatIsoTime(log.takenAt) : formatKoreanTime(earliestTime(medication.timesOfDay)),
         };
       }),
     [medications, dayHistory.medicationLogs],
@@ -184,7 +176,11 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
       </Text>
 
       <View style={styles.summaryRow}>
-        <StatTile label="칼로리" value={hasMeals ? `${Math.round(dayNutrients.calories)}kcal` : '–'} />
+        <StatTile
+          label="칼로리"
+          value={hasMeals ? `${Math.round(dayNutrients.calories)}kcal` : '–'}
+          tone={calorieTile}
+        />
         <StatTile
           label="나트륨"
           value={hasMeals ? `${Math.round(dayNutrients.sodiumMg).toLocaleString()}mg` : '–'}
@@ -215,7 +211,7 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
               </View>
             )}
             <View style={styles.flex1}>
-              <Text style={styles.mealTime}>{formatMealTime(meal.recordedAt)}</Text>
+              <Text style={styles.mealTime}>{formatIsoTime(meal.recordedAt)}</Text>
               <Text style={[styles.mealName, { fontSize: size.label }]}>{displayName}</Text>
               <Text style={styles.mealFoods} numberOfLines={1}>
                 {meal.foods.map((food) => food.name).join(', ')}

@@ -21,7 +21,7 @@ import {
 import { findConnectedLink } from '../../src/domain/guardianLink';
 import { buildAlertCandidates } from '../../src/domain/alertRules';
 import type { CheckIn, ConditionLevel, GuardianAlert, Meal, MedicationLog } from '../../src/domain/types';
-import { formatDateWithWeekday, todayDate } from '../../src/domain/date';
+import { formatDateWithWeekday, formatIsoTime, todayDate } from '../../src/domain/date';
 import { sumNutrients } from '../../src/mocks/nutritionAnalysis';
 
 const CONDITION_LABEL: Record<ConditionLevel, string> = {
@@ -46,15 +46,6 @@ function minutesAgo(iso: string, now: Date): string {
   if (diffMin < 60) return `${diffMin}분 전`;
   const diffHr = Math.round(diffMin / 60);
   return `${diffHr}시간 전`;
-}
-
-function formatMealTime(iso: string): string {
-  const date = new Date(iso);
-  const hour24 = date.getHours();
-  const minute = date.getMinutes();
-  const period = hour24 < 12 ? '오전' : '오후';
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  return minute === 0 ? `${period} ${hour12}시` : `${period} ${hour12}시 ${minute}분`;
 }
 
 export default function GuardianHomeScreen() {
@@ -153,7 +144,7 @@ export default function GuardianHomeScreen() {
   const hasMealsToday = todayMeals.length > 0;
   const sodiumStat = sodiumStatus(totalNutrients.sodiumMg);
   const sodiumLabel = !hasMealsToday ? '–' : sodiumStat === 'danger' ? '초과' : sodiumStat === 'caution' ? '주의' : '양호';
-  const sodiumTile = !hasMealsToday ? 'default' : sodiumStat === 'danger' ? 'danger' : sodiumStat === 'caution' ? 'caution' : 'default';
+  const sodiumTile = !hasMealsToday ? 'default' : sodiumStat;
 
   const now = new Date();
   const conditionGood = todayCheckIn?.condition === 'good' || todayCheckIn?.condition === 'normal';
@@ -163,7 +154,7 @@ export default function GuardianHomeScreen() {
     if (todayCheckIn) {
       entries.push({
         id: `checkin-${todayCheckIn.id}`,
-        time: formatMealTime(todayCheckIn.recordedAt),
+        time: formatIsoTime(todayCheckIn.recordedAt),
         title: '아침 체크인 완료',
         desc: `컨디션 ${CONDITION_LABEL[todayCheckIn.condition]}`,
         dot: todayCheckIn.condition === 'bad' ? colors.danger : colors.good,
@@ -173,7 +164,7 @@ export default function GuardianHomeScreen() {
       const displayName = meal.foods.length > 0 ? `${meal.foods[0].name} 등` : '식사';
       entries.push({
         id: `meal-${meal.id}`,
-        time: formatMealTime(meal.recordedAt),
+        time: formatIsoTime(meal.recordedAt),
         title: `${displayName} 식사`,
         desc: meal.fitness === 'good' ? '영양 적합 · 눌러서 분석 보기' : '나트륨 주의 · 눌러서 분석 보기',
         dot: meal.fitness === 'good' ? colors.good : colors.caution,
@@ -183,7 +174,7 @@ export default function GuardianHomeScreen() {
     for (const log of recentLogs.filter((log) => log.takenAt.slice(0, 10) === todayDate())) {
       entries.push({
         id: `med-${log.id}`,
-        time: formatMealTime(log.takenAt),
+        time: formatIsoTime(log.takenAt),
         title: '복약 완료',
         desc: '정해진 시간에 약을 드셨어요',
         dot: colors.good,
@@ -268,7 +259,7 @@ export default function GuardianHomeScreen() {
                   pressed && entry.mealId ? styles.timelinePressed : null,
                 ]}
               >
-                <Text style={styles.timelineTime}>{entry.time}</Text>
+                <Text style={styles.timelineTime} numberOfLines={1}>{entry.time}</Text>
                 <View style={[styles.timelineDot, { backgroundColor: entry.dot }]} />
                 <View style={styles.flex1}>
                   <Text style={styles.timelineTitle}>{entry.title}</Text>
@@ -358,7 +349,7 @@ const styles = StyleSheet.create({
   },
   timelineRowLast: { borderBottomWidth: 0 },
   timelinePressed: { opacity: 0.6 },
-  timelineTime: { width: 44, fontSize: fontSize.meta, fontFamily: fontFamily.bold, color: colors.textMuted, marginTop: 3 },
+  timelineTime: { minWidth: 62, fontSize: fontSize.meta, fontFamily: fontFamily.bold, color: colors.textMuted, marginTop: 3 },
   timelineDot: { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
   timelineTitle: { fontSize: fontSize.body, fontFamily: fontFamily.bold, color: colors.text },
   timelineDesc: { fontSize: fontSize.small, fontFamily: fontFamily.medium, color: colors.textMuted, marginTop: 1 },
