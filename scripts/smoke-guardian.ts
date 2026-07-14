@@ -72,7 +72,7 @@ async function writePhase() {
   };
   const candidates = buildAlertCandidates(
     ELDERLY_USER_ID,
-    new Date(`${TODAY}T20:00:00.000Z`),
+    new Date(`${TODAY}T20:00:00`),
     [badCheckIn],
     [],
     remainingMeds,

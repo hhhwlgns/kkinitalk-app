@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 
 import { toggleOption } from '../../src/components/MultiSelect';
+import { isoToLocalDate, todayDate } from '../../src/domain/date';
 import { colors, fontFamily, fontSize, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
 import { useRole } from '../../src/state/RoleContext';
 import { useConsent } from '../../src/state/ConsentContext';
@@ -28,8 +29,8 @@ const APPETITE_OPTIONS: { label: string; value: 'low' | 'normal' | 'high' }[] = 
 type RowKey = 'basic' | 'conditions' | 'medications' | 'swallowing' | 'avoidedFoods' | 'appetite' | 'invite' | 'consent';
 
 function daysSince(iso: string): number {
-  const created = new Date(iso.slice(0, 10)).getTime();
-  const today = new Date(new Date().toISOString().slice(0, 10)).getTime();
+  const created = new Date(isoToLocalDate(iso)).getTime();
+  const today = new Date(todayDate()).getTime();
   return Math.max(1, Math.round((today - created) / 86400000) + 1);
 }
 
@@ -54,7 +55,12 @@ function ProfileRow({ label, value, open, onToggleOpen, children }: ProfileRowPr
           <Text style={styles.rowLabel}>{label}</Text>
           <Text style={styles.rowValue}>{value}</Text>
         </View>
-        <Pressable style={styles.editButton} onPress={onToggleOpen}>
+        <Pressable
+          style={styles.editButton}
+          onPress={onToggleOpen}
+          accessibilityRole="button"
+          accessibilityLabel={`${label} ${open ? '접기' : '수정하기'}`}
+        >
           <Text style={styles.editButtonLabel}>{open ? '접기' : '수정'}</Text>
         </Pressable>
       </View>

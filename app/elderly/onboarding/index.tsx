@@ -47,7 +47,7 @@ const INITIAL_ANSWERS: Answers = {
 const TOTAL_STEPS = 7;
 
 const STEP_QUESTIONS = [
-  '안녕하세요, 순자 님! 요즘 앓고 계신 지병이 있으세요?',
+  '안녕하세요! 요즘 앓고 계신 지병이 있으세요?',
   '드시고 계신 약이 있으면 알려주세요.',
   '음식을 삼키기 불편하실 때가 있나요?',
   '피하고 싶은 음식이 있으신가요?',
@@ -115,11 +115,26 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        {/* Dots are ~250px wide — they get their own centered row; buttons live above. */}
         <View style={styles.header}>
-          <OnboardingDots total={TOTAL_STEPS} step={step} />
-          <Pressable onPress={skipToDone}>
+          {step > 0 ? (
+            <Pressable
+              onPress={() => setStep(step - 1)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="이전 질문으로 돌아가기"
+            >
+              <Text style={styles.backLabel}>← 이전</Text>
+            </Pressable>
+          ) : (
+            <View />
+          )}
+          <Pressable onPress={skipToDone} accessibilityRole="button" accessibilityLabel="온보딩 건너뛰기">
             <Text style={styles.skipLabel}>건너뛰기</Text>
           </Pressable>
+        </View>
+        <View style={styles.dotsRow}>
+          <OnboardingDots total={TOTAL_STEPS} step={step} />
         </View>
 
         <View style={styles.body}>
@@ -260,6 +275,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  dotsRow: { alignItems: 'center', marginTop: spacing.md },
+  backLabel: {
+    fontSize: fontSize.body,
+    fontFamily: fontFamily.semibold,
+    color: colors.textMuted,
   },
   skipLabel: {
     fontSize: fontSize.body,

@@ -32,7 +32,7 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npx tsc --noEmit -p tsconfig.json 2>&1 | head -150",
+    "buildCommand": "npx tsc --noEmit -p tsconfig.json 2>&1 | head -20",
     "testCommand": null,
     "lintCommand": null,
     "devCommand": "npm run start",
@@ -187,51 +187,75 @@
   },
   "hotPaths": [
     {
-      "path": "src\\components\\medications\\MedicationsView.tsx",
-      "accessCount": 8,
-      "lastAccessed": 1784013281812,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\profile.tsx",
-      "accessCount": 8,
-      "lastAccessed": 1784013413873,
-      "type": "file"
-    },
-    {
       "path": "app\\guardian\\home.tsx",
-      "accessCount": 7,
-      "lastAccessed": 1784013156447,
+      "accessCount": 19,
+      "lastAccessed": 1784014224169,
       "type": "file"
     },
     {
-      "path": "src\\components\\history\\DayHistoryView.tsx",
-      "accessCount": 7,
-      "lastAccessed": 1784013166120,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\result.tsx",
-      "accessCount": 7,
-      "lastAccessed": 1784013175677,
-      "type": "file"
-    },
-    {
-      "path": "app\\guardian\\alerts.tsx",
-      "accessCount": 6,
-      "lastAccessed": 1783994866635,
+      "path": "src\\components\\medications\\MedicationsView.tsx",
+      "accessCount": 12,
+      "lastAccessed": 1784014312258,
       "type": "file"
     },
     {
       "path": "app\\elderly\\home.tsx",
-      "accessCount": 6,
-      "lastAccessed": 1784013151893,
+      "accessCount": 12,
+      "lastAccessed": 1784014409439,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\history\\DayHistoryView.tsx",
+      "accessCount": 11,
+      "lastAccessed": 1784014453237,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\profile.tsx",
+      "accessCount": 11,
+      "lastAccessed": 1784014488281,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\result.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1784014425229,
+      "type": "file"
+    },
+    {
+      "path": "app\\guardian\\report.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1784014470046,
+      "type": "file"
+    },
+    {
+      "path": "app\\guardian\\alerts.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1784014487502,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\onboarding\\index.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1784015039368,
       "type": "file"
     },
     {
       "path": "src\\domain\\date.ts",
-      "accessCount": 5,
-      "lastAccessed": 1783994725999,
+      "accessCount": 6,
+      "lastAccessed": 1784014095823,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\analysis\\MealAnalysisView.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1784014262119,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\checkin.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1784014373996,
       "type": "file"
     },
     {
@@ -241,9 +265,57 @@
       "type": "directory"
     },
     {
+      "path": "app\\elderly\\medications.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1784014313784,
+      "type": "file"
+    },
+    {
+      "path": "src\\mocks\\nutritionAnalysis.ts",
+      "accessCount": 4,
+      "lastAccessed": 1784014244185,
+      "type": "file"
+    },
+    {
+      "path": "app\\guardian\\medications.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1784014284261,
+      "type": "file"
+    },
+    {
+      "path": "app\\elderly\\camera.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1784014592978,
+      "type": "file"
+    },
+    {
       "path": "src\\components\\ui\\StatTile.tsx",
       "accessCount": 3,
       "lastAccessed": 1784013128182,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 3,
+      "lastAccessed": 1784013975992,
+      "type": "directory"
+    },
+    {
+      "path": "src\\domain\\historyView.ts",
+      "accessCount": 3,
+      "lastAccessed": 1784014148014,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\alertRules.ts",
+      "accessCount": 3,
+      "lastAccessed": 1784014154779,
+      "type": "file"
+    },
+    {
+      "path": "src\\domain\\nutrientStatus.ts",
+      "accessCount": 3,
+      "lastAccessed": 1784014238413,
       "type": "file"
     },
     {
@@ -253,45 +325,21 @@
       "type": "file"
     },
     {
-      "path": "",
-      "accessCount": 2,
-      "lastAccessed": 1784012892086,
-      "type": "directory"
-    },
-    {
       "path": "app",
       "accessCount": 2,
       "lastAccessed": 1784012902149,
       "type": "directory"
     },
     {
-      "path": "src\\domain\\nutrientStatus.ts",
+      "path": "src\\mocks\\db\\seed.ts",
       "accessCount": 2,
-      "lastAccessed": 1784013133797,
+      "lastAccessed": 1784014180732,
       "type": "file"
     },
     {
-      "path": "src\\mocks\\nutritionAnalysis.ts",
+      "path": "src\\domain\\medicationReminders.ts",
       "accessCount": 2,
-      "lastAccessed": 1784013138015,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\medications.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1784013292207,
-      "type": "file"
-    },
-    {
-      "path": "app\\guardian\\medications.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1784013293235,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\onboarding\\index.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1783992966066,
+      "lastAccessed": 1784014280638,
       "type": "file"
     },
     {
@@ -319,12 +367,6 @@
       "type": "file"
     },
     {
-      "path": "app\\elderly\\checkin.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1783993009636,
-      "type": "file"
-    },
-    {
       "path": "src\\components\\icons\\ChevronIcon.tsx",
       "accessCount": 1,
       "lastAccessed": 1783994831540,
@@ -349,21 +391,9 @@
       "type": "directory"
     },
     {
-      "path": "app\\guardian\\report.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1784012914263,
-      "type": "file"
-    },
-    {
       "path": "src\\components\\ui\\Badge.tsx",
       "accessCount": 1,
       "lastAccessed": 1784013033038,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\camera.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1784013688927,
       "type": "file"
     },
     {
@@ -385,27 +415,51 @@
       "type": "file"
     },
     {
-      "path": "src\\components\\analysis\\MealAnalysisView.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1784013699133,
-      "type": "file"
-    },
-    {
-      "path": "src\\domain\\alertRules.ts",
-      "accessCount": 1,
-      "lastAccessed": 1784013699371,
-      "type": "file"
-    },
-    {
-      "path": "src\\domain\\medicationReminders.ts",
-      "accessCount": 1,
-      "lastAccessed": 1784013699527,
-      "type": "file"
-    },
-    {
       "path": "app\\index.tsx",
       "accessCount": 1,
       "lastAccessed": 1784013699815,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\ui\\StatusGauge.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784013976329,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 1,
+      "lastAccessed": 1784013976487,
+      "type": "directory"
+    },
+    {
+      "path": "scripts\\smoke-meal.ts",
+      "accessCount": 1,
+      "lastAccessed": 1784014017300,
+      "type": "directory"
+    },
+    {
+      "path": "scripts",
+      "accessCount": 1,
+      "lastAccessed": 1784014030059,
+      "type": "directory"
+    },
+    {
+      "path": "scripts\\smoke-consent.ts",
+      "accessCount": 1,
+      "lastAccessed": 1784014182589,
+      "type": "file"
+    },
+    {
+      "path": "scripts\\smoke-guardian.ts",
+      "accessCount": 1,
+      "lastAccessed": 1784014183443,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\voice\\OnboardingDots.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1784015007296,
       "type": "file"
     }
   ],

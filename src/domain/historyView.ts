@@ -1,4 +1,5 @@
 import type { CheckIn, Meal, Medication, MedicationLog } from './types';
+import { isoToLocalDate } from './date';
 
 export function collectRecordDates(
   meals: { recordedAt: string }[],
@@ -6,8 +7,8 @@ export function collectRecordDates(
   checkIns: { date: string }[],
 ): Set<string> {
   const dates = new Set<string>();
-  meals.forEach((meal) => dates.add(meal.recordedAt.slice(0, 10)));
-  medicationLogs.forEach((log) => dates.add(log.takenAt.slice(0, 10)));
+  meals.forEach((meal) => dates.add(isoToLocalDate(meal.recordedAt)));
+  medicationLogs.forEach((log) => dates.add(isoToLocalDate(log.takenAt)));
   checkIns.forEach((checkIn) => dates.add(checkIn.date));
   return dates;
 }
@@ -28,9 +29,9 @@ export function buildDayHistory(
   const medicationNameById = new Map(medications.map((medication) => [medication.id, medication.name]));
 
   return {
-    meals: meals.filter((meal) => meal.recordedAt.slice(0, 10) === date),
+    meals: meals.filter((meal) => isoToLocalDate(meal.recordedAt) === date),
     medicationLogs: medicationLogs
-      .filter((log) => log.takenAt.slice(0, 10) === date)
+      .filter((log) => isoToLocalDate(log.takenAt) === date)
       .map((log) => ({ ...log, medicationName: medicationNameById.get(log.medicationId) ?? '알 수 없는 약' })),
     checkIn: checkIns.find((checkIn) => checkIn.date === date) ?? null,
   };

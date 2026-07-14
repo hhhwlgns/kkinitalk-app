@@ -18,7 +18,7 @@ const badCheckIn: CheckIn = {
 async function writePhase() {
   const withoutConsent = buildAlertCandidates(
     ELDERLY_USER_ID,
-    new Date(`${TODAY}T20:00:00.000Z`),
+    new Date(`${TODAY}T20:00:00`),
     [badCheckIn],
     [],
     [],
@@ -31,7 +31,7 @@ async function writePhase() {
 
   const withConsent = buildAlertCandidates(
     ELDERLY_USER_ID,
-    new Date(`${TODAY}T20:00:00.000Z`),
+    new Date(`${TODAY}T20:00:00`),
     [badCheckIn],
     [],
     [],

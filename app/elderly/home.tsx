@@ -20,7 +20,7 @@ import {
   mealsCollection,
 } from '../../src/mocks/db/collections';
 import type { CheckIn, ConditionLevel, HealthProfile, Meal, Medication, MedicationLog } from '../../src/domain/types';
-import { earliestTime, formatDateWithWeekday, formatKoreanTime, todayDate } from '../../src/domain/date';
+import { earliestTime, formatDateWithWeekday, formatKoreanTime, isoToLocalDate, todayDate } from '../../src/domain/date';
 import { DAILY_CALORIE_TARGET, inferMealSlot, suggestNextMeal, sumNutrients } from '../../src/mocks/nutritionAnalysis';
 
 const CONDITION_LABEL: Record<ConditionLevel, string> = {
@@ -73,10 +73,10 @@ export default function ElderlyHomeScreen() {
     setMedications(meds);
 
     const allLogs = await medicationLogsCollection.query((item) => item.userId === userId);
-    setLogsToday(allLogs.filter((item) => item.takenAt.slice(0, 10) === today));
+    setLogsToday(allLogs.filter((item) => isoToLocalDate(item.takenAt) === today));
 
     const meals = await mealsCollection.query((item) => item.userId === userId);
-    setTodayMeals(meals.filter((item) => item.recordedAt.slice(0, 10) === today));
+    setTodayMeals(meals.filter((item) => isoToLocalDate(item.recordedAt) === today));
     const sorted = [...meals].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
     setRecentMeals(sorted.slice(0, 3));
     setRecVariant(0);
@@ -156,6 +156,19 @@ export default function ElderlyHomeScreen() {
               오늘 체크인 완료 · 컨디션 {CONDITION_LABEL[todayCheckIn.condition]}
             </Text>
           </View>
+        )}
+
+        {/* Check-in said "not eaten yet" and still no meal logged — gentle nudge. */}
+        {todayCheckIn?.hadMeal === false && !hasMealsToday && (
+          <Pressable
+            style={styles.mealNudgeStrip}
+            onPress={() => router.push('/elderly/camera')}
+            accessibilityRole="button"
+            accessibilityLabel="식사 사진 찍으러 가기"
+          >
+            <Text style={styles.mealNudgeText}>아직 식사 전이시네요. 드신 후에 사진으로 남겨주세요</Text>
+            <ChevronIcon size={14} color={colors.caution} />
+          </Pressable>
         )}
 
         {/* Focal action: log a meal — the app's core loop. */}
@@ -306,6 +319,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   statusStripText: { ...typeElder.callout, color: colors.good, fontFamily: fontFamily.bold, flex: 1 },
+
+  mealNudgeStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.cautionBg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.cautionBorder,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  mealNudgeText: { ...typeElder.callout, color: colors.caution, fontFamily: fontFamily.bold, flex: 1 },
 
   cameraCta: {
     flexDirection: 'row',

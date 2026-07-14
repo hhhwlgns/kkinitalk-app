@@ -22,13 +22,18 @@ export function proteinStatus(proteinG: number): NutrientStatus {
   return 'danger';
 }
 
-// Calories read as a band around a target (per-meal or per-day) rather than a
-// ceiling — too little is as much a concern as too much for this age group.
-export function calorieStatus(calories: number, targetCalories: number): NutrientStatus {
-  const pct = calories / targetCalories;
+// Band around a target (per-meal or per-day) rather than a ceiling — too
+// little is as much a concern as too much for this age group. Used for
+// calories and carbs, where both under- and over-eating matter.
+export function targetBandStatus(value: number, target: number): NutrientStatus {
+  const pct = value / target;
   if (pct >= 0.7 && pct <= 1.3) return 'good';
   if (pct >= 0.5 && pct <= 1.6) return 'caution';
   return 'danger';
+}
+
+export function calorieStatus(calories: number, targetCalories: number): NutrientStatus {
+  return targetBandStatus(calories, targetCalories);
 }
 
 // Overall meal verdict rolled up from the individual nutrients.

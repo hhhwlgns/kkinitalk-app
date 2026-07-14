@@ -29,13 +29,21 @@ interface MedicationsViewProps {
   medications: Medication[];
   warnings?: ConflictWarning[];
   compact?: boolean;
+  // The daily action (e.g. elderly's "먹었어요") must stay one tap away — when true,
+  // renderAction renders below the collapsed summary instead of inside the accordion.
+  alwaysShowAction?: boolean;
   onSave: (draft: MedicationDraft) => Promise<void> | void;
   renderAction: (medication: Medication) => ReactNode;
 }
 
 function SectionToggleRow({ title, open, onPress }: { title: string; open: boolean; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={styles.sectionToggleRow}>
+    <Pressable
+      onPress={onPress}
+      style={styles.sectionToggleRow}
+      accessibilityRole="button"
+      accessibilityLabel={`${title} ${open ? '접기' : '펼치기'}`}
+    >
       <Text style={styles.sectionToggleTitle}>{title}</Text>
       <View style={[styles.chevronWrap, open && styles.chevronWrapOpen]}>
         <ChevronIcon size={13} color={colors.textFaint} />
@@ -44,7 +52,7 @@ function SectionToggleRow({ title, open, onPress }: { title: string; open: boole
   );
 }
 
-export function MedicationsView({ title, medications, warnings, compact, onSave, renderAction }: MedicationsViewProps) {
+export function MedicationsView({ title, medications, warnings, compact, alwaysShowAction, onSave, renderAction }: MedicationsViewProps) {
   const [scanOpen, setScanOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [medOpenIds, setMedOpenIds] = useState<Set<string>>(new Set());
@@ -185,7 +193,12 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
             const extraCount = medication.timesOfDay.length - 1;
             return (
               <Card key={medication.id} style={styles.medicationCard}>
-                <Pressable onPress={() => toggleMedOpen(medication.id)} style={styles.medicationSummary}>
+                <Pressable
+                  onPress={() => toggleMedOpen(medication.id)}
+                  style={styles.medicationSummary}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${medication.name} 상세 ${open ? '접기' : '펼치기'}`}
+                >
                   <View style={styles.medIconWrap}>
                     <PillIcon size={20} color={colors.onPrimary} />
                   </View>
@@ -201,6 +214,8 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
                   </View>
                 </Pressable>
 
+                {alwaysShowAction && renderAction(medication)}
+
                 {open && (
                   <View style={styles.medicationExpand}>
                     {medication.timesOfDay.length > 1 && (
@@ -215,7 +230,7 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
                       <View style={styles.flex1}>
                         <BigButton label="수정" variant="secondary" onPress={() => startEdit(medication)} />
                       </View>
-                      <View style={styles.flex1}>{renderAction(medication)}</View>
+                      {!alwaysShowAction && <View style={styles.flex1}>{renderAction(medication)}</View>}
                     </View>
                   </View>
                 )}

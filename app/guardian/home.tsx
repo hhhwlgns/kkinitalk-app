@@ -21,7 +21,7 @@ import {
 import { findConnectedLink } from '../../src/domain/guardianLink';
 import { buildAlertCandidates } from '../../src/domain/alertRules';
 import type { CheckIn, ConditionLevel, GuardianAlert, Meal, MedicationLog } from '../../src/domain/types';
-import { formatDateWithWeekday, formatIsoTime, todayDate } from '../../src/domain/date';
+import { formatDateWithWeekday, formatIsoTime, isoToLocalDate, todayDate } from '../../src/domain/date';
 import { sumNutrients } from '../../src/mocks/nutritionAnalysis';
 
 const CONDITION_LABEL: Record<ConditionLevel, string> = {
@@ -32,6 +32,7 @@ const CONDITION_LABEL: Record<ConditionLevel, string> = {
 
 interface TimelineEntry {
   id: string;
+  at: string; // raw ISO timestamp — the sort key; `time` is display-only
   time: string;
   title: string;
   desc: string;
@@ -94,10 +95,10 @@ export default function GuardianHomeScreen() {
     setTodayCheckIn(todayCheckInItem);
     setCheckInAt(todayCheckInItem?.recordedAt ?? null);
 
-    const todaysMeals = meals.filter((item) => item.recordedAt.slice(0, 10) === today);
+    const todaysMeals = meals.filter((item) => isoToLocalDate(item.recordedAt) === today);
     setTodayMeals(todaysMeals);
 
-    const todaysLogs = medicationLogs.filter((item) => item.takenAt.slice(0, 10) === today);
+    const todaysLogs = medicationLogs.filter((item) => isoToLocalDate(item.takenAt) === today);
     setTodayLogs(todaysLogs);
     setMedicationCount(medications.length);
 
@@ -148,22 +149,28 @@ export default function GuardianHomeScreen() {
 
   const now = new Date();
   const conditionGood = todayCheckIn?.condition === 'good' || todayCheckIn?.condition === 'normal';
+  const latestAlert = useMemo(
+    () => [...unacknowledgedAlerts].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null,
+    [unacknowledgedAlerts],
+  );
 
   const timeline = useMemo<TimelineEntry[]>(() => {
     const entries: TimelineEntry[] = [];
     if (todayCheckIn) {
       entries.push({
         id: `checkin-${todayCheckIn.id}`,
+        at: todayCheckIn.recordedAt,
         time: formatIsoTime(todayCheckIn.recordedAt),
         title: '아침 체크인 완료',
         desc: `컨디션 ${CONDITION_LABEL[todayCheckIn.condition]}`,
         dot: todayCheckIn.condition === 'bad' ? colors.danger : colors.good,
       });
     }
-    for (const meal of recentMeals.filter((meal) => meal.recordedAt.slice(0, 10) === todayDate())) {
+    for (const meal of recentMeals.filter((meal) => isoToLocalDate(meal.recordedAt) === todayDate())) {
       const displayName = meal.foods.length > 0 ? `${meal.foods[0].name} 등` : '식사';
       entries.push({
         id: `meal-${meal.id}`,
+        at: meal.recordedAt,
         time: formatIsoTime(meal.recordedAt),
         title: `${displayName} 식사`,
         desc: meal.fitness === 'good' ? '영양 적합 · 눌러서 분석 보기' : '나트륨 주의 · 눌러서 분석 보기',
@@ -171,16 +178,17 @@ export default function GuardianHomeScreen() {
         mealId: meal.id,
       });
     }
-    for (const log of recentLogs.filter((log) => log.takenAt.slice(0, 10) === todayDate())) {
+    for (const log of recentLogs.filter((log) => isoToLocalDate(log.takenAt) === todayDate())) {
       entries.push({
         id: `med-${log.id}`,
+        at: log.takenAt,
         time: formatIsoTime(log.takenAt),
         title: '복약 완료',
         desc: '정해진 시간에 약을 드셨어요',
         dot: colors.good,
       });
     }
-    return entries.sort((a, b) => b.time.localeCompare(a.time));
+    return entries.sort((a, b) => b.at.localeCompare(a.at));
   }, [todayCheckIn, recentMeals, recentLogs]);
 
   if (checking) {
@@ -227,13 +235,13 @@ export default function GuardianHomeScreen() {
           </View>
         </View>
 
-        {unacknowledgedAlerts.length > 0 && (
+        {latestAlert && (
           <Pressable style={styles.alertBanner} onPress={() => router.push('/guardian/alerts')}>
             <View style={styles.alertIconWrap}>
               <Text style={styles.alertIconLabel}>!</Text>
             </View>
             <View style={styles.flex1}>
-              <Text style={styles.alertTitle}>나트륨 3일 연속 초과</Text>
+              <Text style={styles.alertTitle} numberOfLines={2}>{latestAlert.message}</Text>
               <Text style={styles.alertSub}>알림 {unacknowledgedAlerts.length}건 · 눌러서 확인</Text>
             </View>
             <ChevronIcon color={colors.danger} />

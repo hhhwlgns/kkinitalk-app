@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import { AlarmIcon } from '../icons/AlarmIcon';
 import { CalendarIcon } from '../icons/CalendarIcon';
+import { ChevronIcon } from '../icons/ChevronIcon';
 import { StatTile, StatusPill } from '../ui';
 import { colors, fontFamily, fontSize, fontSizeCompact, radius, shadow, spacing } from '../../theme/tokens';
 import type { CheckIn, ConditionLevel, Meal, MealSlot, Medication, MedicationLog } from '../../domain/types';
@@ -52,8 +53,17 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
   );
 
   const now = new Date();
-  const monthCells = useMemo(() => getMonthGridDates(now.getFullYear(), now.getMonth()), [now]);
-  const monthLabel = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+  const monthCells = useMemo(() => getMonthGridDates(viewYear, viewMonth), [viewYear, viewMonth]);
+  const monthLabel = `${viewYear}년 ${viewMonth + 1}월`;
+  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+
+  function shiftMonth(delta: number) {
+    const shifted = new Date(viewYear, viewMonth + delta, 1);
+    setViewYear(shifted.getFullYear());
+    setViewMonth(shifted.getMonth());
+  }
 
   const dayHistory = useMemo(
     () => buildDayHistory(selectedDate, meals, medicationLogs, medications, checkIns),
@@ -130,7 +140,28 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
 
       {calOpen && (
         <View style={styles.calPanel}>
-          <Text style={[styles.calMonthLabel, { fontSize: size.label }]}>{monthLabel}</Text>
+          <View style={styles.calNavRow}>
+            <Pressable
+              onPress={() => shiftMonth(-1)}
+              style={styles.calNavButton}
+              accessibilityRole="button"
+              accessibilityLabel="이전 달"
+            >
+              <View style={styles.calNavIconLeft}>
+                <ChevronIcon size={14} color={colors.text} />
+              </View>
+            </Pressable>
+            <Text style={[styles.calMonthLabel, { fontSize: size.label }]}>{monthLabel}</Text>
+            <Pressable
+              onPress={() => shiftMonth(1)}
+              disabled={isCurrentMonth}
+              style={[styles.calNavButton, isCurrentMonth && styles.calNavButtonDisabled]}
+              accessibilityRole="button"
+              accessibilityLabel="다음 달"
+            >
+              <ChevronIcon size={14} color={colors.text} />
+            </Pressable>
+          </View>
           <View style={styles.weekdayRow}>
             {WEEKDAY_LABELS.map((label, index) => (
               <Text
@@ -319,11 +350,24 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     ...shadow.card,
   },
+  calNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  calNavButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calNavButtonDisabled: { opacity: 0.25 },
+  calNavIconLeft: { transform: [{ rotate: '180deg' }] },
   calMonthLabel: {
     fontFamily: fontFamily.extrabold,
     color: colors.text,
     textAlign: 'center',
-    marginBottom: spacing.xs,
   },
   weekdayRow: { flexDirection: 'row', marginBottom: spacing.xs },
   weekdayLabel: {

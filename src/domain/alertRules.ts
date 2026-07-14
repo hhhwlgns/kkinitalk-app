@@ -1,13 +1,10 @@
 import type { CheckIn, GuardianAlert, Meal, Medication, MedicationLog } from './types';
+import { isoToLocalDate, localDateString } from './date';
 
 export type AlertCandidate = Omit<GuardianAlert, 'acknowledged' | 'comment' | 'createdAt'>;
 
 const MISSED_MEAL_CHECK_MINUTES = 14 * 60;
 const MEDICATION_GRACE_MINUTES = 30;
-
-function todayDate(now: Date): string {
-  return now.toISOString().slice(0, 10);
-}
 
 function timeToMinutes(time: string): number {
   const [hour, minute] = time.split(':').map(Number);
@@ -23,13 +20,13 @@ export function buildAlertCandidates(
   medicationLogs: MedicationLog[],
   highRiskSharingConsent: boolean,
 ): AlertCandidate[] {
-  const today = todayDate(now);
+  const today = localDateString(now);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const candidates: AlertCandidate[] = [];
 
   const todayCheckIn = checkIns.find((item) => item.date === today) ?? null;
-  const todayMeals = meals.filter((meal) => meal.recordedAt.slice(0, 10) === today);
-  const todayLogs = medicationLogs.filter((log) => log.takenAt.slice(0, 10) === today);
+  const todayMeals = meals.filter((meal) => isoToLocalDate(meal.recordedAt) === today);
+  const todayLogs = medicationLogs.filter((log) => isoToLocalDate(log.takenAt) === today);
 
   if (
     nowMinutes >= MISSED_MEAL_CHECK_MINUTES &&

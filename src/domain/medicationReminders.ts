@@ -4,6 +4,19 @@ import type { Medication } from './types';
 
 export const MEDICATION_TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
+export async function cancelMedicationReminders(medicationId: string): Promise<void> {
+  if (isRunningInExpoGo()) {
+    return;
+  }
+  const Notifications = await import('expo-notifications');
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const item of scheduled) {
+    if (item.content.data?.medicationId === medicationId) {
+      await Notifications.cancelScheduledNotificationAsync(item.identifier);
+    }
+  }
+}
+
 export async function scheduleMedicationReminders(medication: Medication): Promise<void> {
   if (isRunningInExpoGo()) {
     return;
@@ -13,6 +26,8 @@ export async function scheduleMedicationReminders(medication: Medication): Promi
   if (!permission.granted) {
     return;
   }
+  // Editing a medication re-schedules it — clear the old alarms first so they don't stack.
+  await cancelMedicationReminders(medication.id);
   for (const time of medication.timesOfDay) {
     const [hour, minute] = time.split(':').map(Number);
     await Notifications.scheduleNotificationAsync({

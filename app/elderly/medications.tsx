@@ -11,7 +11,7 @@ import { mealsCollection, medicationLogsCollection, medicationsCollection } from
 import { createId } from '../../src/domain/id';
 import type { Medication, MedicationLog } from '../../src/domain/types';
 import { findConflicts, type ConflictWarning } from '../../src/domain/conflictRules';
-import { todayDate } from '../../src/domain/date';
+import { isoToLocalDate, todayDate } from '../../src/domain/date';
 import { scheduleMedicationReminders } from '../../src/domain/medicationReminders';
 
 function closestTimeToday(timesOfDay: string[]): string {
@@ -44,7 +44,7 @@ export default function MedicationsScreen() {
 
     const today = todayDate();
     const allLogs = await medicationLogsCollection.query((item) => item.userId === userId);
-    setLogs(allLogs.filter((item) => item.takenAt.slice(0, 10) === today));
+    setLogs(allLogs.filter((item) => isoToLocalDate(item.takenAt) === today));
 
     const meals = await mealsCollection.query((item) => item.userId === userId);
     const sortedMeals = [...meals].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
@@ -103,6 +103,7 @@ export default function MedicationsScreen() {
         title="오늘의 약"
         medications={medications}
         warnings={warnings}
+        alwaysShowAction
         onSave={handleSave}
         renderAction={(medication) => (
           <BigButton

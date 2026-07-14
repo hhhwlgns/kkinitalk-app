@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 
 import { AnalyzingSpinner } from '../../src/components/voice/AnalyzingSpinner';
@@ -21,6 +22,20 @@ import {
 const ANALYSIS_DELAY_MS = 1500;
 
 type Stage = 'idle' | 'analyzing';
+
+// Camera/picker URIs point into the app cache, which the OS may purge — copy
+// the photo into the document directory so meal history keeps its images.
+async function persistPhoto(uri: string, mealId: string): Promise<string> {
+  try {
+    const extMatch = /\.(\w+)(?:\?|$)/.exec(uri);
+    const ext = extMatch ? extMatch[1] : 'jpg';
+    const dest = new File(Paths.document, `${mealId}.${ext}`);
+    await new File(uri).copy(dest);
+    return dest.uri;
+  } catch {
+    return uri;
+  }
+}
 
 function goHome() {
   router.replace('/elderly/home');
@@ -54,11 +69,14 @@ export default function CameraScreen() {
     const { fitness, fitnessNote } = assessMealFitness(totalNutrients, profile);
     const slot = inferMealSlot(now);
 
+    const mealId = createId('meal');
+    const photoUri = await persistPhoto(uri, mealId);
+
     const meal = {
-      id: createId('meal'),
+      id: mealId,
       userId,
       slot,
-      photoUri: uri,
+      photoUri,
       foods,
       totalNutrients,
       fitness,

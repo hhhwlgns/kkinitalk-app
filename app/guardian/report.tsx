@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { G, Rect, Text as SvgText } from 'react-native-svg';
 
@@ -15,6 +15,7 @@ import {
   mealsCollection,
 } from '../../src/mocks/db/collections';
 import { findConnectedLink } from '../../src/domain/guardianLink';
+import { isoToLocalDate, localDateString } from '../../src/domain/date';
 import type { Meal, Medication, MedicationLog } from '../../src/domain/types';
 
 interface DayStat {
@@ -26,7 +27,6 @@ interface DayStat {
   medicationScheduledCount: number;
 }
 
-const CHART_WIDTH = 320;
 const CHART_HEIGHT = 140;
 const BAR_GAP = 8;
 
@@ -36,7 +36,7 @@ function lastNDates(n: number): string[] {
   for (let i = n - 1; i >= 0; i -= 1) {
     const d = new Date(now);
     d.setDate(now.getDate() - i);
-    dates.push(d.toISOString().slice(0, 10));
+    dates.push(localDateString(d));
   }
   return dates;
 }
@@ -86,9 +86,9 @@ function buildWeeklySummary(input: {
 
 function buildDayStats(dates: string[], meals: Meal[], medications: Medication[], logs: MedicationLog[]): DayStat[] {
   return dates.map((date) => {
-    const dayMeals = meals.filter((meal) => meal.recordedAt.slice(0, 10) === date);
+    const dayMeals = meals.filter((meal) => isoToLocalDate(meal.recordedAt) === date);
     const sodiumMg = dayMeals.reduce((sum, meal) => sum + meal.totalNutrients.sodiumMg, 0);
-    const dayLogs = logs.filter((log) => log.takenAt.slice(0, 10) === date);
+    const dayLogs = logs.filter((log) => isoToLocalDate(log.takenAt) === date);
     const takenMedicationIds = new Set(dayLogs.map((log) => log.medicationId));
     return {
       date,
@@ -101,12 +101,12 @@ function buildDayStats(dates: string[], meals: Meal[], medications: Medication[]
   });
 }
 
-function SodiumChart({ stats }: { stats: DayStat[] }) {
+function SodiumChart({ stats, width }: { stats: DayStat[]; width: number }) {
   const maxSodium = Math.max(...stats.map((s) => s.sodiumMg), 1500);
-  const barWidth = (CHART_WIDTH - BAR_GAP * (stats.length - 1)) / stats.length;
+  const barWidth = (width - BAR_GAP * (stats.length - 1)) / stats.length;
 
   return (
-    <Svg width={CHART_WIDTH} height={CHART_HEIGHT + 24}>
+    <Svg width={width} height={CHART_HEIGHT + 24}>
       {stats.map((stat, index) => {
         const barHeight = Math.max((stat.sodiumMg / maxSodium) * CHART_HEIGHT, 2);
         const x = index * (barWidth + BAR_GAP);
@@ -134,6 +134,9 @@ function SodiumChart({ stats }: { stats: DayStat[] }) {
 export default function GuardianReportScreen() {
   const { activeUserId } = useRole();
   const guardianUserId = activeUserId ?? 'guardian-self';
+  const { width: windowWidth } = useWindowDimensions();
+  // Screen padding (lg) + card padding (md) on both sides.
+  const chartWidth = Math.max(220, windowWidth - spacing.lg * 2 - spacing.md * 2);
 
   const [checking, setChecking] = useState(true);
   const [stats, setStats] = useState<DayStat[]>([]);
@@ -207,7 +210,7 @@ export default function GuardianReportScreen() {
               />
             )}
           </View>
-          <SodiumChart stats={stats} />
+          <SodiumChart stats={stats} width={chartWidth} />
           <Text style={styles.cardSub}>주간 평균 {avgSodium}mg · 기준 1500mg</Text>
         </View>
 

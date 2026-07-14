@@ -6,14 +6,17 @@ import { DisclaimerBanner } from '../DisclaimerBanner';
 import { colors, fontFamily, radius, spacing, statusColor, type as typeScale } from '../../theme/tokens';
 import type { HealthProfile, Meal, Medication } from '../../domain/types';
 import {
+  MEAL_CALORIE_TARGET,
+  MEAL_CARB_TARGET,
   assessMealFitness,
   buildMealInsights,
   computeFoodContributions,
   nutrientPct,
   sumNutrients,
 } from '../../mocks/nutritionAnalysis';
-import { mealStatus, proteinStatus, sodiumStatus, type NutrientStatus } from '../../domain/nutrientStatus';
+import { calorieStatus, mealStatus, proteinStatus, sodiumStatus, targetBandStatus, type NutrientStatus } from '../../domain/nutrientStatus';
 import { findConflicts } from '../../domain/conflictRules';
+import { formatIsoTime } from '../../domain/date';
 
 const SLOT_LABEL: Record<Meal['slot'], string> = {
   breakfast: '아침',
@@ -21,15 +24,6 @@ const SLOT_LABEL: Record<Meal['slot'], string> = {
   dinner: '저녁',
   snack: '간식',
 };
-
-function formatTime(iso: string): string {
-  const date = new Date(iso);
-  const h = date.getHours();
-  const period = h < 12 ? '오전' : '오후';
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  const m = date.getMinutes();
-  return m === 0 ? `${period} ${h12}시` : `${period} ${h12}시 ${m}분`;
-}
 
 interface NutrientRow {
   key: string;
@@ -70,7 +64,7 @@ export function MealAnalysisView({ meal, profile, medications, compact = false }
       name: '칼로리',
       value: `${Math.round(totals.calories)} kcal`,
       pct: nutrientPct(totals.calories, 'calories'),
-      status: 'good',
+      status: calorieStatus(totals.calories, MEAL_CALORIE_TARGET),
     },
     {
       key: 'sodium',
@@ -91,7 +85,7 @@ export function MealAnalysisView({ meal, profile, medications, compact = false }
       name: '탄수화물',
       value: `${Math.round(totals.carbsG)} g`,
       pct: nutrientPct(totals.carbsG, 'carbsG'),
-      status: 'good',
+      status: targetBandStatus(totals.carbsG, MEAL_CARB_TARGET),
     },
   ];
 
@@ -110,7 +104,7 @@ export function MealAnalysisView({ meal, profile, medications, compact = false }
         )}
         <View style={styles.headerBody}>
           <Text style={styles.eyebrow}>
-            {SLOT_LABEL[meal.slot]} · {formatTime(meal.recordedAt)}
+            {SLOT_LABEL[meal.slot]} · {formatIsoTime(meal.recordedAt)}
           </Text>
           <Text style={styles.headerTitle}>{displayName}</Text>
           <View style={styles.chipRow}>

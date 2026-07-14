@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -8,7 +8,7 @@ import { OptionStack } from '../../src/components/voice/OptionStack';
 import { VoiceListeningIndicator } from '../../src/components/voice/VoiceListeningIndicator';
 import { colors, fontFamily, fontSize, spacing } from '../../src/theme/tokens';
 import { useRole } from '../../src/state/RoleContext';
-import { checkInsCollection } from '../../src/mocks/db/collections';
+import { checkInsCollection, healthProfilesCollection } from '../../src/mocks/db/collections';
 import { createId } from '../../src/domain/id';
 import { todayDate } from '../../src/domain/date';
 import type { CheckIn, ConditionLevel } from '../../src/domain/types';
@@ -20,7 +20,8 @@ interface CheckinQuestion {
 
 const CK_QUESTIONS: CheckinQuestion[] = [
   {
-    question: '순자 님, 좋은 아침이에요! 아침 식사 하셨어요?',
+    // Question 0's greeting is personalized at render time with the profile name.
+    question: '좋은 아침이에요! 아침 식사 하셨어요?',
     options: [
       { label: '네, 먹었어요', hadMeal: true },
       { label: '아직이요', hadMeal: false },
@@ -47,9 +48,22 @@ export default function CheckInScreen() {
 
   const [step, setStep] = useState(0);
   const [hadMeal, setHadMeal] = useState<boolean | null>(null);
+  const [profileName, setProfileName] = useState('어르신');
+
+  useEffect(() => {
+    let active = true;
+    healthProfilesCollection.query((item) => item.userId === userId).then((profiles) => {
+      const name = profiles[profiles.length - 1]?.name?.trim();
+      if (active && name) setProfileName(name);
+    });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
   const clampedStep = Math.min(step, CK_QUESTIONS.length - 1);
   const current = CK_QUESTIONS[clampedStep];
+  const questionText = clampedStep === 0 ? `${profileName} 님, ${current.question}` : current.question;
 
   async function pickOption(option: CheckinQuestion['options'][number]) {
     if (clampedStep === 0) {
@@ -59,8 +73,10 @@ export default function CheckInScreen() {
     }
 
     const today = todayDate();
+    // Re-checking in on the same day updates the existing record instead of stacking a duplicate.
+    const existing = await checkInsCollection.query((item) => item.userId === userId && item.date === today);
     const checkIn: CheckIn = {
-      id: createId('checkin'),
+      id: existing[0]?.id ?? createId('checkin'),
       userId,
       date: today,
       condition: option.condition ?? 'normal',
@@ -88,7 +104,7 @@ export default function CheckInScreen() {
           <View style={styles.indicatorWrap}>
             <VoiceListeningIndicator />
           </View>
-          <AiQuestionBubble question={current.question} />
+          <AiQuestionBubble question={questionText} />
           <OptionStack
             options={current.options.map((option, index) => ({
               key: `${clampedStep}-${index}`,

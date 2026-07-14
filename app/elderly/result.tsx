@@ -95,6 +95,14 @@ export default function ResultScreen() {
     router.replace('/elderly/home');
   }
 
+  // The camera already saved this meal — retaking must discard it or a ghost record remains.
+  async function retake() {
+    if (meal) {
+      await mealsCollection.remove(meal.id);
+    }
+    router.replace('/elderly/camera');
+  }
+
   const displayName = activeFoods.length > 0 ? `${activeFoods[0].name} 등 ${activeFoods.length}가지` : '식사';
   const sodiumTile = sodiumStatus(totals.sodiumMg);
   const proteinStat = proteinStatus(totals.proteinG);
@@ -171,7 +179,7 @@ export default function ResultScreen() {
           <Text style={styles.primaryButtonLabel}>기록 저장하기</Text>
         </Pressable>
 
-        <Pressable style={styles.retakeButton} onPress={() => router.replace('/elderly/camera')}>
+        <Pressable style={styles.retakeButton} onPress={retake}>
           <Text style={styles.retakeLabel}>다시 찍기</Text>
         </Pressable>
 

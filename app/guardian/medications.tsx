@@ -11,7 +11,7 @@ import { guardianLinksCollection, medicationsCollection } from '../../src/mocks/
 import { findConnectedLink } from '../../src/domain/guardianLink';
 import { createId } from '../../src/domain/id';
 import type { Medication } from '../../src/domain/types';
-import { scheduleMedicationReminders } from '../../src/domain/medicationReminders';
+import { cancelMedicationReminders, scheduleMedicationReminders } from '../../src/domain/medicationReminders';
 
 export default function GuardianMedicationsScreen() {
   const { activeUserId } = useRole();
@@ -58,6 +58,7 @@ export default function GuardianMedicationsScreen() {
 
   async function deleteMedication(id: string) {
     await medicationsCollection.remove(id);
+    await cancelMedicationReminders(id);
     await load();
   }
 

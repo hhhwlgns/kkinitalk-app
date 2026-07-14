@@ -103,7 +103,12 @@ export default function GuardianAlertsScreen() {
               <Card key={alert.id} padded={false} style={[styles.card, alert.acknowledged && styles.cardAcknowledged]}>
                 <View style={[styles.accent, { backgroundColor: accent }]} />
                 <View style={styles.cardBody}>
-                  <Pressable onPress={() => toggleOpen(alert.id)} style={styles.summaryPressable}>
+                  <Pressable
+                    onPress={() => toggleOpen(alert.id)}
+                    style={styles.summaryPressable}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${ALERT_TYPE_LABEL[alert.type]} 알림 ${open ? '접기' : '자세히 보기'}`}
+                  >
                     <View style={styles.cardTopRow}>
                       <StatusPill status={status} size="sm" label={ALERT_TYPE_LABEL[alert.type]} />
                       {alert.acknowledged && <Text style={styles.doneTag}>확인함</Text>}

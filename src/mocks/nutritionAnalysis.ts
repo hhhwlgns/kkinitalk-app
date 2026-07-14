@@ -118,9 +118,12 @@ const NUTRIENT_TARGETS = {
 
 export const DAILY_CALORIE_TARGET = NUTRIENT_TARGETS.calories;
 export const MEAL_CALORIE_TARGET = Math.round(NUTRIENT_TARGETS.calories / 3);
+export const MEAL_CARB_TARGET = Math.round(NUTRIENT_TARGETS.carbsG / 3);
 
+// Not capped at 100 — captions show the real overshoot ("하루 권장의 128%");
+// StatusGauge clamps its bar fill internally.
 export function nutrientPct(value: number, key: keyof typeof NUTRIENT_TARGETS): number {
-  return Math.min(100, Math.round((value / NUTRIENT_TARGETS[key]) * 100));
+  return Math.round((value / NUTRIENT_TARGETS[key]) * 100);
 }
 
 // Per-food contribution to the meal's calories & sodium — powers the detailed
