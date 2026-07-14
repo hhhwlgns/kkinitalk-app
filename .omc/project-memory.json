@@ -32,7 +32,7 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npx tsc --noEmit 2>&1 | head -30 && echo \"---TSC DONE---\"",
+    "buildCommand": "npx tsc --noEmit 2>&1 | head -20 && echo \"===TSC===\" && for s in onboarding checkin meal medication history profile guardian consent; do echo \"--- $s ---\"; npm run smoke:$s 2>&1 | grep -E \"PASSED|FAIL|Error\" | head -2; done",
     "testCommand": "cd C:/kkinitalk-app && grep -iE \"jest\" package.json; ls node_modules | grep -iE \"^jest\" 2>&1",
     "lintCommand": null,
     "devCommand": "npm run start",
@@ -140,6 +140,12 @@
       "type": "file"
     },
     {
+      "path": "app\\elderly\\profile.tsx",
+      "accessCount": 45,
+      "lastAccessed": 1783989686508,
+      "type": "file"
+    },
+    {
       "path": "app\\elderly\\checkin.tsx",
       "accessCount": 42,
       "lastAccessed": 1783949403095,
@@ -170,12 +176,6 @@
       "type": "file"
     },
     {
-      "path": "app\\elderly\\profile.tsx",
-      "accessCount": 39,
-      "lastAccessed": 1783961760631,
-      "type": "file"
-    },
-    {
       "path": "app\\elderly\\onboarding\\done.tsx",
       "accessCount": 34,
       "lastAccessed": 1783949374148,
@@ -195,8 +195,8 @@
     },
     {
       "path": "",
-      "accessCount": 30,
-      "lastAccessed": 1783922502765,
+      "accessCount": 31,
+      "lastAccessed": 1783989724399,
       "type": "directory"
     },
     {

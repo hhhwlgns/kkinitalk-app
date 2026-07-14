@@ -5,7 +5,7 @@ import { useFocusEffect } from 'expo-router';
 
 import { BigButton } from '../../src/components/BigButton';
 import { toggleOption } from '../../src/components/MultiSelect';
-import { colors, fontFamily, fontSize, radius, shadow, spacing } from '../../src/theme/tokens';
+import { colors, fontFamily, fontSize, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
 import { useRole } from '../../src/state/RoleContext';
 import { useConsent } from '../../src/state/ConsentContext';
 import { guardianLinksCollection, healthProfilesCollection } from '../../src/mocks/db/collections';
@@ -354,9 +354,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitial: { fontSize: 26, fontFamily: fontFamily.extrabold, color: colors.avatarInitial },
-  name: { fontSize: 28, fontFamily: fontFamily.extrabold, color: colors.text, letterSpacing: -0.5 },
-  subtitle: { fontSize: fontSize.body, fontFamily: fontFamily.semibold, color: colors.textMuted, marginTop: 2 },
+  avatarInitial: { ...typeElder.heading, color: colors.avatarInitial },
+  name: { ...typeElder.title, color: colors.text },
+  subtitle: { ...typeElder.callout, color: colors.textMuted, marginTop: 2 },
   infoBanner: {
     backgroundColor: colors.nextMedBg,
     borderWidth: 1.5,
@@ -373,12 +373,14 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.md,
     ...shadow.card,
   },
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   rowLabel: { fontSize: fontSize.small, fontFamily: fontFamily.bold, color: colors.textMuted },
-  rowValue: { fontSize: 21, fontFamily: fontFamily.extrabold, color: colors.text, marginTop: 4 },
+  rowValue: { ...typeElder.subheading, color: colors.text, marginTop: 4 },
   editButton: {
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -429,6 +431,8 @@ const styles = StyleSheet.create({
   inviteCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -443,18 +447,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   inviteCaption: {
-    fontSize: 14,
-    fontFamily: fontFamily.medium,
+    ...typeElder.caption,
     color: colors.textFaint,
     textAlign: 'right',
-    lineHeight: 14 * 1.5,
   },
   footerCaption: {
-    fontSize: 14,
-    fontFamily: fontFamily.medium,
+    ...typeElder.caption,
     color: colors.textFaint,
     textAlign: 'center',
-    lineHeight: 14 * 1.5,
     marginTop: 4,
   },
 });

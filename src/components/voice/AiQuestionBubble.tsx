@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, fontFamily } from '../../theme/tokens';
+import { colors, fontFamily, shadow } from '../../theme/tokens';
 import { MascotLogo } from '../MascotLogo';
 
 export function AiQuestionBubble({ question }: { question: string }) {
@@ -21,12 +21,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 24,
     borderBottomLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 24,
-    shadowColor: colors.text,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
+    ...shadow.card,
   },
   header: {
     flexDirection: 'row',

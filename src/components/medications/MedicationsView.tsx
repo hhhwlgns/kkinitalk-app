@@ -6,8 +6,10 @@ import { Pressable } from 'react-native';
 
 import { BigButton } from '../BigButton';
 import { DisclaimerBanner } from '../DisclaimerBanner';
+import { Card, EmptyState, SectionHeader } from '../ui';
+import { PillIcon } from '../icons/PillIcon';
 import { MedicationScanCard } from './MedicationScanCard';
-import { colors, fontFamily, fontSize, radius, shadow, spacing } from '../../theme/tokens';
+import { colors, fontFamily, fontSize, radius, shadow, spacing, type as typeScale } from '../../theme/tokens';
 import type { Medication } from '../../domain/types';
 import type { ConflictWarning } from '../../domain/conflictRules';
 import { MEDICATION_TIME_PATTERN } from '../../domain/medicationReminders';
@@ -98,41 +100,55 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
       <DisclaimerBanner variant="medication" />
 
       {warnings && warnings.length > 0 && (
-        <View style={styles.warningCard}>
-          <Text style={styles.warningTitle}>음식 충돌 경고</Text>
+        <Card style={styles.warningCard}>
+          <View style={styles.warningHeader}>
+            <View style={styles.warningDot} />
+            <Text style={styles.warningTitle}>음식과 함께 주의하세요</Text>
+          </View>
           {warnings.map((warning, index) => (
             <Text key={`${warning.medicationName}-${warning.foodName}-${index}`} style={styles.warningText}>
               {warning.warning}
             </Text>
           ))}
-        </View>
+        </Card>
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>등록된 약</Text>
+        <SectionHeader title="등록된 약" />
         {medications.length === 0 ? (
-          <Text style={styles.emptyText}>등록된 약이 없어요</Text>
+          <EmptyState
+            icon={<PillIcon size={26} color={colors.textFaint} />}
+            title="등록된 약이 없어요"
+            description="아래에서 사진으로 찍거나 직접 추가해 보세요."
+          />
         ) : (
           medications.map((medication) => (
-            <View key={medication.id} style={styles.medicationCard}>
-              <Text style={styles.medicationName}>{medication.name}</Text>
-              <Text style={styles.medicationTimes}>{medication.timesOfDay.join(', ')}</Text>
-              {medication.conflictFoods.length > 0 && (
-                <Text style={styles.medicationConflicts}>주의 음식: {medication.conflictFoods.join(', ')}</Text>
-              )}
+            <Card key={medication.id} style={styles.medicationCard}>
+              <View style={styles.medicationTop}>
+                <View style={styles.medIconWrap}>
+                  <PillIcon size={20} color={colors.onPrimary} />
+                </View>
+                <View style={styles.flex1}>
+                  <Text style={styles.medicationName}>{medication.name}</Text>
+                  <Text style={styles.medicationTimes}>{medication.timesOfDay.join(' · ')}</Text>
+                  {medication.conflictFoods.length > 0 && (
+                    <Text style={styles.medicationConflicts}>주의 음식: {medication.conflictFoods.join(', ')}</Text>
+                  )}
+                </View>
+              </View>
               {renderAction(medication)}
-            </View>
+            </Card>
           ))
         )}
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>사진으로 약 등록</Text>
+        <SectionHeader title="사진으로 약 등록" />
         <MedicationScanCard compact={compact} onAdd={onSave} />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>직접 약 등록</Text>
+        <SectionHeader title="직접 약 등록" />
 
         <Text style={styles.label}>무슨 약이에요?</Text>
         <View style={styles.chipRow}>
@@ -246,55 +262,51 @@ export function MedicationsView({ title, medications, warnings, compact, onSave,
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.lg },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  flex1: { flex: 1 },
   title: {
-    fontSize: fontSize.sectionHeader,
-    fontFamily: fontFamily.bold,
+    ...typeScale.title,
     color: colors.text,
     marginBottom: spacing.sm,
   },
   section: { marginTop: spacing.lg },
-  sectionTitle: {
-    fontSize: fontSize.label,
-    fontFamily: fontFamily.bold,
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  emptyText: { fontSize: fontSize.small, fontFamily: fontFamily.regular, color: colors.textMuted },
   medicationCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    ...shadow.card,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
   },
-  medicationName: { fontSize: fontSize.body, fontFamily: fontFamily.bold, color: colors.text },
+  medicationTop: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
+  medIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  medicationName: { ...typeScale.subheading, color: colors.text },
   medicationTimes: {
-    fontSize: fontSize.small,
-    fontFamily: fontFamily.regular,
+    ...typeScale.callout,
     color: colors.textMuted,
-    marginTop: spacing.xs,
+    marginTop: 2,
   },
   medicationConflicts: {
-    fontSize: fontSize.meta,
-    fontFamily: fontFamily.regular,
+    ...typeScale.caption,
     color: colors.caution,
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   warningCard: {
     backgroundColor: colors.dangerBg,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderColor: colors.dangerBorder,
     marginBottom: spacing.md,
-    ...shadow.card,
+    gap: spacing.xs,
   },
+  warningHeader: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 2 },
+  warningDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.danger },
   warningTitle: {
-    fontSize: fontSize.label,
-    fontFamily: fontFamily.bold,
+    ...typeScale.bodyStrong,
     color: colors.danger,
-    marginBottom: spacing.xs,
   },
-  warningText: { fontSize: fontSize.small, fontFamily: fontFamily.regular, color: colors.text, marginBottom: spacing.xs },
+  warningText: { ...typeScale.body, color: colors.text },
   label: {
     fontSize: fontSize.body,
     fontFamily: fontFamily.bold,
