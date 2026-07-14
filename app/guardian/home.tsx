@@ -4,7 +4,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChevronIcon } from '../../src/components/icons/ChevronIcon';
+import { Card, StatTile, StatusPill } from '../../src/components/ui';
 import { colors, fontFamily, fontSize, fontSizeCompact, radius, shadow, spacing } from '../../src/theme/tokens';
+import { sodiumStatus } from '../../src/domain/nutrientStatus';
 import { useRole } from '../../src/state/RoleContext';
 import {
   checkInsCollection,
@@ -148,17 +150,10 @@ export default function GuardianHomeScreen() {
   );
 
   const totalNutrients = useMemo(() => sumNutrients(todayMeals.flatMap((meal) => meal.foods)), [todayMeals]);
-  const isSodiumCaution = totalNutrients.sodiumMg > 1500;
-  const isSodiumDanger = totalNutrients.sodiumMg > 2000;
-
-  const sodiumLabel = isSodiumDanger ? '초과' : isSodiumCaution ? '주의' : '양호';
-  const sodiumBoxStyle = isSodiumDanger
-    ? { backgroundColor: colors.dangerBg }
-    : isSodiumCaution
-      ? { backgroundColor: colors.cautionBg }
-      : null;
-  const sodiumLabelColor = isSodiumDanger ? colors.danger : isSodiumCaution ? colors.caution : colors.textMuted;
-  const sodiumValueColor = isSodiumDanger ? colors.danger : isSodiumCaution ? colors.caution : colors.text;
+  const hasMealsToday = todayMeals.length > 0;
+  const sodiumStat = sodiumStatus(totalNutrients.sodiumMg);
+  const sodiumLabel = !hasMealsToday ? '–' : sodiumStat === 'danger' ? '초과' : sodiumStat === 'caution' ? '주의' : '양호';
+  const sodiumTile = !hasMealsToday ? 'default' : sodiumStat === 'danger' ? 'danger' : sodiumStat === 'caution' ? 'caution' : 'default';
 
   const now = new Date();
   const conditionGood = todayCheckIn?.condition === 'good' || todayCheckIn?.condition === 'normal';
@@ -235,24 +230,9 @@ export default function GuardianHomeScreen() {
           </View>
 
           <View style={styles.summaryRow}>
-            <View style={styles.summaryBox}>
-              <Text style={styles.summaryBoxLabel}>오늘 식사</Text>
-              <Text style={styles.summaryBoxValue} numberOfLines={1} adjustsFontSizeToFit>
-                {todayMeals.length}회
-              </Text>
-            </View>
-            <View style={styles.summaryBox}>
-              <Text style={styles.summaryBoxLabel}>복약</Text>
-              <Text style={styles.summaryBoxValue} numberOfLines={1} adjustsFontSizeToFit>
-                {todayLogs.length}/{medicationCount}
-              </Text>
-            </View>
-            <View style={[styles.summaryBox, sodiumBoxStyle]}>
-              <Text style={[styles.summaryBoxLabel, { color: sodiumLabelColor }]}>나트륨</Text>
-              <Text style={[styles.summaryBoxValue, { color: sodiumValueColor }]} numberOfLines={1} adjustsFontSizeToFit>
-                {sodiumLabel}
-              </Text>
-            </View>
+            <StatTile label="오늘 식사" value={`${todayMeals.length}회`} />
+            <StatTile label="복약" value={`${todayLogs.length}/${medicationCount}`} />
+            <StatTile label="나트륨" value={sodiumLabel} tone={sodiumTile} />
           </View>
         </View>
 
@@ -336,17 +316,7 @@ const styles = StyleSheet.create({
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   statusDot: { width: 9, height: 9, borderRadius: 4.5 },
   statusText: { fontSize: fontSize.small, fontFamily: fontFamily.bold },
-  summaryRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  summaryBox: {
-    flex: 1,
-    backgroundColor: colors.cardSubBg,
-    borderRadius: radius.md,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-  },
-  summaryBoxLabel: { fontSize: fontSize.meta, fontFamily: fontFamily.semibold, color: colors.textMuted },
-  summaryBoxValue: { fontSize: fontSize.label, fontFamily: fontFamily.extrabold, color: colors.text, marginTop: 3 },
+  summaryRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   alertBanner: {
     borderWidth: 1.5,
     borderColor: colors.dangerBorder,

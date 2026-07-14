@@ -8,8 +8,9 @@ import { CameraIcon } from '../../src/components/icons/CameraIcon';
 import { CheckIcon } from '../../src/components/icons/CheckIcon';
 import { ChevronIcon } from '../../src/components/icons/ChevronIcon';
 import { PillIcon } from '../../src/components/icons/PillIcon';
-import { Badge, Card, SectionHeader, StatTile } from '../../src/components/ui';
+import { Card, SectionHeader, StatTile, StatusPill } from '../../src/components/ui';
 import { colors, fontFamily, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
+import { mealStatus, proteinStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
 import { useRole } from '../../src/state/RoleContext';
 import {
   checkInsCollection,
@@ -20,7 +21,7 @@ import {
 } from '../../src/mocks/db/collections';
 import type { CheckIn, ConditionLevel, HealthProfile, Meal, Medication, MedicationLog } from '../../src/domain/types';
 import { earliestTime, formatDateWithWeekday, formatKoreanTime, todayDate } from '../../src/domain/date';
-import { assessMealFitness, inferMealSlot, nutrientPct, suggestNextMeal, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { inferMealSlot, suggestNextMeal, sumNutrients } from '../../src/mocks/nutritionAnalysis';
 
 const CONDITION_LABEL: Record<ConditionLevel, string> = {
   good: '좋음',
@@ -99,7 +100,6 @@ export default function ElderlyHomeScreen() {
   }, [notTakenMeds]);
 
   const totalNutrients = useMemo(() => sumNutrients(todayMeals.flatMap((meal) => meal.foods)), [todayMeals]);
-  const verdict = useMemo(() => assessMealFitness(totalNutrients, profile), [totalNutrients, profile]);
 
   const now = new Date();
   const currentSlot = inferMealSlot(now);
@@ -112,14 +112,14 @@ export default function ElderlyHomeScreen() {
       ? '피해야 할 음식은 제외했어요'
       : '균형 잡힌 식사예요';
 
-  const isSodiumCaution = verdict.fitness === 'caution';
   const hasMealsToday = todayMeals.length > 0;
-  const proteinTone = !hasMealsToday
-    ? 'default'
-    : nutrientPct(totalNutrients.proteinG, 'proteinG') >= 50
-      ? 'default'
-      : 'caution';
-  const proteinLabel = !hasMealsToday ? '–' : proteinTone === 'default' ? '좋음' : '부족';
+  const sodiumStat = sodiumStatus(totalNutrients.sodiumMg);
+  const proteinStat = proteinStatus(totalNutrients.proteinG);
+  const overallStat = mealStatus(totalNutrients);
+  const sodiumTile = !hasMealsToday ? 'default' : sodiumStat === 'good' ? 'default' : sodiumStat === 'caution' ? 'caution' : 'danger';
+  const proteinTile = !hasMealsToday ? 'default' : proteinStat === 'good' ? 'default' : proteinStat === 'caution' ? 'caution' : 'danger';
+  const proteinLabel = !hasMealsToday ? '–' : proteinStat === 'good' ? '좋음' : proteinStat === 'caution' ? '보통' : '부족';
+  const overallWord = overallStat === 'good' ? '균형 좋음' : overallStat === 'caution' ? '주의' : '위험';
   const latestMeal = recentMeals[0] ?? null;
 
   return (
@@ -207,18 +207,16 @@ export default function ElderlyHomeScreen() {
           <Card>
             <View style={styles.summaryTopRow}>
               <Text style={styles.summaryCount}>{todayMeals.length}끼 기록</Text>
-              {hasMealsToday ? (
-                <Badge label={isSodiumCaution ? '나트륨 주의' : '균형 좋음'} tone={isSodiumCaution ? 'caution' : 'good'} />
-              ) : null}
+              {hasMealsToday ? <StatusPill status={overallStat} label={overallWord} /> : null}
             </View>
             <View style={styles.statRow}>
               <StatTile label="칼로리" value={hasMealsToday ? `${Math.round(totalNutrients.calories)}kcal` : '–'} />
               <StatTile
                 label="나트륨"
                 value={hasMealsToday ? `${Math.round(totalNutrients.sodiumMg).toLocaleString()}mg` : '–'}
-                tone={isSodiumCaution ? 'danger' : 'default'}
+                tone={sodiumTile}
               />
-              <StatTile label="단백질" value={proteinLabel} tone={proteinTone} />
+              <StatTile label="단백질" value={proteinLabel} tone={proteinTile} />
             </View>
             {latestMeal ? (
               <Pressable

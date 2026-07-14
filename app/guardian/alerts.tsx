@@ -5,7 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BigButton } from '../../src/components/BigButton';
 import { DisclaimerBanner } from '../../src/components/DisclaimerBanner';
-import { colors, fontFamily, fontSize, radius, shadow, spacing } from '../../src/theme/tokens';
+import { Card, EmptyState, StatusPill } from '../../src/components/ui';
+import { colors, fontFamily, fontSize, radius, spacing, type as typeScale } from '../../src/theme/tokens';
+import type { NutrientStatus } from '../../src/domain/nutrientStatus';
 import { useRole } from '../../src/state/RoleContext';
 import { guardianAlertsCollection, guardianLinksCollection } from '../../src/mocks/db/collections';
 import { findConnectedLink } from '../../src/domain/guardianLink';
@@ -16,6 +18,15 @@ const ALERT_TYPE_LABEL: Record<GuardianAlert['type'], string> = {
   nutrition_risk: '영양 주의',
   missed_medication: '복약 누락',
   high_risk: '고위험',
+};
+
+// Severity color per alert type — high-risk & missed medication read as danger,
+// the rest as caution, so the list conveys urgency at a glance.
+const ALERT_STATUS: Record<GuardianAlert['type'], NutrientStatus> = {
+  missed_meal: 'caution',
+  nutrition_risk: 'caution',
+  missed_medication: 'danger',
+  high_risk: 'danger',
 };
 
 export default function GuardianAlertsScreen() {
@@ -71,27 +82,38 @@ export default function GuardianAlertsScreen() {
         <DisclaimerBanner variant="general" />
 
         {alerts.length === 0 ? (
-          <Text style={styles.emptyText}>알림이 없어요</Text>
+          <EmptyState title="새로운 알림이 없어요" description="어르신의 식사·복약에 주의가 필요하면 여기로 알려드려요." />
         ) : (
-          alerts.map((alert) => (
-            <View key={alert.id} style={[styles.card, alert.acknowledged && styles.cardAcknowledged]}>
-              <Text style={styles.cardType}>{ALERT_TYPE_LABEL[alert.type]}</Text>
-              <Text style={styles.cardMessage}>{alert.message}</Text>
-              <Text style={styles.cardDate}>{alert.createdAt.slice(0, 16).replace('T', ' ')}</Text>
+          alerts.map((alert) => {
+            const status = ALERT_STATUS[alert.type];
+            const accent = status === 'danger' ? colors.danger : colors.caution;
+            return (
+              <Card key={alert.id} padded={false} style={[styles.card, alert.acknowledged && styles.cardAcknowledged]}>
+                <View style={[styles.accent, { backgroundColor: accent }]} />
+                <View style={styles.cardBody}>
+                  <View style={styles.cardTopRow}>
+                    <StatusPill status={status} size="sm" label={ALERT_TYPE_LABEL[alert.type]} />
+                    {alert.acknowledged && <Text style={styles.doneTag}>확인함</Text>}
+                  </View>
+                  <Text style={styles.cardMessage}>{alert.message}</Text>
+                  <Text style={styles.cardDate}>{alert.createdAt.slice(0, 16).replace('T', ' ')}</Text>
 
-              <TextInput
-                style={styles.commentInput}
-                value={drafts[alert.id] ?? ''}
-                onChangeText={(text) => setDrafts((prev) => ({ ...prev, [alert.id]: text }))}
-                placeholder="코멘트를 입력하세요"
-                multiline
-              />
-              <View style={styles.actions}>
-                <BigButton label="코멘트 저장" variant="secondary" onPress={() => saveComment(alert)} />
-                {!alert.acknowledged && <BigButton label="확인 완료" onPress={() => acknowledge(alert)} />}
-              </View>
-            </View>
-          ))
+                  <TextInput
+                    style={styles.commentInput}
+                    value={drafts[alert.id] ?? ''}
+                    onChangeText={(text) => setDrafts((prev) => ({ ...prev, [alert.id]: text }))}
+                    placeholder="메모를 남겨두면 기록에 함께 저장돼요"
+                    placeholderTextColor={colors.textFaint}
+                    multiline
+                  />
+                  <View style={styles.actions}>
+                    <BigButton label="메모 저장" variant="secondary" onPress={() => saveComment(alert)} />
+                    {!alert.acknowledged && <BigButton label="확인 완료" onPress={() => acknowledge(alert)} />}
+                  </View>
+                </View>
+              </Card>
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>
@@ -107,36 +129,30 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.sm,
   },
-  emptyText: { fontSize: fontSize.small, fontFamily: fontFamily.regular, color: colors.textMuted, marginTop: spacing.lg },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
     marginTop: spacing.md,
-    ...shadow.card,
+    flexDirection: 'row',
+    overflow: 'hidden',
   },
-  cardAcknowledged: {
-    opacity: 0.7,
-  },
-  cardType: {
-    fontSize: fontSize.meta,
-    fontFamily: fontFamily.bold,
-    color: colors.danger,
-    marginBottom: spacing.xs,
-  },
-  cardMessage: { fontSize: fontSize.body, fontFamily: fontFamily.regular, color: colors.text, marginBottom: spacing.xs },
-  cardDate: { fontSize: fontSize.meta, fontFamily: fontFamily.regular, color: colors.textMuted, marginBottom: spacing.sm },
+  cardAcknowledged: { opacity: 0.6 },
+  accent: { width: 5 },
+  cardBody: { flex: 1, padding: spacing.md },
+  cardTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
+  doneTag: { ...typeScale.caption, color: colors.good, fontFamily: fontFamily.bold },
+  cardMessage: { ...typeScale.body, color: colors.text, marginBottom: 4 },
+  cardDate: { ...typeScale.caption, color: colors.textMuted, marginBottom: spacing.sm },
   commentInput: {
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     padding: spacing.sm,
-    fontSize: fontSize.meta,
+    fontSize: fontSize.body,
     fontFamily: fontFamily.regular,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceSunken,
     color: colors.text,
     minHeight: 60,
     marginBottom: spacing.sm,
+    textAlignVertical: 'top',
   },
   actions: { gap: spacing.xs },
 });

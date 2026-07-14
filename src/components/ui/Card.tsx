@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { colors, radius, shadow, spacing } from '../../theme/tokens';
 
@@ -11,7 +11,7 @@ interface CardProps {
   // `raised` reserves the stronger shadow for the single focal card on a screen.
   raised?: boolean;
   padded?: boolean;
-  style?: ViewStyle | ViewStyle[];
+  style?: StyleProp<ViewStyle>;
 }
 
 /**
@@ -29,7 +29,7 @@ export function Card({ children, tone = 'default', raised = false, padded = true
         tone === 'sunken' && styles.sunken,
         tone === 'flat' && styles.flat,
         raised && tone === 'default' && shadow.raised,
-        style as ViewStyle,
+        style,
       ]}
     >
       {children}

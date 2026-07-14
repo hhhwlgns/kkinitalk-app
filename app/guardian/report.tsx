@@ -4,7 +4,9 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { G, Rect, Text as SvgText } from 'react-native-svg';
 
+import { StatusPill } from '../../src/components/ui';
 import { colors, fontFamily, fontSize, radius, shadow, spacing } from '../../src/theme/tokens';
+import { adherenceStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
 import { useRole } from '../../src/state/RoleContext';
 import {
   guardianLinksCollection,
@@ -195,17 +197,38 @@ export default function GuardianReportScreen() {
         {!hasAnyData && <Text style={styles.emptyText}>이번 주 기록이 없어요.</Text>}
 
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>나트륨 섭취 추이 (일별, mg)</Text>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardLabel}>나트륨 섭취 추이 (일별)</Text>
+            {hasAnyData && (
+              <StatusPill
+                status={sodiumStatus(avgSodium)}
+                size="sm"
+                label={sodiumStatus(avgSodium) === 'good' ? '양호' : sodiumStatus(avgSodium) === 'caution' ? '주의' : '초과'}
+              />
+            )}
+          </View>
           <SodiumChart stats={stats} />
-          <Text style={styles.cardSub}>주간 평균: {avgSodium}mg (기준 1500mg 초과 시 빨간색)</Text>
+          <Text style={styles.cardSub}>주간 평균 {avgSodium}mg · 기준 1500mg</Text>
         </View>
 
-        <View style={styles.card}>
+        <View style={styles.statCard}>
           <Text style={styles.cardLabel}>주간 통계</Text>
-          <Text style={styles.statLine}>총 식사 기록: {totalMeals}건</Text>
-          <Text style={styles.statLine}>
-            복약 이행률: {adherenceRate !== null ? `${adherenceRate}%` : '등록된 약 없음'}
-          </Text>
+          <View style={styles.statRow}>
+            <Text style={styles.statLine}>총 식사 기록</Text>
+            <Text style={styles.statValue}>{totalMeals}건</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLine}>복약 이행률</Text>
+            {adherenceRate !== null ? (
+              <StatusPill
+                status={adherenceStatus(adherenceRate)}
+                size="sm"
+                label={`${adherenceRate}%`}
+              />
+            ) : (
+              <Text style={styles.statValue}>등록된 약 없음</Text>
+            )}
+          </View>
         </View>
 
         {hasAnyData && (
@@ -236,14 +259,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...shadow.card,
   },
+  statCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    ...shadow.card,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+    marginBottom: spacing.sm,
+  },
   cardLabel: {
     fontSize: fontSize.label,
-    fontFamily: fontFamily.regular,
+    fontFamily: fontFamily.bold,
     color: colors.textMuted,
     marginBottom: spacing.sm,
     alignSelf: 'flex-start',
   },
   cardSub: { fontSize: fontSize.meta, fontFamily: fontFamily.regular, color: colors.textMuted, marginTop: spacing.xs },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  statValue: { fontSize: fontSize.body, fontFamily: fontFamily.extrabold, color: colors.text },
   aiCard: {
     backgroundColor: colors.nextMedBg,
     borderWidth: 1.5,
@@ -260,7 +306,7 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     marginTop: spacing.xs,
   },
-  statLine: { fontSize: fontSize.body, fontFamily: fontFamily.regular, color: colors.text, marginTop: spacing.xs, alignSelf: 'flex-start' },
+  statLine: { fontSize: fontSize.body, fontFamily: fontFamily.medium, color: colors.textMuted },
   loadingText: {
     fontSize: fontSize.body,
     fontFamily: fontFamily.regular,

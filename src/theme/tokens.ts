@@ -176,4 +176,12 @@ export const animationTiming = {
   blinkDurationMs: 1600,
 };
 
+// Status → color set. Keyed by the domain's NutrientStatus so any screen can
+// turn a good/caution/danger verdict into fg/bg/border/track colors uniformly.
+export const statusColor = {
+  good: { fg: colors.good, bg: colors.goodBg, border: colors.goodBorder, track: colors.goodBgAlt },
+  caution: { fg: colors.caution, bg: colors.cautionBg, border: colors.cautionBorder, track: '#F6E4CB' },
+  danger: { fg: colors.danger, bg: colors.dangerBg, border: colors.dangerBorder, track: '#F7D6CC' },
+} as const;
+
 export const minTouchTarget = 56;

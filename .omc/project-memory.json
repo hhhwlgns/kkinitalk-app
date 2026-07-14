@@ -123,8 +123,8 @@
   "hotPaths": [
     {
       "path": "app\\elderly\\home.tsx",
-      "accessCount": 57,
-      "lastAccessed": 1783962048351,
+      "accessCount": 64,
+      "lastAccessed": 1783962925200,
       "type": "file"
     },
     {
@@ -135,8 +135,8 @@
     },
     {
       "path": "src\\theme\\tokens.ts",
-      "accessCount": 48,
-      "lastAccessed": 1783961868253,
+      "accessCount": 51,
+      "lastAccessed": 1783962755606,
       "type": "file"
     },
     {
@@ -152,6 +152,12 @@
       "type": "directory"
     },
     {
+      "path": "app\\elderly\\result.tsx",
+      "accessCount": 42,
+      "lastAccessed": 1783963279259,
+      "type": "file"
+    },
+    {
       "path": "app\\elderly\\medications.tsx",
       "accessCount": 41,
       "lastAccessed": 1783949409545,
@@ -161,12 +167,6 @@
       "path": "app\\elderly\\camera.tsx",
       "accessCount": 41,
       "lastAccessed": 1783960211688,
-      "type": "file"
-    },
-    {
-      "path": "app\\elderly\\result.tsx",
-      "accessCount": 40,
-      "lastAccessed": 1783962237468,
       "type": "file"
     },
     {

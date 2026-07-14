@@ -3,11 +3,13 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import { AlarmIcon } from '../icons/AlarmIcon';
 import { CalendarIcon } from '../icons/CalendarIcon';
+import { StatTile, StatusPill } from '../ui';
 import { colors, fontFamily, fontSize, fontSizeCompact, radius, shadow, spacing } from '../../theme/tokens';
 import type { CheckIn, ConditionLevel, Meal, MealSlot, Medication, MedicationLog } from '../../domain/types';
 import { buildDayHistory, collectRecordDates, getMonthGridDates } from '../../domain/historyView';
 import { earliestTime, formatKoreanTime, todayDate } from '../../domain/date';
-import { nutrientPct, sumNutrients } from '../../mocks/nutritionAnalysis';
+import { sumNutrients } from '../../mocks/nutritionAnalysis';
+import { proteinStatus, sodiumStatus } from '../../domain/nutrientStatus';
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -76,8 +78,11 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
     () => sumNutrients(dayHistory.meals.flatMap((meal) => meal.foods)),
     [dayHistory.meals],
   );
-  const isSodiumCaution = dayNutrients.sodiumMg > 1500;
-  const isProteinCaution = nutrientPct(dayNutrients.proteinG, 'proteinG') < 50;
+  const hasMeals = dayHistory.meals.length > 0;
+  const sodiumStat = sodiumStatus(dayNutrients.sodiumMg);
+  const proteinStat = proteinStatus(dayNutrients.proteinG);
+  const sodiumTile = !hasMeals ? 'default' : sodiumStat === 'good' ? 'default' : sodiumStat === 'caution' ? 'caution' : 'danger';
+  const proteinTile = !hasMeals ? 'default' : proteinStat === 'good' ? 'default' : proteinStat === 'caution' ? 'caution' : 'danger';
 
   const medicationRows = useMemo(
     () =>
@@ -178,40 +183,23 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
         {selectedDateLabel} · {dayHistory.meals.length}건
       </Text>
 
-      <View style={styles.summaryCard}>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryBox}>
-            <Text style={styles.summaryBoxLabel}>칼로리</Text>
-            <Text style={[styles.summaryBoxValue, { fontSize: size.label }]} numberOfLines={1} adjustsFontSizeToFit>
-              {Math.round(dayNutrients.calories)}kcal
-            </Text>
-          </View>
-          <View style={styles.summaryBox}>
-            <Text style={styles.summaryBoxLabel}>나트륨</Text>
-            <Text
-              style={[styles.summaryBoxValue, { fontSize: size.label }, isSodiumCaution && { color: colors.danger }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {Math.round(dayNutrients.sodiumMg).toLocaleString()}mg
-            </Text>
-          </View>
-          <View style={styles.summaryBox}>
-            <Text style={styles.summaryBoxLabel}>단백질</Text>
-            <Text
-              style={[styles.summaryBoxValue, { fontSize: size.label }, isProteinCaution && { color: colors.danger }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {Math.round(dayNutrients.proteinG)}g
-            </Text>
-          </View>
-        </View>
+      <View style={styles.summaryRow}>
+        <StatTile label="칼로리" value={hasMeals ? `${Math.round(dayNutrients.calories)}kcal` : '–'} />
+        <StatTile
+          label="나트륨"
+          value={hasMeals ? `${Math.round(dayNutrients.sodiumMg).toLocaleString()}mg` : '–'}
+          tone={sodiumTile}
+        />
+        <StatTile
+          label="단백질"
+          value={hasMeals ? `${Math.round(dayNutrients.proteinG)}g` : '–'}
+          tone={proteinTile}
+        />
       </View>
 
       <Text style={[styles.sectionHeader, { fontSize: size.small }]}>식사</Text>
       {filteredMeals.map((meal) => {
-        const isGood = meal.fitness === 'good';
+        const mealStat = sodiumStatus(meal.totalNutrients.sodiumMg);
         const displayName = meal.foods.length > 0 ? `${meal.foods[0].name} 등` : '식사';
         return (
           <View key={meal.id} style={[styles.mealCard, compact && styles.mealCardCompact]}>
@@ -233,11 +221,11 @@ export function DayHistoryView({ variant, title, meals, medications, medicationL
                 {meal.foods.map((food) => food.name).join(', ')}
               </Text>
             </View>
-            <View style={[styles.verdictPill, compact && styles.verdictPillCompact, { backgroundColor: isGood ? colors.goodBg : colors.cautionBg }]}>
-              <Text style={[styles.verdictPillLabel, { color: isGood ? colors.good : colors.caution }]}>
-                {isGood ? '적합' : '주의'}
-              </Text>
-            </View>
+            <StatusPill
+              status={mealStat}
+              size="sm"
+              label={mealStat === 'good' ? '적합' : mealStat === 'caution' ? '주의' : '위험'}
+            />
           </View>
         );
       })}
@@ -366,23 +354,7 @@ const styles = StyleSheet.create({
   dayNumber: { fontFamily: fontFamily.bold, color: colors.text },
   dayNumberSelected: { color: colors.onPrimary },
   dateMeta: { fontFamily: fontFamily.bold, color: colors.textMuted },
-  summaryCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    ...shadow.card,
-  },
-  summaryRow: { flexDirection: 'row', gap: 8 },
-  summaryBox: {
-    flex: 1,
-    backgroundColor: colors.cardSubBg,
-    borderRadius: radius.sm,
-    paddingVertical: 13,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-  },
-  summaryBoxLabel: { fontSize: fontSize.meta, fontFamily: fontFamily.semibold, color: colors.textMuted },
-  summaryBoxValue: { fontFamily: fontFamily.extrabold, color: colors.text, marginTop: 3 },
+  summaryRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xxs },
   sectionHeader: { fontFamily: fontFamily.extrabold, color: colors.textMuted, marginTop: 4 },
   mealCard: {
     backgroundColor: colors.surface,
@@ -408,14 +380,6 @@ const styles = StyleSheet.create({
   mealTime: { fontSize: fontSize.meta, fontFamily: fontFamily.bold, color: colors.textMuted },
   mealName: { fontFamily: fontFamily.extrabold, color: colors.text, marginTop: 1 },
   mealFoods: { fontSize: fontSize.meta, fontFamily: fontFamily.medium, color: colors.textMuted, marginTop: 1 },
-  verdictPill: {
-    borderRadius: radius.pill,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    flexShrink: 0,
-  },
-  verdictPillCompact: { paddingVertical: 4, paddingHorizontal: 10 },
-  verdictPillLabel: { fontSize: fontSize.meta, fontFamily: fontFamily.extrabold },
   missingCard: {
     borderWidth: 1.5,
     borderColor: colors.border,

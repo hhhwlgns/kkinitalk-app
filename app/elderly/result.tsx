@@ -3,12 +3,13 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
-import { BigButton } from '../../src/components/BigButton';
-import { colors, fontFamily, fontSize, radius, shadow, spacing } from '../../src/theme/tokens';
+import { Card, StatTile, StatusPill } from '../../src/components/ui';
+import { colors, fontFamily, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
 import { useRole } from '../../src/state/RoleContext';
 import { healthProfilesCollection, mealsCollection } from '../../src/mocks/db/collections';
 import type { FoodItem, HealthProfile, Meal } from '../../src/domain/types';
-import { assessMealFitness, nutrientPct, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { assessMealFitness, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { mealStatus, proteinStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
 
 const SLOT_LABEL: Record<Meal['slot'], string> = {
   breakfast: '아침',
@@ -23,38 +24,7 @@ function formatTime(iso: string): string {
   const period = hours24 < 12 ? '오전' : '오후';
   const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
   const minutes = date.getMinutes();
-  return `${period} ${hours12}시 ${minutes}분`;
-}
-
-function NutrientBar({
-  name,
-  value,
-  unit,
-  pct,
-  color,
-}: {
-  name: string;
-  value: string;
-  unit: string;
-  pct: number;
-  color: string;
-}) {
-  return (
-    <View>
-      <View style={styles.nutrientRow}>
-        <Text style={styles.nutrientName} numberOfLines={1}>
-          {name}
-        </Text>
-        <Text style={[styles.nutrientValue, { color }]} numberOfLines={1}>
-          {value}
-          {unit}
-        </Text>
-      </View>
-      <View style={styles.nutrientTrack}>
-        <View style={[styles.nutrientFill, { width: `${pct}%`, backgroundColor: color }]} />
-      </View>
-    </View>
-  );
+  return minutes === 0 ? `${period} ${hours12}시` : `${period} ${hours12}시 ${minutes}분`;
 }
 
 export default function ResultScreen() {
@@ -95,31 +65,25 @@ export default function ResultScreen() {
 
   if (!meal) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>분석 결과</Text>
-          <Text style={styles.subtitle}>분석 결과를 찾을 수 없어요</Text>
-          <BigButton label="홈으로" onPress={() => router.replace('/elderly/home')} />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.missingWrap}>
+          <Text style={styles.missingTitle}>분석 결과를 찾을 수 없어요</Text>
+          <Pressable style={styles.primaryButton} onPress={() => router.replace('/elderly/home')}>
+            <Text style={styles.primaryButtonLabel}>홈으로</Text>
+          </Pressable>
         </View>
       </SafeAreaView>
     );
   }
 
-  const isGood = verdict.fitness === 'good';
-  const verdictTitle = isGood
-    ? '골고루 잘 드셨어요'
-    : totals.sodiumMg > 1500
-      ? '국이 조금 짜요'
-      : '나트륨이 조금 높아요';
+  const overall = mealStatus(totals);
+  const overallWord = overall === 'good' ? '균형 좋음' : overall === 'caution' ? '주의' : '위험';
 
   function toggleFood(foodId: string) {
     setRemovedFoodIds((prev) => {
       const next = new Set(prev);
-      if (next.has(foodId)) {
-        next.delete(foodId);
-      } else {
-        next.add(foodId);
-      }
+      if (next.has(foodId)) next.delete(foodId);
+      else next.add(foodId);
       return next;
     });
   }
@@ -139,104 +103,68 @@ export default function ResultScreen() {
     router.replace('/elderly/home');
   }
 
-  const displayName = activeFoods.length > 0 ? `${activeFoods[0].name} 등` : '식사';
+  const displayName = activeFoods.length > 0 ? `${activeFoods[0].name} 등 ${activeFoods.length}가지` : '식사';
+  const sodiumTile = sodiumStatus(totals.sodiumMg) === 'good' ? 'default' : sodiumStatus(totals.sodiumMg) === 'caution' ? 'caution' : 'danger';
+  const proteinStat = proteinStatus(totals.proteinG);
+  const proteinTile = proteinStat === 'good' ? 'default' : proteinStat === 'caution' ? 'caution' : 'danger';
+  const proteinLabel = proteinStat === 'good' ? '좋음' : proteinStat === 'caution' ? '보통' : '부족';
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.headerRow}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.screenTitle}>이렇게 드셨네요</Text>
+
+        <Card padded={false} style={styles.photoCard}>
           {meal.photoUri ? (
-            <Image source={{ uri: meal.photoUri }} style={styles.photoStripe} resizeMode="cover" />
+            <Image source={{ uri: meal.photoUri }} style={styles.photo} resizeMode="cover" />
           ) : (
-            <View style={styles.photoStripe} />
+            <View style={[styles.photo, styles.photoEmpty]}>
+              <Text style={styles.photoEmptyText}>사진 없음</Text>
+            </View>
           )}
-          <View style={styles.headerText}>
-            <Text style={styles.headerMeta}>
+          <View style={styles.photoBody}>
+            <Text style={styles.eyebrow}>
               {SLOT_LABEL[meal.slot]} · {formatTime(meal.recordedAt)}
             </Text>
-            <Text style={styles.headerTitle}>{displayName}</Text>
+            <Text style={styles.mealName}>{displayName}</Text>
           </View>
-        </View>
+        </Card>
 
-        <View style={styles.chipsRow}>
-          {activeFoods.map((food) => (
-            <Pressable
-              key={food.id}
-              onPress={() => isEditFoods && toggleFood(food.id)}
-              style={[styles.chip, { borderColor: isEditFoods ? colors.dangerBorder : colors.border }]}
-            >
-              <Text style={styles.chipLabel}>
-                {food.name}
-                {isEditFoods ? '  ✕' : ''}
-              </Text>
+        <View>
+          <View style={styles.foodsHeader}>
+            <Text style={styles.foodsTitle}>인식된 음식</Text>
+            <Pressable onPress={() => setIsEditFoods((v) => !v)} hitSlop={8}>
+              <Text style={styles.linkLabel}>{isEditFoods ? '완료' : '고치기'}</Text>
             </Pressable>
-          ))}
-        </View>
-
-        <View style={styles.editHintCard}>
-          <Text style={styles.editHintText}>
-            {isEditFoods
-              ? '잘못 인식된 음식을 누르면 빠져요'
-              : 'AI 분석 신뢰도 보통 · 잘못 인식된 음식은 고칠 수 있어요'}
-          </Text>
-          <Pressable style={styles.editButton} onPress={() => setIsEditFoods((v) => !v)}>
-            <Text style={styles.editButtonLabel}>{isEditFoods ? '고치기 완료' : '음식 고치기'}</Text>
-          </Pressable>
-          <Pressable style={styles.editButton} onPress={() => router.replace('/elderly/camera')}>
-            <Text style={styles.editButtonLabelMuted}>다시 찍기</Text>
-          </Pressable>
-        </View>
-
-        <View
-          style={[
-            styles.verdictCard,
-            {
-              backgroundColor: isGood ? colors.goodBg : colors.cautionBg,
-              borderColor: isGood ? colors.goodBorder : colors.cautionBorder,
-            },
-          ]}
-        >
-          <View style={styles.verdictHeader}>
-            <View style={[styles.verdictChip, { backgroundColor: isGood ? colors.good : colors.caution }]}>
-              <Text style={styles.verdictChipLabel}>{isGood ? '적합' : '주의'}</Text>
-            </View>
-            <Text style={[styles.verdictTitle, { color: isGood ? colors.good : colors.text }]}>
-              {verdictTitle}
-            </Text>
           </View>
-          <Text style={styles.verdictText}>{verdict.fitnessNote}</Text>
+          <View style={styles.chipsRow}>
+            {activeFoods.map((food) => (
+              <Pressable
+                key={food.id}
+                onPress={() => isEditFoods && toggleFood(food.id)}
+                style={[styles.foodChip, isEditFoods && styles.foodChipEditing]}
+              >
+                <Text style={[styles.foodChipLabel, isEditFoods && styles.foodChipLabelEditing]}>
+                  {food.name}
+                  {isEditFoods ? '  ✕' : ''}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          {isEditFoods && <Text style={styles.editHint}>잘못 인식된 음식을 누르면 빠져요</Text>}
         </View>
 
-        <View style={styles.nutrientsCard}>
-          <Text style={styles.nutrientsHeader}>이번 식사 영양</Text>
-          <NutrientBar
-            name="칼로리"
-            value={`${Math.round(totals.calories)}`}
-            unit=" kcal"
-            pct={nutrientPct(totals.calories, 'calories')}
-            color={colors.text}
-          />
-          <NutrientBar
-            name="나트륨"
-            value={`${Math.round(totals.sodiumMg).toLocaleString()}`}
-            unit=" mg"
-            pct={nutrientPct(totals.sodiumMg, 'sodiumMg')}
-            color={totals.sodiumMg > 1500 ? colors.danger : colors.good}
-          />
-          <NutrientBar
-            name="단백질"
-            value={`${Math.round(totals.proteinG)}`}
-            unit=" g"
-            pct={nutrientPct(totals.proteinG, 'proteinG')}
-            color={colors.good}
-          />
-          <NutrientBar
-            name="탄수화물"
-            value={`${Math.round(totals.carbsG)}`}
-            unit=" g"
-            pct={nutrientPct(totals.carbsG, 'carbsG')}
-            color={colors.avatarInitial}
-          />
+        <Card
+          style={[styles.verdictCard, { backgroundColor: overall === 'good' ? colors.goodBg : overall === 'caution' ? colors.cautionBg : colors.dangerBg, borderColor: overall === 'good' ? colors.goodBorder : overall === 'caution' ? colors.cautionBorder : colors.dangerBorder }]}
+        >
+          <StatusPill status={overall} label={overallWord} />
+          <Text style={styles.verdictText}>{verdict.fitnessNote}</Text>
+        </Card>
+
+        <View style={styles.statRow}>
+          <StatTile label="칼로리" value={`${Math.round(totals.calories)}kcal`} />
+          <StatTile label="나트륨" value={`${Math.round(totals.sodiumMg).toLocaleString()}mg`} tone={sodiumTile} />
+          <StatTile label="단백질" value={proteinLabel} tone={proteinTile} />
         </View>
 
         <Pressable
@@ -246,8 +174,12 @@ export default function ResultScreen() {
           <Text style={styles.detailButtonLabel}>자세한 분석 보기</Text>
         </Pressable>
 
-        <Pressable style={styles.saveButton} onPress={saveRecord} disabled={saving}>
-          <Text style={styles.saveButtonLabel}>기록 저장하기</Text>
+        <Pressable style={styles.primaryButton} onPress={saveRecord} disabled={saving}>
+          <Text style={styles.primaryButtonLabel}>기록 저장하기</Text>
+        </Pressable>
+
+        <Pressable style={styles.retakeButton} onPress={() => router.replace('/elderly/camera')}>
+          <Text style={styles.retakeLabel}>다시 찍기</Text>
         </Pressable>
 
         <Text style={styles.disclaimer}>
@@ -260,194 +192,62 @@ export default function ResultScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg },
-  title: { fontSize: fontSize.sectionHeader, fontFamily: fontFamily.bold, color: colors.text },
-  subtitle: {
-    fontSize: fontSize.small,
-    fontFamily: fontFamily.regular,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginBottom: spacing.md,
-  },
-  photoStripe: {
-    width: 74,
-    height: 74,
-    borderRadius: radius.md,
-    backgroundColor: colors.dividerLight,
-  },
-  headerText: { flex: 1 },
-  headerMeta: {
-    fontSize: fontSize.body,
-    fontFamily: fontFamily.semibold,
-    color: colors.textMuted,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontFamily: fontFamily.extrabold,
-    color: colors.text,
-    marginTop: 2,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: spacing.sm,
-  },
-  chip: {
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
+
+  screenTitle: { ...typeElder.title, color: colors.text },
+
+  photoCard: { overflow: 'hidden' },
+  photo: { width: '100%', height: 180, backgroundColor: colors.surfaceSunken },
+  photoEmpty: { alignItems: 'center', justifyContent: 'center' },
+  photoEmptyText: { ...typeElder.callout, color: colors.textFaint },
+  photoBody: { padding: spacing.md, gap: 4 },
+  eyebrow: { ...typeElder.caption, color: colors.textMuted, fontFamily: fontFamily.bold },
+  mealName: { ...typeElder.heading, color: colors.text },
+
+  foodsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  foodsTitle: { ...typeElder.subheading, color: colors.text },
+  linkLabel: { fontSize: 16, fontFamily: fontFamily.bold, color: colors.secondaryAccent },
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  foodChip: {
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderRadius: radius.pill,
-    paddingVertical: 9,
-    paddingHorizontal: 16,
-  },
-  chipLabel: {
-    fontSize: fontSize.body,
-    fontFamily: fontFamily.bold,
-    color: colors.text,
-  },
-  editHintCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: spacing.md,
-    ...shadow.card,
-  },
-  editHintText: {
-    flex: 1,
-    fontSize: fontSize.small,
-    fontFamily: fontFamily.semibold,
-    color: colors.textMuted,
-    lineHeight: 20,
-  },
-  editButton: {
     borderWidth: 1.5,
     borderColor: colors.border,
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  editButtonLabel: {
-    fontSize: fontSize.small,
-    fontFamily: fontFamily.bold,
-    color: colors.secondaryAccent,
-  },
-  editButtonLabelMuted: {
-    fontSize: fontSize.small,
-    fontFamily: fontFamily.bold,
-    color: colors.textMuted,
-  },
-  verdictCard: {
-    borderWidth: 1.5,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  verdictHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  verdictChip: {
     borderRadius: radius.pill,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
-  verdictChipLabel: {
-    color: colors.onPrimary,
-    fontSize: fontSize.small,
-    fontFamily: fontFamily.extrabold,
-  },
-  verdictTitle: {
-    fontSize: 22,
-    fontFamily: fontFamily.extrabold,
-  },
-  verdictText: {
-    fontSize: fontSize.body,
-    fontFamily: fontFamily.medium,
-    color: colors.text,
-    lineHeight: 26,
-    marginTop: spacing.sm,
-  },
-  nutrientsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: 15,
-    marginBottom: spacing.md,
-    ...shadow.card,
-  },
-  nutrientsHeader: {
-    fontSize: fontSize.body,
-    fontFamily: fontFamily.extrabold,
-    color: colors.textMuted,
-  },
-  nutrientRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  nutrientName: {
-    fontSize: fontSize.label,
-    fontFamily: fontFamily.bold,
-    color: colors.text,
-  },
-  nutrientValue: {
-    fontSize: fontSize.body,
-    fontFamily: fontFamily.extrabold,
-  },
-  nutrientTrack: {
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.dividerLight,
-    marginTop: 7,
-    overflow: 'hidden',
-  },
-  nutrientFill: {
-    height: '100%',
-    borderRadius: 6,
-  },
+  foodChipEditing: { borderColor: colors.dangerBorder, backgroundColor: colors.dangerBg },
+  foodChipLabel: { ...typeElder.callout, color: colors.text, fontFamily: fontFamily.bold },
+  foodChipLabelEditing: { color: colors.danger },
+  editHint: { ...typeElder.caption, color: colors.textMuted, marginTop: spacing.xs },
+
+  verdictCard: { gap: spacing.sm },
+  verdictText: { ...typeElder.bodyStrong, color: colors.text },
+
+  statRow: { flexDirection: 'row', gap: spacing.sm },
+
   detailButton: {
     borderRadius: radius.lg,
     borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: spacing.sm,
   },
-  detailButtonLabel: {
-    color: colors.secondaryAccent,
-    fontSize: fontSize.label,
-    fontFamily: fontFamily.extrabold,
-  },
-  saveButton: {
+  detailButtonLabel: { ...typeElder.subheading, color: colors.secondaryAccent },
+  primaryButton: {
     borderRadius: radius.lg,
     backgroundColor: colors.primary,
-    paddingVertical: 21,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginBottom: spacing.md,
     ...shadow.cta,
   },
-  saveButtonLabel: {
-    color: colors.onPrimary,
-    fontSize: 23,
-    fontFamily: fontFamily.extrabold,
-  },
-  disclaimer: {
-    fontSize: 14,
-    fontFamily: fontFamily.medium,
-    color: colors.textFaint,
-    textAlign: 'center',
-    lineHeight: 21,
-  },
+  primaryButtonLabel: { ...typeElder.heading, color: colors.onPrimary },
+  retakeButton: { paddingVertical: spacing.sm, alignItems: 'center' },
+  retakeLabel: { ...typeElder.callout, color: colors.textMuted, fontFamily: fontFamily.bold },
+
+  disclaimer: { ...typeElder.caption, color: colors.textFaint, textAlign: 'center', marginTop: spacing.xs },
+
+  missingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
+  missingTitle: { ...typeElder.subheading, color: colors.textMuted },
 });

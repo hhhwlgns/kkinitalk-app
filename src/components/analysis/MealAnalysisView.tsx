@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Card, SectionHeader } from '../ui';
+import { Card, SectionHeader, StatusGauge, StatusPill } from '../ui';
 import { DisclaimerBanner } from '../DisclaimerBanner';
-import { colors, fontFamily, radius, spacing, type as typeScale } from '../../theme/tokens';
+import { colors, fontFamily, radius, spacing, statusColor, type as typeScale } from '../../theme/tokens';
 import type { HealthProfile, Meal, Medication } from '../../domain/types';
 import {
   assessMealFitness,
@@ -12,6 +12,7 @@ import {
   nutrientPct,
   sumNutrients,
 } from '../../mocks/nutritionAnalysis';
+import { mealStatus, proteinStatus, sodiumStatus, type NutrientStatus } from '../../domain/nutrientStatus';
 import { findConflicts } from '../../domain/conflictRules';
 
 const SLOT_LABEL: Record<Meal['slot'], string> = {
@@ -35,15 +36,8 @@ interface NutrientRow {
   name: string;
   value: string;
   pct: number;
-  tone: 'brand' | 'good' | 'danger' | 'neutral';
+  status: NutrientStatus;
 }
-
-const BAR_COLOR: Record<NutrientRow['tone'], string> = {
-  brand: colors.primary,
-  good: colors.good,
-  danger: colors.danger,
-  neutral: colors.avatarInitial,
-};
 
 interface MealAnalysisViewProps {
   meal: Meal;
@@ -67,7 +61,8 @@ export function MealAnalysisView({ meal, profile, medications, compact = false }
     [medications, meal.foods],
   );
 
-  const isGood = verdict.fitness === 'good';
+  const overall = mealStatus(totals);
+  const overallWord = overall === 'good' ? '균형 좋음' : overall === 'caution' ? '주의' : '위험';
 
   const nutrientRows: NutrientRow[] = [
     {
@@ -75,28 +70,28 @@ export function MealAnalysisView({ meal, profile, medications, compact = false }
       name: '칼로리',
       value: `${Math.round(totals.calories)} kcal`,
       pct: nutrientPct(totals.calories, 'calories'),
-      tone: 'brand',
+      status: 'good',
     },
     {
       key: 'sodium',
       name: '나트륨',
       value: `${Math.round(totals.sodiumMg).toLocaleString()} mg`,
       pct: nutrientPct(totals.sodiumMg, 'sodiumMg'),
-      tone: totals.sodiumMg > 1500 ? 'danger' : 'good',
+      status: sodiumStatus(totals.sodiumMg),
     },
     {
       key: 'protein',
       name: '단백질',
       value: `${Math.round(totals.proteinG)} g`,
       pct: nutrientPct(totals.proteinG, 'proteinG'),
-      tone: 'good',
+      status: proteinStatus(totals.proteinG),
     },
     {
       key: 'carbs',
       name: '탄수화물',
       value: `${Math.round(totals.carbsG)} g`,
       pct: nutrientPct(totals.carbsG, 'carbsG'),
-      tone: 'neutral',
+      status: 'good',
     },
   ];
 
@@ -130,10 +125,15 @@ export function MealAnalysisView({ meal, profile, medications, compact = false }
 
       {/* Verdict */}
       <Card
-        style={[styles.verdictCard, { backgroundColor: isGood ? colors.goodBg : colors.cautionBg, borderColor: isGood ? colors.goodBorder : colors.cautionBorder }]}
+        style={[
+          styles.verdictCard,
+          { backgroundColor: statusColor[overall].bg, borderColor: statusColor[overall].border },
+        ]}
       >
-        <Badge label={isGood ? '균형 좋음' : '주의'} tone={isGood ? 'good' : 'caution'} />
-        <Text style={[styles.verdictText, { color: isGood ? colors.good : colors.text }]}>{verdict.fitnessNote}</Text>
+        <StatusPill status={overall} label={overallWord} />
+        <Text style={[styles.verdictText, { color: overall === 'good' ? colors.good : colors.text }]}>
+          {verdict.fitnessNote}
+        </Text>
       </Card>
 
       {/* Nutrients with target bars */}
@@ -141,17 +141,14 @@ export function MealAnalysisView({ meal, profile, medications, compact = false }
         <SectionHeader title="영양 상세" />
         <Card>
           {nutrientRows.map((row, index) => (
-            <View key={row.key} style={[styles.nutrientBlock, index === nutrientRows.length - 1 && styles.nutrientBlockLast]}>
-              <View style={styles.nutrientTop}>
-                <Text style={styles.nutrientName}>{row.name}</Text>
-                <Text style={[styles.nutrientValue, { color: BAR_COLOR[row.tone] }]} numberOfLines={1}>
-                  {row.value}
-                </Text>
-              </View>
-              <View style={styles.track}>
-                <View style={[styles.fill, { width: `${Math.max(row.pct, 3)}%`, backgroundColor: BAR_COLOR[row.tone] }]} />
-              </View>
-              <Text style={styles.nutrientPct}>하루 권장의 {row.pct}%</Text>
+            <View key={row.key} style={index !== nutrientRows.length - 1 && styles.gaugeGap}>
+              <StatusGauge
+                label={row.name}
+                value={row.value}
+                pct={row.pct}
+                status={row.status}
+                caption={`하루 권장의 ${row.pct}%`}
+              />
             </View>
           ))}
         </Card>
@@ -233,19 +230,12 @@ const styles = StyleSheet.create({
   verdictCard: { gap: spacing.sm },
   verdictText: { ...typeScale.bodyStrong },
 
-  nutrientBlock: {
+  gaugeGap: {
     paddingBottom: spacing.md,
     marginBottom: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.dividerLight,
   },
-  nutrientBlockLast: { paddingBottom: 0, marginBottom: 0, borderBottomWidth: 0 },
-  nutrientTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  nutrientName: { ...typeScale.bodyStrong, color: colors.text },
-  nutrientValue: { ...typeScale.bodyStrong, fontFamily: fontFamily.extrabold },
-  track: { height: 10, borderRadius: 5, backgroundColor: colors.surfaceSunken, marginTop: spacing.xs, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: 5 },
-  nutrientPct: { ...typeScale.caption, color: colors.textMuted, marginTop: 5 },
 
   foodRow: {
     flexDirection: 'row',
