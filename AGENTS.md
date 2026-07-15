@@ -1,60 +1,29 @@
-<!-- Generated: 2026-07-13 | Updated: 2026-07-13 -->
+# Repository Guidelines
 
-# kkinitalk-app (끼니톡)
+## 프로젝트 구조와 모듈 구성
 
-## Purpose
-Expo/React Native app for AI-assisted meal and medication management targeting elderly users living alone and their family guardians. Elderly users speak/photograph their way through onboarding, daily check-ins, and meal logging; a mock "AI" layer analyzes photographed meals for nutrition and flags conflicts with medications/conditions; guardians get a read-only dashboard with alerts and a weekly report. See `끼니톡 prd.md` for full Korean product spec (goals, personas, risk/disclaimer language). Backend is fully mocked today (AsyncStorage + MSW) — no real API integration yet.
+`app/`은 Expo Router의 파일 기반 화면을 담으며, `elderly/`와 `guardian/` 역할별 라우트로 나뉩니다. 공통 애플리케이션 코드는 `src/`에 위치합니다. 도메인 규칙은 `src/domain/`, 상태와 영속화는 `src/mocks/db/`, 디자인 토큰은 `src/theme/`, 재사용 UI는 `src/components/`를 사용하세요. 정적 이미지와 Pretendard 폰트는 `assets/`, 스모크 테스트와 실행기는 `scripts/`에 있습니다. 세부 디렉터리를 수정하기 전 해당 위치의 `AGENTS.md`도 확인하세요.
 
-## Key Files
-| File | Description |
-|------|-------------|
-| `app.json` | Expo config: app name 끼니톡, slug `kkinitalk-app`, scheme `kkinitalk`, plugins (expo-router, expo-image-picker, expo-notifications) |
-| `package.json` | Dependencies (Expo ~57.0.4, React Native 0.86.0, React 19.2.3, @tanstack/react-query, msw) and `smoke:*` scripts |
-| `tsconfig.json` | Extends `expo/tsconfig.base` with `strict: true` |
-| `tsconfig.smoke.json` | Separate compiler config (CommonJS, `node10` resolution) used only to compile smoke-test scripts to `.smoke-tmp/` |
-| `끼니톡 prd.md` | Korean-language product requirements doc — product goals, personas, scenarios, and mandatory medical-disclaimer language |
-| `LICENSE` | Project license |
+## 개발, 빌드 및 테스트 명령어
 
-## Subdirectories
-| Directory | Purpose |
-|-----------|---------|
-| `app/` | Expo Router file-based routes — screens for both roles (see `app/AGENTS.md`) |
-| `src/` | Application source: domain logic, mock backend, state, theme, components (see `src/AGENTS.md`) |
-| `scripts/` | Custom smoke-test runners invoked via `npm run smoke:*` (see `scripts/AGENTS.md`) |
-| `assets/` | Static app icons, splash image, and Pretendard font files (no AGENTS.md — static binary assets only) |
+- `npm install`: 잠금 파일 기준으로 의존성을 설치합니다.
+- `npm start`: Expo 개발 서버를 시작합니다.
+- `npm run android`, `npm run ios`, `npm run web`: 대상 플랫폼에서 앱을 실행합니다.
+- `npx tsc --noEmit`: strict TypeScript 타입 검사를 수행합니다.
+- `npm run smoke:meal`: 식사 기록 도메인과 mock DB 흐름을 검증합니다. `meal` 대신 `db`, `onboarding`, `checkin`, `medication`, `guardian`, `consent` 등 변경 영역에 맞는 스위트를 실행하세요.
 
-## For AI Agents
+## 코딩 스타일과 이름 규칙
 
-### Working In This Directory
-- **Expo HAS CHANGED**: read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any Expo/Router code — do not rely on older Expo knowledge/training data, APIs have moved.
-- Today's date for this project context is 2026-07-13.
-- This app has two parallel route trees (`app/elderly/`, `app/guardian/`) driven by a single `Role` (`elderly` | `guardian`) stored via `RoleContext`. Always check which role a screen belongs to before copying patterns across trees.
-- All persistence currently goes through the mock DB (`src/mocks/db/`), not `src/api/`. `src/api/client.ts` and `src/api/endpoints/` are placeholders for a real backend that does not exist yet — do not assume live network calls work.
-- UI strings are Korean. Preserve existing tone/phrasing conventions (formal, warm, elder-friendly) when adding new user-facing text.
-- This is not a medical device. Any new nutrition/medication-conflict feature must keep the "참고용" (reference only) framing and route users to 119/의료진 for real emergencies, per `DisclaimerBanner`.
+TypeScript/TSX와 2칸 들여쓰기를 사용하고 기존 파일의 세미콜론 및 따옴표 스타일을 따릅니다. 컴포넌트는 `PascalCase`, 함수·변수는 `camelCase`, 상수는 의미가 분명한 이름으로 작성하세요. 화면 스타일에서 색상, 간격, 글꼴을 직접 하드코딩하지 말고 `src/theme/tokens.ts`를 사용합니다. 아이콘은 기존 방식대로 로컬 `react-native-svg` 컴포넌트로 구현합니다. 사용자 문구는 따뜻하고 정중한 한국어를 유지하세요.
 
-### Testing Requirements
-- There is no Jest/standard test runner. Verification is via `npm run smoke:<name>` scripts in `scripts/`, each compiling through `tsconfig.smoke.json` then running a `.cjs` runner against the compiled output, then deleting `.smoke-tmp/`.
-- Available smoke suites: `msw`, `db`, `onboarding`, `checkin`, `meal`, `suggestion`, `medication`, `history`, `profile`, `guardian`, `consent`.
-- When changing mock DB collections, domain logic (`src/domain/`), or MSW setup, run the relevant `smoke:*` script(s) before considering the change done.
+## 테스트 지침
 
-### Common Patterns
-- Design tokens (`src/theme/tokens.ts`) are used for all styling — never hardcode colors/spacing/fonts in screens.
-- Icons are inline `react-native-svg` components defined locally per-screen or per-component, not from an icon library.
-- Screens query mock DB collections directly inside `useFocusEffect`/`useCallback` `load()` functions rather than through React Query — `@tanstack/react-query`'s `QueryClientProvider` is wired at the root but not yet used by any screen.
+Jest 테스트 러너는 없습니다. `scripts/smoke-*.ts`가 `tsconfig.smoke.json`으로 컴파일된 뒤 `.cjs` 실행기로 검증됩니다. 도메인 로직, mock DB 컬렉션 또는 MSW 설정을 수정했다면 관련 스모크 스위트를 반드시 실행하고, 실패 시 생성되는 `.smoke-tmp/` 산출물을 커밋하지 마세요.
 
-## Dependencies
+## 커밋 및 Pull Request 지침
 
-### Internal
-- `app/` depends on `src/` for state, mock DB, domain helpers, theme, and shared components.
+최근 이력의 형식처럼 `[feat] 기능 설명`, `[design] 가독성 변경` 등 짧은 한국어 제목을 사용합니다. 커밋 하나에는 한 가지 논리적 변경만 담으세요. PR에는 변경 목적, 영향받는 역할과 화면, 실행한 검증 명령을 적고 UI 변경에는 전후 스크린샷을 첨부합니다. 관련 이슈가 있다면 연결하고, 의료·영양 안내 변경은 “참고용” 고지와 119/의료진 안내가 유지되는지 명시하세요.
 
-### External
-- `expo` ~57.0.4 / `expo-router` ~57.0.4 — app shell and file-based routing
-- `react-native` 0.86.0, `react` 19.2.3 — core framework
-- `@tanstack/react-query` — configured at root, not yet consumed by screens
-- `@react-native-async-storage/async-storage` — backing store for the mock DB and role/consent persistence
-- `msw` (`msw/native`) — mocks the (currently unused-by-screens) `src/api/client.ts` HTTP layer
-- `react-native-svg` — all inline icon graphics
-- `axios` — HTTP client wrapped by `src/api/client.ts`
+## 아키텍처 및 안전 주의사항
 
-<!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->
+현재 백엔드는 AsyncStorage와 MSW 기반 mock입니다. 화면에서는 존재하지 않는 실제 API를 가정하지 마세요. Expo 코드를 변경할 때는 프로젝트 버전인 Expo 57 문서를 기준으로 확인하고, 노인과 보호자 역할 간 데이터 수정 권한을 혼동하지 마세요.

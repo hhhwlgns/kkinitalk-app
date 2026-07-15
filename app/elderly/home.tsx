@@ -1,17 +1,16 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AlarmIcon } from '../../src/components/icons/AlarmIcon';
 import { CameraIcon } from '../../src/components/icons/CameraIcon';
 import { CheckIcon } from '../../src/components/icons/CheckIcon';
 import { ChevronIcon } from '../../src/components/icons/ChevronIcon';
 import { PillIcon } from '../../src/components/icons/PillIcon';
-import { Card, SectionHeader, StatTile, StatusPill } from '../../src/components/ui';
-import { colors, fontFamily, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
-import { calorieStatus, mealStatus, proteinStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
-import { useRole } from '../../src/state/RoleContext';
+import { Card } from '../../src/components/ui';
+import type { CheckIn, ConditionLevel, HealthProfile, Meal, Medication, MedicationLog } from '../../src/domain/types';
+import { earliestTime, formatDateWithWeekday, formatKoreanTime, isoToLocalDate, todayDate } from '../../src/domain/date';
 import {
   checkInsCollection,
   healthProfilesCollection,
@@ -19,34 +18,16 @@ import {
   medicationsCollection,
   mealsCollection,
 } from '../../src/mocks/db/collections';
-import type { CheckIn, ConditionLevel, HealthProfile, Meal, Medication, MedicationLog } from '../../src/domain/types';
-import { earliestTime, formatDateWithWeekday, formatKoreanTime, isoToLocalDate, todayDate } from '../../src/domain/date';
-import { DAILY_CALORIE_TARGET, inferMealSlot, suggestNextMeal, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { useRole } from '../../src/state/RoleContext';
+import { colors, fontFamily, minTouchTarget, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
 
 const CONDITION_LABEL: Record<ConditionLevel, string> = {
-  good: '좋음',
-  normal: '보통',
-  bad: '좋지 않음',
+  good: '좋아요',
+  normal: '괜찮아요',
+  bad: '좋지 않아요',
 };
 
-const MEAL_SLOT_GREETING: Record<Meal['slot'], string> = {
-  breakfast: '아침',
-  lunch: '점심',
-  dinner: '저녁',
-  snack: '간식',
-};
-
-const NEXT_SLOT_TITLE: Record<Meal['slot'], string> = {
-  breakfast: '오늘 점심 추천',
-  lunch: '오늘 저녁 추천',
-  dinner: '내일 아침 추천',
-  snack: '다음 식사 추천',
-};
-
-const CONDITION_REASON: Record<string, string> = {
-  고혈압: '혈압 관리에 도움돼요',
-  당뇨: '혈당 관리에 도움돼요',
-};
+type MainTask = 'checkin' | 'medication' | 'meal';
 
 export default function ElderlyHomeScreen() {
   const { activeUserId } = useRole();
@@ -57,29 +38,22 @@ export default function ElderlyHomeScreen() {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [logsToday, setLogsToday] = useState<MedicationLog[]>([]);
   const [todayMeals, setTodayMeals] = useState<Meal[]>([]);
-  const [recentMeals, setRecentMeals] = useState<Meal[]>([]);
-  const [recVariant, setRecVariant] = useState(0);
 
   const load = useCallback(async () => {
     const today = todayDate();
+    const [profiles, checkIns, meds, logs, meals] = await Promise.all([
+      healthProfilesCollection.query((item) => item.userId === userId),
+      checkInsCollection.query((item) => item.userId === userId && item.date === today),
+      medicationsCollection.query((item) => item.userId === userId),
+      medicationLogsCollection.query((item) => item.userId === userId),
+      mealsCollection.query((item) => item.userId === userId),
+    ]);
 
-    const profiles = await healthProfilesCollection.query((item) => item.userId === userId);
     setProfile(profiles[profiles.length - 1] ?? null);
-
-    const checkIns = await checkInsCollection.query((item) => item.userId === userId && item.date === today);
     setTodayCheckIn(checkIns[0] ?? null);
-
-    const meds = await medicationsCollection.query((item) => item.userId === userId);
     setMedications(meds);
-
-    const allLogs = await medicationLogsCollection.query((item) => item.userId === userId);
-    setLogsToday(allLogs.filter((item) => isoToLocalDate(item.takenAt) === today));
-
-    const meals = await mealsCollection.query((item) => item.userId === userId);
+    setLogsToday(logs.filter((item) => isoToLocalDate(item.takenAt) === today));
     setTodayMeals(meals.filter((item) => isoToLocalDate(item.recordedAt) === today));
-    const sorted = [...meals].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
-    setRecentMeals(sorted.slice(0, 3));
-    setRecVariant(0);
   }, [userId]);
 
   useFocusEffect(
@@ -92,175 +66,121 @@ export default function ElderlyHomeScreen() {
     () => medications.filter((med) => !logsToday.some((log) => log.medicationId === med.id)),
     [medications, logsToday],
   );
-  const hasNextMed = medications.length > 0 && notTakenMeds.length > 0;
-  const homeMedsAllDone = medications.length > 0 && notTakenMeds.length === 0;
-  const nextMed = useMemo(() => {
-    if (notTakenMeds.length === 0) return null;
-    return [...notTakenMeds].sort((a, b) => earliestTime(a.timesOfDay).localeCompare(earliestTime(b.timesOfDay)))[0];
-  }, [notTakenMeds]);
-
-  const totalNutrients = useMemo(() => sumNutrients(todayMeals.flatMap((meal) => meal.foods)), [todayMeals]);
+  const nextMed = useMemo(
+    () => [...notTakenMeds].sort((a, b) => earliestTime(a.timesOfDay).localeCompare(earliestTime(b.timesOfDay)))[0] ?? null,
+    [notTakenMeds],
+  );
 
   const now = new Date();
-  const currentSlot = inferMealSlot(now);
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const medicationIsDue = nextMed ? earliestTime(nextMed.timesOfDay) <= currentTime : false;
+  const mainTask: MainTask = !todayCheckIn ? 'checkin' : medicationIsDue ? 'medication' : 'meal';
   const name = profile?.name ?? '회원';
-  const recText = suggestNextMeal(currentSlot, profile, recentMeals, recVariant);
-  const matchedCondition = profile?.conditions.find((c) => CONDITION_REASON[c]);
-  const recWhy = matchedCondition
-    ? CONDITION_REASON[matchedCondition]
-    : (profile?.avoidedFoods.length ?? 0) > 0
-      ? '피해야 할 음식은 제외했어요'
-      : '균형 잡힌 식사예요';
+  const medicationDone = medications.length > 0 && notTakenMeds.length === 0;
 
-  const hasMealsToday = todayMeals.length > 0;
-  const sodiumStat = sodiumStatus(totalNutrients.sodiumMg);
-  const proteinStat = proteinStatus(totalNutrients.proteinG);
-  const overallStat = mealStatus(totalNutrients);
-  const sodiumTile = !hasMealsToday ? 'default' : sodiumStat;
-  const proteinTile = !hasMealsToday ? 'default' : proteinStat;
-  const calorieTile = !hasMealsToday ? 'default' : calorieStatus(totalNutrients.calories, DAILY_CALORIE_TARGET);
-  const proteinLabel = !hasMealsToday ? '–' : proteinStat === 'good' ? '좋음' : proteinStat === 'caution' ? '보통' : '부족';
-  const overallWord = overallStat === 'good' ? '균형 좋음' : overallStat === 'caution' ? '주의' : '위험';
-  const latestMeal = recentMeals[0] ?? null;
+  const mainTaskContent = {
+    checkin: {
+      eyebrow: '지금 할 일',
+      title: '오늘 상태를 알려주세요',
+      description: '몇 가지 질문에 말로 답하면 돼요',
+      button: '30초 체크인 시작하기',
+      onPress: () => router.push('/elderly/checkin'),
+      icon: <AlarmIcon size={30} color={colors.onPrimary} />,
+    },
+    medication: {
+      eyebrow: '약 드실 시간이에요',
+      title: nextMed?.name ?? '복용할 약이 있어요',
+      description: nextMed ? `${formatKoreanTime(earliestTime(nextMed.timesOfDay))} 복용 예정` : '복약 일정을 확인해주세요',
+      button: '복약 확인하기',
+      onPress: () => router.push('/elderly/medications'),
+      icon: <PillIcon size={30} color={colors.onPrimary} />,
+    },
+    meal: {
+      eyebrow: '지금 할 일',
+      title: '드신 식사를 남겨주세요',
+      description: '사진만 찍으면 영양을 분석해드려요',
+      button: '식사 사진 찍기',
+      onPress: () => router.push('/elderly/camera'),
+      icon: <CameraIcon size={30} color={colors.onPrimary} />,
+    },
+  }[mainTask];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.greetingBlock}>
-          <Text style={styles.dateLabel}>{formatDateWithWeekday(now)}</Text>
-          <Text style={styles.greeting}>
-            {name} 님,{'\n'}
-            {MEAL_SLOT_GREETING[currentSlot]} 잘 드셨어요?
-          </Text>
+        <View style={styles.header}>
+          <Text style={styles.date}>{formatDateWithWeekday(now)}</Text>
+          <Text style={styles.greeting}>{name} 님,{`\n`}오늘도 잘 챙겨드릴게요</Text>
         </View>
 
-        {!todayCheckIn ? (
-          <Pressable onPress={() => router.push('/elderly/checkin')}>
-            <Card style={styles.actionRow}>
-              <View style={styles.actionIconBrand}>
-                <AlarmIcon size={22} color={colors.primary} />
-              </View>
-              <View style={styles.flex1}>
-                <Text style={styles.actionTitle}>오늘 체크인하기</Text>
-                <Text style={styles.actionSub}>30초면 돼요 · 말로 대답하세요</Text>
-              </View>
-              <ChevronIcon size={16} color={colors.textFaint} />
-            </Card>
-          </Pressable>
-        ) : (
-          <View style={styles.statusStrip}>
-            <View style={styles.statusDotWrap}>
-              <CheckIcon size={14} color={colors.surface} />
-            </View>
-            <Text style={styles.statusStripText}>
-              오늘 체크인 완료 · 컨디션 {CONDITION_LABEL[todayCheckIn.condition]}
-            </Text>
+        <View style={styles.heroCard}>
+          <View style={styles.heroTopRow}>
+            <View style={styles.heroIcon}>{mainTaskContent.icon}</View>
+            <Text style={styles.heroEyebrow}>{mainTaskContent.eyebrow}</Text>
           </View>
-        )}
-
-        {/* Check-in said "not eaten yet" and still no meal logged — gentle nudge. */}
-        {todayCheckIn?.hadMeal === false && !hasMealsToday && (
+          <Text style={styles.heroTitle}>{mainTaskContent.title}</Text>
+          <Text style={styles.heroDescription}>{mainTaskContent.description}</Text>
           <Pressable
-            style={styles.mealNudgeStrip}
-            onPress={() => router.push('/elderly/camera')}
             accessibilityRole="button"
-            accessibilityLabel="식사 사진 찍으러 가기"
+            accessibilityLabel={mainTaskContent.button}
+            onPress={mainTaskContent.onPress}
+            style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}
           >
-            <Text style={styles.mealNudgeText}>아직 식사 전이시네요. 드신 후에 사진으로 남겨주세요</Text>
-            <ChevronIcon size={14} color={colors.caution} />
+            <Text style={styles.heroButtonText}>{mainTaskContent.button}</Text>
+            <ChevronIcon size={20} color={colors.primary} />
+          </Pressable>
+        </View>
+
+        {mainTask !== 'meal' && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="식사 사진 찍기"
+            onPress={() => router.push('/elderly/camera')}
+            style={({ pressed }) => [styles.quickMealButton, pressed && styles.pressed]}
+          >
+            <View style={styles.quickMealIcon}>
+              <CameraIcon size={23} color={colors.secondaryAccent} />
+            </View>
+            <View style={styles.flex1}>
+              <Text style={styles.quickMealTitle}>식사 사진 찍기</Text>
+              <Text style={styles.quickMealDescription} numberOfLines={1}>언제든 바로 기록할 수 있어요</Text>
+            </View>
+            <ChevronIcon size={18} color={colors.textFaint} />
           </Pressable>
         )}
 
-        {/* Focal action: log a meal — the app's core loop. */}
-        <Pressable onPress={() => router.push('/elderly/camera')} style={({ pressed }) => pressed && styles.pressed}>
-          <View style={styles.cameraCta}>
-            <View style={styles.cameraIconWrap}>
-              <CameraIcon size={26} color={colors.onPrimary} />
-            </View>
-            <View style={styles.flex1}>
-              <Text style={styles.cameraCtaLabel}>식사 사진 찍기</Text>
-              <Text style={styles.cameraCtaSub}>찍으면 영양을 바로 분석해드려요</Text>
-            </View>
-            <ChevronIcon size={18} color={colors.onPrimary} />
-          </View>
-        </Pressable>
-
-        {hasNextMed && nextMed ? (
-          <Card style={styles.actionRow}>
-            <View style={styles.actionIconPill}>
-              <PillIcon size={22} color={colors.onPrimary} />
-            </View>
-            <View style={styles.flex1}>
-              <Text style={styles.actionEyebrow}>다음 약 · {formatKoreanTime(earliestTime(nextMed.timesOfDay))}</Text>
-              <Text style={styles.actionTitle}>{nextMed.name}</Text>
-            </View>
-            <Pressable style={styles.smallButton} onPress={() => router.push('/elderly/medications')}>
-              <Text style={styles.smallButtonLabel}>보기</Text>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>오늘 한 일</Text>
+            <Pressable onPress={() => router.push('/elderly/history')} hitSlop={8}>
+              <Text style={styles.sectionLink}>지난 기록</Text>
             </Pressable>
-          </Card>
-        ) : homeMedsAllDone ? (
-          <View style={styles.statusStrip}>
-            <View style={styles.statusDotWrap}>
-              <CheckIcon size={14} color={colors.surface} />
-            </View>
-            <Text style={styles.statusStripText}>오늘 약을 모두 드셨어요</Text>
           </View>
-        ) : null}
 
-        <View>
-          <SectionHeader
-            title="오늘 드신 것"
-            action={
-              hasMealsToday ? (
-                <Pressable onPress={() => router.push('/elderly/history')} hitSlop={8}>
-                  <Text style={styles.linkLabel}>기록 보기</Text>
-                </Pressable>
-              ) : undefined
-            }
-          />
-          <Card>
-            <View style={styles.summaryTopRow}>
-              <Text style={styles.summaryCount}>{todayMeals.length}끼 기록</Text>
-              {hasMealsToday ? <StatusPill status={overallStat} label={overallWord} /> : null}
-            </View>
-            <View style={styles.statRow}>
-              <StatTile
-                label="칼로리"
-                value={hasMealsToday ? `${Math.round(totalNutrients.calories)}kcal` : '–'}
-                tone={calorieTile}
-              />
-              <StatTile
-                label="나트륨"
-                value={hasMealsToday ? `${Math.round(totalNutrients.sodiumMg).toLocaleString()}mg` : '–'}
-                tone={sodiumTile}
-              />
-              <StatTile label="단백질" value={proteinLabel} tone={proteinTile} />
-            </View>
-            {latestMeal ? (
-              <Pressable
-                style={styles.detailLink}
-                onPress={() => router.push({ pathname: '/elderly/analysis', params: { mealId: latestMeal.id } })}
-              >
-                <Text style={styles.detailLinkLabel}>가장 최근 식사 자세히 보기</Text>
-                <ChevronIcon size={14} color={colors.secondaryAccent} />
-              </Pressable>
-            ) : (
-              <Text style={styles.summaryHint}>사진을 찍으면 오늘 영양이 여기에 쌓여요.</Text>
-            )}
-          </Card>
-        </View>
-
-        <View>
-          <SectionHeader title={NEXT_SLOT_TITLE[currentSlot]} />
-          <Card>
-            <Text style={styles.recName}>{recText}</Text>
-            <View style={styles.recWhyRow}>
-              <View style={styles.recDot} />
-              <Text style={styles.recWhy}>{recWhy}</Text>
-            </View>
-            <Pressable style={styles.recButton} onPress={() => setRecVariant((v) => v + 1)}>
-              <Text style={styles.recButtonLabel}>다른 추천 받기</Text>
-            </Pressable>
+          <Card style={styles.progressCard}>
+            <ProgressRow
+              icon={<AlarmIcon size={22} color={todayCheckIn ? colors.good : colors.textMuted} />}
+              label="오늘 체크인"
+              value={todayCheckIn ? `컨디션 ${CONDITION_LABEL[todayCheckIn.condition]}` : '아직 안 했어요'}
+              done={Boolean(todayCheckIn)}
+              onPress={() => router.push('/elderly/checkin')}
+            />
+            <View style={styles.divider} />
+            <ProgressRow
+              icon={<CameraIcon size={22} color={todayMeals.length > 0 ? colors.good : colors.textMuted} />}
+              label="식사 기록"
+              value={`${todayMeals.length}끼 남겼어요`}
+              done={todayMeals.length > 0}
+              onPress={() => router.push('/elderly/history')}
+            />
+            <View style={styles.divider} />
+            <ProgressRow
+              icon={<PillIcon size={22} color={medicationDone ? colors.good : colors.textMuted} />}
+              label="약 챙기기"
+              value={medications.length === 0 ? '등록된 약이 없어요' : medicationDone ? '모두 드셨어요' : `${logsToday.length}/${medications.length}회 완료`}
+              done={medicationDone}
+              onPress={() => router.push('/elderly/medications')}
+            />
           </Card>
         </View>
       </ScrollView>
@@ -268,138 +188,123 @@ export default function ElderlyHomeScreen() {
   );
 }
 
+interface ProgressRowProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  done: boolean;
+  onPress: () => void;
+}
+
+function ProgressRow({ icon, label, value, done, onPress }: ProgressRowProps) {
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.progressRow, pressed && styles.pressed]}>
+      <View style={[styles.progressIcon, done && styles.progressIconDone]}>{icon}</View>
+      <View style={styles.flex1}>
+        <Text style={styles.progressLabel}>{label}</Text>
+        <Text style={[styles.progressValue, done && styles.progressValueDone]}>{value}</Text>
+      </View>
+      {done ? (
+        <View style={styles.checkCircle}>
+          <CheckIcon size={14} color={colors.onPrimary} />
+        </View>
+      ) : (
+        <ChevronIcon size={18} color={colors.textFaint} />
+      )}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
   flex1: { flex: 1 },
-  pressed: { opacity: 0.85 },
-
-  greetingBlock: { marginBottom: spacing.xxs },
-  dateLabel: { ...typeElder.callout, color: colors.textMuted },
-  greeting: { ...typeElder.title, color: colors.text, marginTop: spacing.xxs },
-
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  actionIconBrand: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionIconPill: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
+  pressed: { opacity: 0.72 },
+  header: { gap: spacing.xxs },
+  date: { ...typeElder.callout, color: colors.textMuted },
+  greeting: { ...typeElder.heading, color: colors.text },
+  heroCard: {
     backgroundColor: colors.primary,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    ...shadow.raised,
+  },
+  heroTopRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  heroIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.primaryTranslucent,
   },
-  actionEyebrow: { ...typeElder.caption, color: colors.secondaryAccent, fontFamily: fontFamily.bold },
-  actionTitle: { ...typeElder.subheading, color: colors.text },
-  actionSub: { ...typeElder.callout, color: colors.textMuted, marginTop: 2 },
-
-  statusStrip: {
+  heroEyebrow: { ...typeElder.callout, color: colors.onPrimary, fontFamily: fontFamily.bold },
+  heroTitle: { ...typeElder.subheading, color: colors.onPrimary, marginTop: spacing.md },
+  heroDescription: { ...typeElder.callout, color: colors.onPrimary, opacity: 0.88, marginTop: spacing.xxs },
+  heroButton: {
+    minHeight: minTouchTarget,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heroButtonText: { ...typeElder.bodyStrong, color: colors.primary },
+  quickMealButton: {
+    minHeight: minTouchTarget,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.goodBg,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.goodBorder,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
   },
-  statusDotWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+  quickMealIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    backgroundColor: colors.dangerBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickMealTitle: { ...typeElder.bodyStrong, color: colors.text },
+  quickMealDescription: { ...typeElder.caption, color: colors.textMuted, marginTop: spacing.xxs },
+  section: { gap: spacing.sm },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionTitle: { ...typeElder.heading, color: colors.text },
+  sectionLink: { ...typeElder.callout, color: colors.primary, fontFamily: fontFamily.bold },
+  progressCard: { paddingVertical: spacing.xs },
+  progressRow: {
+    minHeight: minTouchTarget + spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  progressIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceSunken,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressIconDone: { backgroundColor: colors.goodBg },
+  progressLabel: { ...typeElder.bodyStrong, color: colors.text },
+  progressValue: { ...typeElder.callout, color: colors.textMuted, marginTop: spacing.xxs },
+  progressValueDone: { color: colors.good },
+  checkCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.pill,
     backgroundColor: colors.good,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statusStripText: { ...typeElder.callout, color: colors.good, fontFamily: fontFamily.bold, flex: 1 },
-
-  mealNudgeStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.cautionBg,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.cautionBorder,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  mealNudgeText: { ...typeElder.callout, color: colors.caution, fontFamily: fontFamily.bold, flex: 1 },
-
-  cameraCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.primary,
-    borderRadius: radius.xl,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-    ...shadow.cta,
-  },
-  cameraIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cameraCtaLabel: { ...typeElder.heading, color: colors.onPrimary },
-  cameraCtaSub: { ...typeElder.callout, color: colors.onPrimary, opacity: 0.85, marginTop: 2 },
-
-  smallButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  smallButtonLabel: { ...typeElder.callout, color: colors.onPrimary, fontFamily: fontFamily.bold },
-
-  linkLabel: { fontSize: 15, lineHeight: 20, fontFamily: fontFamily.bold, color: colors.secondaryAccent },
-
-  summaryTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  summaryCount: { ...typeElder.bodyStrong, color: colors.text },
-  statRow: { flexDirection: 'row', gap: spacing.sm },
-  summaryHint: { ...typeElder.callout, color: colors.textFaint, marginTop: spacing.sm },
-  detailLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: spacing.md,
-    paddingVertical: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.dividerLight,
-  },
-  detailLinkLabel: { ...typeElder.callout, color: colors.secondaryAccent, fontFamily: fontFamily.bold },
-
-  recName: { ...typeElder.subheading, color: colors.text },
-  recWhyRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: spacing.xs },
-  recDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.good },
-  recWhy: { ...typeElder.callout, color: colors.good, fontFamily: fontFamily.bold },
-  recButton: {
-    marginTop: spacing.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    minHeight: 48,
-    justifyContent: 'center',
-  },
-  recButtonLabel: { ...typeElder.callout, color: colors.text, fontFamily: fontFamily.bold },
+  divider: { height: 1, backgroundColor: colors.dividerLight, marginLeft: 56 },
 });

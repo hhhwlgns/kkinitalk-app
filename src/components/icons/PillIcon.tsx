@@ -10,8 +10,8 @@ interface PillIconProps {
 export function PillIcon({ size = 24, color = colors.iconFillCream }: PillIconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Rect x={8} y={3} width={8} height={18} rx={4} stroke={color} strokeWidth={2} />
-      <Line x1={8} y1={12} x2={16} y2={12} stroke={color} strokeWidth={2} />
+      <Rect x={5} y={8} width={14} height={8} rx={4} stroke={color} strokeWidth={2} transform="rotate(-45 12 12)" />
+      <Line x1={12} y1={8} x2={12} y2={16} stroke={color} strokeWidth={2} transform="rotate(-45 12 12)" />
     </Svg>
   );
 }

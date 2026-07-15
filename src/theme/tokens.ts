@@ -17,6 +17,7 @@ export const colors = {
   iconFillCream: '#FFF6EC',
   primaryHoverBg: '#FBEADE',
   primarySoft: '#F7E4D5',
+  primaryTranslucent: 'rgba(255,255,255,0.18)',
 
   secondaryAccent: '#A54A08',
   secondaryAccentHover: '#8C3F06',
