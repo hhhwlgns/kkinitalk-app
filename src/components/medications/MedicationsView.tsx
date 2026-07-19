@@ -34,6 +34,7 @@ interface MedicationsViewProps {
   alwaysShowAction?: boolean;
   onSave: (draft: MedicationDraft) => Promise<void> | void;
   renderAction: (medication: Medication) => ReactNode;
+  summaryContent?: ReactNode;
 }
 
 function SectionToggleRow({ title, open, onPress }: { title: string; open: boolean; onPress: () => void }) {
@@ -52,7 +53,7 @@ function SectionToggleRow({ title, open, onPress }: { title: string; open: boole
   );
 }
 
-export function MedicationsView({ title, medications, warnings, compact, alwaysShowAction, onSave, renderAction }: MedicationsViewProps) {
+export function MedicationsView({ title, medications, warnings, compact, alwaysShowAction, onSave, renderAction, summaryContent }: MedicationsViewProps) {
   const [scanOpen, setScanOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [medOpenIds, setMedOpenIds] = useState<Set<string>>(new Set());
@@ -163,6 +164,7 @@ export function MedicationsView({ title, medications, warnings, compact, alwaysS
     <ScrollView contentContainerStyle={styles.content}>
       <Text style={styles.title}>{title}</Text>
       <DisclaimerBanner variant="medication" />
+      {summaryContent}
 
       {warnings && warnings.length > 0 && (
         <Card style={styles.warningCard}>
