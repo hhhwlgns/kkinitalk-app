@@ -33,14 +33,23 @@ async function writePhase() {
     scheduledFor: `${TODAY}T08:00:00.000Z`,
   };
   await medicationLogsCollection.upsert(log);
+  await medicationLogsCollection.upsert({
+    id: createId('medlog'),
+    medicationId: jointMed.id,
+    userId: USER_ID,
+    takenAt: `${TODAY}T09:15:00.000Z`,
+    scheduledFor: `${TODAY}T09:00:00.000Z`,
+    status: 'skipped',
+    skippedReason: 'notFeelingWell',
+  });
 
   const storedMeds = await medicationsCollection.query((item) => item.userId === USER_ID);
   const storedLogs = await medicationLogsCollection.query((item) => item.userId === USER_ID);
   if (storedMeds.length !== 2) {
     throw new Error(`expected 2 medications, got ${storedMeds.length}`);
   }
-  if (storedLogs.length !== 1) {
-    throw new Error(`expected 1 medication log, got ${storedLogs.length}`);
+  if (storedLogs.length !== 2) {
+    throw new Error(`expected 2 medication logs, got ${storedLogs.length}`);
   }
 
   console.log('MEDICATION_WRITE_PHASE_OK');
@@ -53,8 +62,12 @@ async function readPhase() {
   if (storedMeds.length !== 2) {
     throw new Error(`expected 2 persisted medications after restart, got ${storedMeds.length}`);
   }
-  if (storedLogs.length !== 1) {
-    throw new Error(`expected 1 persisted medication log after restart, got ${storedLogs.length}`);
+  if (storedLogs.length !== 2) {
+    throw new Error(`expected 2 persisted medication logs after restart, got ${storedLogs.length}`);
+  }
+  const skippedLog = storedLogs.find((item) => item.status === 'skipped');
+  if (skippedLog?.skippedReason !== 'notFeelingWell') {
+    throw new Error('skipped medication reason mismatch after restart');
   }
 
   const bloodPressureMed = storedMeds.find((item) => item.name === '혈압약');

@@ -1,325 +1,116 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { G, Rect, Text as SvgText } from 'react-native-svg';
 
-import { StatusPill } from '../../src/components/ui';
-import { colors, fontFamily, fontSize, radius, shadow, spacing } from '../../src/theme/tokens';
-import { adherenceStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
-import { useRole } from '../../src/state/RoleContext';
-import {
-  guardianLinksCollection,
-  medicationLogsCollection,
-  medicationsCollection,
-  mealsCollection,
-} from '../../src/mocks/db/collections';
+import { NutritionBalanceTrend } from '../../src/components/nutrition/NutritionBalanceTrend';
+import { Card, EmptyState, ScreenState } from '../../src/components/ui';
+import { buildNutritionBalanceInsight, DEFAULT_NUTRITION_GOAL, recentDateStrings, summarizeNutritionForDate, type DailyNutritionSummary } from '../../src/domain/dailyNutrition';
+import { isoToLocalDate, todayDate } from '../../src/domain/date';
 import { findConnectedLink } from '../../src/domain/guardianLink';
-import { isoToLocalDate, localDateString } from '../../src/domain/date';
-import type { Meal, Medication, MedicationLog } from '../../src/domain/types';
+import type { CheckIn, Meal, Medication, MedicationLog, NutritionGoal } from '../../src/domain/types';
+import { checkInsCollection, guardianLinksCollection, mealsCollection, medicationLogsCollection, medicationsCollection, nutritionGoalsCollection } from '../../src/mocks/db/collections';
+import { useRole } from '../../src/state/RoleContext';
+import { colors, minTouchTarget, radius, spacing, type } from '../../src/theme/tokens';
 
-interface DayStat {
-  date: string;
-  label: string;
-  sodiumMg: number;
-  mealCount: number;
-  medicationTakenCount: number;
-  medicationScheduledCount: number;
-}
-
-const CHART_HEIGHT = 140;
-const BAR_GAP = 8;
-
-function lastNDates(n: number): string[] {
-  const dates: string[] = [];
-  const now = new Date();
-  for (let i = n - 1; i >= 0; i -= 1) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - i);
-    dates.push(localDateString(d));
-  }
-  return dates;
-}
-
-// Composes an elder-friendly weekly summary from the aggregated stats.
-// This is a rule-based stand-in for a real AI summary — kept in the "참고용" tone.
-function buildWeeklySummary(input: {
-  totalMeals: number;
-  daysWithMeals: number;
-  sodiumExceedDays: number;
-  adherenceRate: number | null;
-}): string {
-  const { totalMeals, daysWithMeals, sodiumExceedDays, adherenceRate } = input;
-
-  if (totalMeals === 0 && adherenceRate === null) {
-    return '이번 주에는 기록이 거의 없어요. 어르신께 식사와 복약 기록을 부탁드려 보세요.';
-  }
-
-  const parts: string[] = [];
-
-  if (daysWithMeals >= 5) {
-    parts.push('이번 주 식사는 꾸준했어요.');
-  } else if (daysWithMeals > 0) {
-    parts.push(`이번 주 식사 기록이 ${daysWithMeals}일뿐이라 조금 아쉬워요.`);
-  }
-
-  if (sodiumExceedDays >= 3) {
-    parts.push(`국·찌개로 나트륨이 ${sodiumExceedDays}일이나 기준을 넘었어요. 저염으로 도와주세요.`);
-  } else if (sodiumExceedDays > 0) {
-    parts.push(`나트륨이 ${sodiumExceedDays}일 기준을 넘었어요.`);
-  } else if (daysWithMeals > 0) {
-    parts.push('나트륨은 대체로 안정적이었어요.');
-  }
-
-  if (adherenceRate !== null) {
-    if (adherenceRate >= 80) {
-      parts.push(`복약도 ${adherenceRate}%로 잘 챙기셨어요.`);
-    } else if (adherenceRate >= 50) {
-      parts.push(`복약 이행률은 ${adherenceRate}%예요. 저녁 약을 잊는 날이 있는지 살펴봐 주세요.`);
-    } else {
-      parts.push(`복약 이행률이 ${adherenceRate}%로 낮아요. 알림 시간을 조정해 보는 것을 권해요.`);
-    }
-  }
-
-  return parts.join(' ');
-}
-
-function buildDayStats(dates: string[], meals: Meal[], medications: Medication[], logs: MedicationLog[]): DayStat[] {
-  return dates.map((date) => {
-    const dayMeals = meals.filter((meal) => isoToLocalDate(meal.recordedAt) === date);
-    const sodiumMg = dayMeals.reduce((sum, meal) => sum + meal.totalNutrients.sodiumMg, 0);
-    const dayLogs = logs.filter((log) => isoToLocalDate(log.takenAt) === date);
-    const takenMedicationIds = new Set(dayLogs.map((log) => log.medicationId));
-    return {
-      date,
-      label: date.slice(5),
-      sodiumMg,
-      mealCount: dayMeals.length,
-      medicationTakenCount: takenMedicationIds.size,
-      medicationScheduledCount: medications.length,
-    };
-  });
-}
-
-function SodiumChart({ stats, width }: { stats: DayStat[]; width: number }) {
-  const maxSodium = Math.max(...stats.map((s) => s.sodiumMg), 1500);
-  const barWidth = (width - BAR_GAP * (stats.length - 1)) / stats.length;
-
-  return (
-    <Svg width={width} height={CHART_HEIGHT + 24}>
-      {stats.map((stat, index) => {
-        const barHeight = Math.max((stat.sodiumMg / maxSodium) * CHART_HEIGHT, 2);
-        const x = index * (barWidth + BAR_GAP);
-        const y = CHART_HEIGHT - barHeight;
-        return (
-          <G key={stat.date}>
-            <Rect
-              x={x}
-              y={y}
-              width={barWidth}
-              height={barHeight}
-              fill={stat.sodiumMg > 1500 ? colors.danger : colors.primary}
-              rx={4}
-            />
-            <SvgText x={x + barWidth / 2} y={CHART_HEIGHT + 16} fontSize={10} fill={colors.textMuted} textAnchor="middle">
-              {stat.label}
-            </SvgText>
-          </G>
-        );
-      })}
-    </Svg>
-  );
+interface WeeklyData {
+  summaries: DailyNutritionSummary[];
+  meals: Meal[];
+  medications: Medication[];
+  logs: MedicationLog[];
+  checkIns: CheckIn[];
 }
 
 export default function GuardianReportScreen() {
   const { activeUserId } = useRole();
   const guardianUserId = activeUserId ?? 'guardian-self';
-  const { width: windowWidth } = useWindowDimensions();
-  // Screen padding (lg) + card padding (md) on both sides.
-  const chartWidth = Math.max(220, windowWidth - spacing.lg * 2 - spacing.md * 2);
-
-  const [checking, setChecking] = useState(true);
-  const [stats, setStats] = useState<DayStat[]>([]);
+  const [data, setData] = useState<WeeklyData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const links = await guardianLinksCollection.getAll();
-    const link = findConnectedLink(links, guardianUserId);
-    if (!link) {
-      setChecking(false);
-      router.replace('/guardian/connect');
-      return;
-    }
-
-    const elderlyUserId = link.elderlyUserId;
-    const [meals, medications, medicationLogs] = await Promise.all([
-      mealsCollection.query((item) => item.userId === elderlyUserId),
-      medicationsCollection.query((item) => item.userId === elderlyUserId),
-      medicationLogsCollection.query((item) => item.userId === elderlyUserId),
+    const link = findConnectedLink(await guardianLinksCollection.getAll(), guardianUserId);
+    if (!link) { router.replace('/guardian/connect'); return; }
+    const [meals, medications, logs, checkIns, goals] = await Promise.all([
+      mealsCollection.query((item) => item.userId === link.elderlyUserId),
+      medicationsCollection.query((item) => item.userId === link.elderlyUserId && item.active !== false),
+      medicationLogsCollection.query((item) => item.userId === link.elderlyUserId),
+      checkInsCollection.query((item) => item.userId === link.elderlyUserId),
+      nutritionGoalsCollection.query((item) => item.userId === link.elderlyUserId),
     ]);
-
-    const dates = lastNDates(7);
-    setStats(buildDayStats(dates, meals, medications, medicationLogs));
-    setChecking(false);
+    const goal: NutritionGoal = goals[0] ?? { id: link.elderlyUserId, userId: link.elderlyUserId, ...DEFAULT_NUTRITION_GOAL, updatedAt: new Date().toISOString() };
+    const dates = recentDateStrings(todayDate(), 7);
+    setData({ summaries: dates.map((date) => summarizeNutritionForDate(meals, date, goal)), meals, medications, logs, checkIns });
+    setLoading(false);
   }, [guardianUserId]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
+  const metrics = useMemo(() => {
+    if (!data) return null;
+    const dates = new Set(data.summaries.map((summary) => summary.date));
+    const totalMeals = data.summaries.reduce((sum, summary) => sum + summary.mealCount, 0);
+    const daysWithMeals = data.summaries.filter((summary) => summary.mealCount > 0).length;
+    const recordedBalances = data.summaries.filter((summary) => summary.mealCount > 0).map(buildNutritionBalanceInsight);
+    const averageBalance = recordedBalances.length ? Math.round(recordedBalances.reduce((sum, item) => sum + item.score, 0) / recordedBalances.length) : null;
+    const scheduledPerDay = data.medications.reduce((sum, medication) => sum + medication.timesOfDay.length, 0);
+    const taken = data.logs.filter((log) => dates.has(isoToLocalDate(log.scheduledFor)) && log.status !== 'skipped').length;
+    const skipped = data.logs.filter((log) => dates.has(isoToLocalDate(log.scheduledFor)) && log.status === 'skipped').length;
+    const scheduled = scheduledPerDay * 7;
+    const adherence = scheduled > 0 ? Math.min(100, Math.round(taken / scheduled * 100)) : null;
+    const weeklyCheckIns = data.checkIns.filter((checkIn) => dates.has(checkIn.date));
+    const badDays = weeklyCheckIns.filter((checkIn) => checkIn.condition === 'bad').length;
+    return { totalMeals, daysWithMeals, averageBalance, adherence, skipped, checkInDays: weeklyCheckIns.length, badDays };
+  }, [data]);
 
-  if (checking) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.loadingText}>불러오는 중이에요...</Text>
-      </SafeAreaView>
-    );
-  }
+  if (loading) return <SafeAreaView style={styles.container}><ScreenState kind="loading" title="주간 기록을 정리하고 있어요" description="식사·영양·복약·컨디션을 함께 살펴보는 중이에요." /></SafeAreaView>;
+  if (!data || !metrics) return <SafeAreaView style={styles.container}><EmptyState title="리포트를 만들 수 없어요" description="연결 상태를 다시 확인해 주세요." /></SafeAreaView>;
 
-  const totalScheduled = stats.reduce((sum, s) => sum + s.medicationScheduledCount, 0);
-  const totalTaken = stats.reduce((sum, s) => sum + s.medicationTakenCount, 0);
-  const adherenceRate = totalScheduled > 0 ? Math.round((totalTaken / totalScheduled) * 100) : null;
-  const totalMeals = stats.reduce((sum, s) => sum + s.mealCount, 0);
-  const avgSodium = Math.round(stats.reduce((sum, s) => sum + s.sodiumMg, 0) / stats.length);
-  const sodiumExceedDays = stats.filter((s) => s.sodiumMg > 1500).length;
-  const daysWithMeals = stats.filter((s) => s.mealCount > 0).length;
-  const hasAnyData = totalMeals > 0 || totalTaken > 0;
-
-  const aiSummary = buildWeeklySummary({
-    totalMeals,
-    daysWithMeals,
-    sodiumExceedDays,
-    adherenceRate,
-  });
+  const hasData = metrics.totalMeals > 0 || metrics.adherence !== null || metrics.checkInDays > 0;
+  const summary = !hasData
+    ? '이번 주 기록이 아직 없어요.'
+    : `${metrics.daysWithMeals >= 5 ? '식사 기록은 꾸준해요.' : `식사 기록이 ${7 - metrics.daysWithMeals}일 비어 있어요.`} ${metrics.adherence !== null ? `복약 이행은 ${metrics.adherence}%예요.` : ''} ${metrics.badDays > 0 ? `컨디션 확인이 필요한 날이 ${metrics.badDays}일 있었어요.` : '기록된 컨디션은 대체로 안정적이에요.'}`;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>주간 리포트</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View><Text style={styles.eyebrow}>최근 7일</Text><Text style={styles.title}>주간 돌봄 리포트</Text></View>
+        <Card raised style={styles.summaryCard}><View style={styles.summaryIcon}><Ionicons name="sparkles" size={26} color={colors.primary} /></View><View style={styles.flex1}><Text style={styles.summaryLabel}>이번 주 한눈에</Text><Text style={styles.summaryText}>{summary}</Text></View></Card>
 
-        {!hasAnyData && <Text style={styles.emptyText}>이번 주 기록이 없어요.</Text>}
-
-        <View style={styles.card}>
-          <View style={styles.cardHeaderRow}>
-            <Text style={styles.cardLabel}>나트륨 섭취 추이 (일별)</Text>
-            {hasAnyData && (
-              <StatusPill
-                status={sodiumStatus(avgSodium)}
-                size="sm"
-                label={sodiumStatus(avgSodium) === 'good' ? '양호' : sodiumStatus(avgSodium) === 'caution' ? '주의' : '초과'}
-              />
-            )}
-          </View>
-          <SodiumChart stats={stats} width={chartWidth} />
-          <Text style={styles.cardSub}>주간 평균 {avgSodium}mg · 기준 1500mg</Text>
+        <View style={styles.metricGrid}>
+          <MetricCard icon="restaurant" label="식사 규칙성" value={`${metrics.daysWithMeals}/7일`} description={`총 ${metrics.totalMeals}끼 기록`} tone={metrics.daysWithMeals >= 5 ? 'good' : 'caution'} />
+          <MetricCard icon="pie-chart" label="영양 균형" value={metrics.averageBalance === null ? '기록 전' : `${metrics.averageBalance}점`} description="기록된 날 평균" tone={metrics.averageBalance !== null && metrics.averageBalance >= 80 ? 'good' : 'caution'} />
+          <MetricCard icon="medkit" label="복약 이행" value={metrics.adherence === null ? '일정 없음' : `${metrics.adherence}%`} description={metrics.skipped > 0 ? `미복용 ${metrics.skipped}회` : '미복용 기록 없음'} tone={metrics.adherence !== null && metrics.adherence >= 80 ? 'good' : 'caution'} />
+          <MetricCard icon="happy" label="컨디션" value={`${metrics.checkInDays}/7일`} description={metrics.badDays > 0 ? `확인 필요 ${metrics.badDays}일` : '특이 기록 없음'} tone={metrics.badDays === 0 ? 'good' : 'caution'} />
         </View>
 
-        <View style={styles.statCard}>
-          <Text style={styles.cardLabel}>주간 통계</Text>
-          <View style={styles.statRow}>
-            <Text style={styles.statLine}>총 식사 기록</Text>
-            <Text style={styles.statValue}>{totalMeals}건</Text>
-          </View>
-          <View style={styles.statRow}>
-            <Text style={styles.statLine}>복약 이행률</Text>
-            {adherenceRate !== null ? (
-              <StatusPill
-                status={adherenceStatus(adherenceRate)}
-                size="sm"
-                label={`${adherenceRate}%`}
-              />
-            ) : (
-              <Text style={styles.statValue}>등록된 약 없음</Text>
-            )}
-          </View>
-        </View>
+        <NutritionBalanceTrend summaries={data.summaries} />
 
-        {hasAnyData && (
-          <View style={styles.aiCard}>
-            <Text style={styles.aiLabel}>AI 요약</Text>
-            <Text style={styles.aiText}>{aiSummary}</Text>
-          </View>
-        )}
+        <Card style={styles.nextCard}>
+          <Text style={styles.nextTitle}>다음 주에는 이렇게 도와주세요</Text>
+          <ActionLine number="1" text={metrics.daysWithMeals < 5 ? '식사 기록이 비는 시간에 안부를 확인해 주세요.' : '지금처럼 식사 기록을 꾸준히 격려해 주세요.'} />
+          <ActionLine number="2" text={metrics.adherence !== null && metrics.adherence < 80 ? '놓치기 쉬운 약 시간을 어르신과 다시 맞춰보세요.' : '현재 복약 습관을 유지하도록 응원해 주세요.'} />
+          <ActionLine number="3" text={metrics.badDays > 0 ? '컨디션이 좋지 않았던 날의 식사와 복약을 함께 살펴보세요.' : '맞춤 식단으로 다음 주 식사를 미리 준비할 수 있어요.'} />
+        </Card>
+
+        <View style={styles.actions}><Pressable onPress={() => router.push('/guardian/history')} style={styles.secondaryButton}><Text style={styles.secondaryText}>상세 기록 보기</Text></Pressable><Pressable onPress={() => router.push('/guardian/shop')} style={styles.primaryButton}><Text style={styles.primaryText}>맞춤 식단 보내기</Text></Pressable></View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+function MetricCard({ icon, label, value, description, tone }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string; description: string; tone: 'good' | 'caution' }) {
+  const color = tone === 'good' ? colors.good : colors.caution;
+  return <Card style={styles.metricCard}><Ionicons name={icon} size={23} color={color} /><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text><Text style={styles.metricDescription}>{description}</Text></Card>;
+}
+
+function ActionLine({ number, text }: { number: string; text: string }) {
+  return <View style={styles.actionLine}><View style={styles.number}><Text style={styles.numberText}>{number}</Text></View><Text style={styles.actionLineText}>{text}</Text></View>;
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg },
-  title: {
-    fontSize: fontSize.sectionHeader,
-    fontFamily: fontFamily.bold,
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    alignItems: 'center',
-    ...shadow.card,
-  },
-  statCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    ...shadow.card,
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    alignSelf: 'stretch',
-    marginBottom: spacing.sm,
-  },
-  cardLabel: {
-    fontSize: fontSize.label,
-    fontFamily: fontFamily.bold,
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
-    alignSelf: 'flex-start',
-  },
-  cardSub: { fontSize: fontSize.meta, fontFamily: fontFamily.regular, color: colors.textMuted, marginTop: spacing.xs },
-  statRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.xs,
-  },
-  statValue: { fontSize: fontSize.body, fontFamily: fontFamily.extrabold, color: colors.text },
-  aiCard: {
-    backgroundColor: colors.nextMedBg,
-    borderWidth: 1.5,
-    borderColor: colors.profileHighlightBorder,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  aiLabel: { fontSize: fontSize.small, fontFamily: fontFamily.extrabold, color: colors.secondaryAccent },
-  aiText: {
-    fontSize: fontSize.body,
-    fontFamily: fontFamily.medium,
-    color: colors.text,
-    lineHeight: 26,
-    marginTop: spacing.xs,
-  },
-  statLine: { fontSize: fontSize.body, fontFamily: fontFamily.medium, color: colors.textMuted },
-  loadingText: {
-    fontSize: fontSize.body,
-    fontFamily: fontFamily.regular,
-    color: colors.textMuted,
-    padding: spacing.lg,
-  },
-  emptyText: {
-    fontSize: fontSize.small,
-    fontFamily: fontFamily.regular,
-    color: colors.textMuted,
-    marginBottom: spacing.md,
-  },
+  container: { flex: 1, backgroundColor: colors.background }, content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg }, flex1: { flex: 1 }, eyebrow: { ...type.callout, color: colors.primary }, title: { ...type.title, color: colors.text, marginTop: spacing.xxs },
+  summaryCard: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }, summaryIcon: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }, summaryLabel: { ...type.caption, color: colors.primary }, summaryText: { ...type.heading, color: colors.text, marginTop: spacing.xxs },
+  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, metricCard: { width: '48%', gap: spacing.xxs }, metricLabel: { ...type.caption, color: colors.textMuted }, metricValue: { ...type.heading, color: colors.text }, metricDescription: { ...type.caption, color: colors.textMuted },
+  nextCard: { gap: spacing.md }, nextTitle: { ...type.heading, color: colors.text }, actionLine: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }, number: { width: 26, height: 26, borderRadius: radius.pill, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }, numberText: { ...type.caption, color: colors.primary }, actionLineText: { ...type.body, color: colors.text, flex: 1 },
+  actions: { flexDirection: 'row', gap: spacing.sm }, primaryButton: { minHeight: minTouchTarget, flex: 1, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }, primaryText: { ...type.callout, color: colors.onPrimary }, secondaryButton: { minHeight: minTouchTarget, flex: 1, borderRadius: radius.md, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }, secondaryText: { ...type.callout, color: colors.primary },
 });

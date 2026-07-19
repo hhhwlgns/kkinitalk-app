@@ -9,12 +9,13 @@ import { NutritionBalanceHero } from '../../src/components/nutrition/NutritionBa
 import { NutritionBalanceTrend } from '../../src/components/nutrition/NutritionBalanceTrend';
 import { Card } from '../../src/components/ui';
 import { buildAlertCandidates } from '../../src/domain/alertRules';
-import { buildNutritionBalanceInsight, buildNutritionTrend, DEFAULT_NUTRITION_GOAL, summarizeNutritionForDate } from '../../src/domain/dailyNutrition';
+import { buildContextualNutritionBalanceInsight, buildNutritionTrend, DEFAULT_NUTRITION_GOAL, summarizeNutritionForDate } from '../../src/domain/dailyNutrition';
 import { formatDateWithWeekday, isoToLocalDate, todayDate } from '../../src/domain/date';
 import { findConnectedLink } from '../../src/domain/guardianLink';
+import { createId } from '../../src/domain/id';
 import type { CheckIn, GuardianAlert, HealthProfile, Meal, Medication, MedicationLog, NutritionGoal } from '../../src/domain/types';
 import {
-  checkInsCollection, consentRecordsCollection, guardianAlertsCollection, guardianLinksCollection,
+  checkInsCollection, consentRecordsCollection, guardianAlertsCollection, guardianCareActionsCollection, guardianLinksCollection,
   healthProfilesCollection, mealsCollection, medicationLogsCollection, medicationsCollection, nutritionGoalsCollection,
 } from '../../src/mocks/db/collections';
 import { useRole } from '../../src/state/RoleContext';
@@ -31,12 +32,15 @@ export default function GuardianHomeScreen() {
   const [logs, setLogs] = useState<MedicationLog[]>([]);
   const [alerts, setAlerts] = useState<GuardianAlert[]>([]);
   const [goal, setGoal] = useState<NutritionGoal | null>(null);
+  const [elderlyUserId, setElderlyUserId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const links = await guardianLinksCollection.getAll();
     const link = findConnectedLink(links, guardianUserId);
     if (!link) { router.replace('/guardian/connect'); return; }
     const elderlyUserId = link.elderlyUserId;
+    setElderlyUserId(elderlyUserId);
     const [profiles, checkIns, allMeals, meds, allLogs, consent, goals] = await Promise.all([
       healthProfilesCollection.query((item) => item.userId === elderlyUserId),
       checkInsCollection.query((item) => item.userId === elderlyUserId),
@@ -57,7 +61,7 @@ export default function GuardianHomeScreen() {
     setCheckIn(checkIns.find((item) => item.date === today) ?? null);
     setMeals(allMeals);
     setMedications(meds);
-    setLogs(allLogs.filter((item) => isoToLocalDate(item.takenAt) === today));
+    setLogs(allLogs.filter((item) => isoToLocalDate(item.takenAt) === today && item.status !== 'skipped'));
     setAlerts(loadedAlerts.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
     setGoal(goals[0] ?? null);
   }, [guardianUserId, today]);
@@ -65,11 +69,17 @@ export default function GuardianHomeScreen() {
 
   const resolvedGoal = useMemo<NutritionGoal>(() => goal ?? { id: profile?.userId ?? 'elderly-self', userId: profile?.userId ?? 'elderly-self', ...DEFAULT_NUTRITION_GOAL, updatedAt: new Date().toISOString() }, [goal, profile]);
   const summary = useMemo(() => summarizeNutritionForDate(meals, today, resolvedGoal), [meals, resolvedGoal, today]);
-  const balanceInsight = useMemo(() => buildNutritionBalanceInsight(summary), [summary]);
+  const balanceInsight = useMemo(() => buildContextualNutritionBalanceInsight(summary, resolvedGoal, { now: new Date(), isToday: true }), [resolvedGoal, summary]);
   const trend = useMemo(() => buildNutritionTrend(meals, today, 7, resolvedGoal), [meals, resolvedGoal, today]);
   const todayMeals = useMemo(() => meals.filter((meal) => isoToLocalDate(meal.recordedAt) === today), [meals, today]);
   const scheduledDoseCount = medications.reduce((sum, medication) => sum + medication.timesOfDay.length, 0);
   const latestAlert = alerts[0];
+
+  async function recordCareAction(type: 'checkIn' | 'requestMealRecord' | 'requestMedicationCheck', message: string) {
+    if (!elderlyUserId) return;
+    await guardianCareActionsCollection.upsert({ id: createId('care-action'), guardianUserId, elderlyUserId, type, message, createdAt: new Date().toISOString() });
+    setActionMessage(message);
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -118,6 +128,15 @@ export default function GuardianHomeScreen() {
         </View>
 
         <NutritionBalanceTrend summaries={trend} />
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>지금 도와드리기</Text><Text style={styles.actionCaption}>요청 내용이 돌봄 기록에 남아요</Text></View>
+          <View style={styles.careGrid}>
+            <Pressable onPress={() => recordCareAction('checkIn', '안부 확인을 요청했어요.')} style={styles.careButton}><Ionicons name="call" size={23} color={colors.primary} /><Text style={styles.careText}>안부 확인</Text></Pressable>
+            <Pressable onPress={() => recordCareAction('requestMealRecord', '식사 기록을 부탁드렸어요.')} style={styles.careButton}><Ionicons name="camera" size={23} color={colors.primary} /><Text style={styles.careText}>식사 기록 요청</Text></Pressable>
+            <Pressable onPress={() => recordCareAction('requestMedicationCheck', '복약 확인을 부탁드렸어요.')} style={styles.careButton}><Ionicons name="medkit" size={23} color={colors.primary} /><Text style={styles.careText}>복약 확인 요청</Text></Pressable>
+          </View>
+          {actionMessage && <View style={styles.actionFeedback}><Ionicons name="checkmark-circle" size={21} color={colors.good} /><Text style={styles.actionFeedbackText}>{actionMessage}</Text></View>}
+        </View>
         <View style={styles.actionRow}>
           <Pressable onPress={() => router.push('/guardian/shop')} style={styles.primaryAction}><Ionicons name="gift" size={22} color={colors.onPrimary} /><Text style={styles.primaryActionText}>맞춤 식단 보내기</Text></Pressable>
           <Pressable onPress={() => router.push('/guardian/history')} style={styles.secondaryAction}><Ionicons name="calendar" size={22} color={colors.primary} /><Text style={styles.secondaryActionText}>기록 보기</Text></Pressable>
@@ -135,4 +154,5 @@ const styles = StyleSheet.create({
   section: { gap: spacing.sm }, sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, sectionTitle: { ...type.heading, color: colors.text }, link: { ...type.callout, color: colors.primary }, medicationCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, medicationIcon: { width: 54, height: 54, borderRadius: radius.md, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }, medicationTitle: { ...type.bodyStrong, color: colors.text }, medicationText: { ...type.caption, color: colors.textMuted, marginTop: 2 }, manageButton: { minHeight: minTouchTarget, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md }, manageButtonText: { ...type.bodyStrong, color: colors.primary },
   statusGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, statusTile: { width: '48%', gap: spacing.xxs }, statusLabel: { ...type.caption, color: colors.textMuted }, statusValue: { ...type.heading, color: colors.text },
   actionRow: { flexDirection: 'row', gap: spacing.sm }, primaryAction: { minHeight: minTouchTarget, flex: 1, borderRadius: radius.md, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingHorizontal: spacing.sm }, primaryActionText: { ...type.callout, color: colors.onPrimary }, secondaryAction: { minHeight: minTouchTarget, flex: 1, borderRadius: radius.md, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingHorizontal: spacing.sm }, secondaryActionText: { ...type.callout, color: colors.primary },
+  actionCaption: { ...type.caption, color: colors.textMuted }, careGrid: { flexDirection: 'row', gap: spacing.xs }, careButton: { minHeight: 84, flex: 1, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', gap: spacing.xs, padding: spacing.xs }, careText: { ...type.caption, color: colors.text, textAlign: 'center' }, actionFeedback: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, borderRadius: radius.md, backgroundColor: colors.goodBg, padding: spacing.sm }, actionFeedbackText: { ...type.callout, color: colors.good, flex: 1 },
 });

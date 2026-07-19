@@ -8,7 +8,7 @@ import { MealPhotoGrid } from '../../src/components/nutrition/MealPhotoGrid';
 import { NutritionBalanceHero } from '../../src/components/nutrition/NutritionBalanceHero';
 import { NutritionBalanceTrend } from '../../src/components/nutrition/NutritionBalanceTrend';
 import { Card } from '../../src/components/ui';
-import { buildNextMealAdvice, buildNutritionBalanceInsight, buildNutritionTrend, DEFAULT_NUTRITION_GOAL, summarizeNutritionForDate } from '../../src/domain/dailyNutrition';
+import { buildContextualNutritionBalanceInsight, buildNextMealAdvice, buildNutritionTrend, DEFAULT_NUTRITION_GOAL, summarizeNutritionForDate } from '../../src/domain/dailyNutrition';
 import { formatDateWithWeekday, isoToLocalDate, todayDate } from '../../src/domain/date';
 import type { CheckIn, HealthProfile, Meal, MealOrder, MealProduct, Medication, MedicationLog, NutritionGoal } from '../../src/domain/types';
 import {
@@ -55,7 +55,7 @@ export default function ElderlyHomeScreen() {
     setCheckIn(checkIns[0] ?? null);
     setMeals(allMeals);
     setMedications(meds);
-    setLogs(allLogs.filter((item) => isoToLocalDate(item.takenAt) === today));
+    setLogs(allLogs.filter((item) => isoToLocalDate(item.takenAt) === today && item.status !== 'skipped'));
     setGoal(goals[0] ?? null);
     setGiftOrder(order);
     setGiftProduct(order ? products.find((item) => item.id === order.productId) ?? null : null);
@@ -70,12 +70,19 @@ export default function ElderlyHomeScreen() {
     updatedAt: new Date().toISOString(),
   }, [goal, userId]);
   const summary = useMemo(() => summarizeNutritionForDate(meals, today, resolvedGoal), [meals, resolvedGoal, today]);
-  const balanceInsight = useMemo(() => buildNutritionBalanceInsight(summary), [summary]);
+  const balanceInsight = useMemo(() => buildContextualNutritionBalanceInsight(summary, resolvedGoal, { now: new Date(), isToday: true }), [resolvedGoal, summary]);
   const trend = useMemo(() => buildNutritionTrend(meals, today, 7, resolvedGoal), [meals, resolvedGoal, today]);
   const advice = useMemo(() => buildNextMealAdvice(summary), [summary]);
   const todayMeals = useMemo(() => meals.filter((meal) => isoToLocalDate(meal.recordedAt) === today), [meals, today]);
-  const takenMedicationIds = useMemo(() => new Set(logs.map((log) => log.medicationId)), [logs]);
-  const takenCount = medications.filter((medication) => takenMedicationIds.has(medication.id)).length;
+  const recordableSlot = useMemo<'breakfast' | 'lunch' | 'dinner' | null>(() => {
+    const slots = ['breakfast', 'lunch', 'dinner'] as const;
+    const hour = new Date().getHours();
+    const currentIndex = hour < 11 ? 0 : hour < 17 ? 1 : 2;
+    return slots.slice(currentIndex).find((slot) => !todayMeals.some((meal) => meal.slot === slot)) ?? null;
+  }, [todayMeals]);
+  const scheduledDoseCount = medications.reduce((sum, medication) => sum + medication.timesOfDay.length, 0);
+  const takenCount = logs.length;
+  const nextMedication = useMemo(() => medications.flatMap((medication) => medication.timesOfDay.map((time) => ({ medication, time }))).sort((a, b) => a.time.localeCompare(b.time)).find(({ medication, time }) => !logs.some((log) => log.medicationId === medication.id && new Date(log.scheduledFor).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }).slice(0, 5) === time)) ?? null, [logs, medications]);
 
   function openCamera(slot: 'breakfast' | 'lunch' | 'dinner') {
     router.push({ pathname: '/elderly/camera', params: { slot } });
@@ -122,7 +129,6 @@ export default function ElderlyHomeScreen() {
         )}
 
         <NutritionBalanceHero summary={summary} insight={balanceInsight} goal={resolvedGoal} elder />
-        <NutritionBalanceTrend summaries={trend} elder />
 
         <Pressable onPress={() => router.push('/elderly/voice')} style={({ pressed }) => [pressed && styles.pressed]}>
         <Card style={styles.adviceCard}>
@@ -149,10 +155,10 @@ export default function ElderlyHomeScreen() {
               <View style={styles.medicationIcon}><Ionicons name="medkit" size={28} color={colors.primary} /></View>
               <View style={styles.flex1}>
                 <Text style={styles.medicationTitle}>
-                  {medications.length === 0 ? '등록된 약이 없어요' : takenCount === medications.length ? '오늘 약을 모두 드셨어요' : `${medications.length}개 중 ${takenCount}개 드셨어요`}
+                  {medications.length === 0 ? '등록된 약이 없어요' : takenCount >= scheduledDoseCount ? '오늘 약을 모두 드셨어요' : nextMedication ? `다음 약은 ${nextMedication.time}이에요` : `${scheduledDoseCount}회 중 ${takenCount}회 드셨어요`}
                 </Text>
                 <Text style={styles.medicationDescription}>
-                  {medications.length === 0 ? '복약 화면에서 약을 등록할 수 있어요.' : medications.filter((item) => !takenMedicationIds.has(item.id)).map((item) => item.name).slice(0, 2).join(', ') || '참 잘하셨어요!'}
+                  {medications.length === 0 ? '복약 화면에서 약을 등록할 수 있어요.' : nextMedication ? `${nextMedication.medication.name} · ${nextMedication.medication.dosage ?? '1정'}` : '참 잘하셨어요!'}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={24} color={colors.textFaint} />
@@ -170,10 +176,13 @@ export default function ElderlyHomeScreen() {
           <MealPhotoGrid
             meals={todayMeals}
             elder
+            recordableSlot={recordableSlot}
             onAddPress={openCamera}
             onMealPress={(meal) => router.push({ pathname: '/elderly/analysis', params: { mealId: meal.id } })}
           />
         </View>
+
+        <NutritionBalanceTrend summaries={trend} elder />
       </ScrollView>
     </SafeAreaView>
   );

@@ -62,7 +62,7 @@ export function NutritionBalanceHero({ summary, insight, goal, elder = false }: 
             <View key={item.key} style={styles.legendRow}>
               <View style={[styles.legendDot, { backgroundColor: tone(summary.states[item.key]) }]} />
               <Text style={[styles.legendLabel, scale.caption]}>{item.label}</Text>
-              <Text style={[styles.legendValue, scale.caption]}>{summary.mealCount === 0 ? '—' : `${Math.round(summary.totals[item.key] / Math.max(1, goal[item.key].target) * 100)}%`}</Text>
+              <Text style={[styles.legendValue, scale.caption]}>{summary.mealCount === 0 ? '—' : `${Math.round(summary.totals[item.key] / Math.max(1, goal[item.key].target * (insight.expectedProgress ?? 1)) * 100)}%`}</Text>
             </View>
           ))}
         </View>
@@ -70,6 +70,7 @@ export function NutritionBalanceHero({ summary, insight, goal, elder = false }: 
       <View style={styles.conclusion}>
         <Text style={[styles.title, scale.subheading]}>{insight.title}</Text>
         <Text style={[styles.description, scale.callout]}>{insight.description}</Text>
+        {insight.basisLabel && <Text style={[styles.basis, scale.caption]}>{insight.basisLabel}</Text>}
       </View>
       {summary.mealCount > 0 && (
         <View style={styles.sodiumRow}>
@@ -97,6 +98,7 @@ const styles = StyleSheet.create({
   conclusion: { borderRadius: radius.md, backgroundColor: colors.surfaceSunken, padding: spacing.md },
   title: { color: colors.text },
   description: { color: colors.textMuted, marginTop: spacing.xxs },
+  basis: { color: colors.primary, marginTop: spacing.xs },
   sodiumRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm, borderTopWidth: 1, borderTopColor: colors.dividerLight, paddingTop: spacing.sm },
   sodiumLabel: { color: colors.textMuted },
   sodiumValue: { color: colors.text },

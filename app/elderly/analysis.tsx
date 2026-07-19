@@ -5,7 +5,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { MealAnalysisView } from '../../src/components/analysis/MealAnalysisView';
 import { ChevronIcon } from '../../src/components/icons/ChevronIcon';
-import { EmptyState } from '../../src/components/ui';
+import { EmptyState, ScreenState } from '../../src/components/ui';
 import { colors, fontFamily, spacing, typeElder } from '../../src/theme/tokens';
 import { useRole } from '../../src/state/RoleContext';
 import { healthProfilesCollection, mealsCollection, medicationsCollection } from '../../src/mocks/db/collections';
@@ -54,7 +54,7 @@ export default function AnalysisScreen() {
         <View style={styles.backButton} />
       </View>
 
-      {loading ? null : meal ? (
+      {loading ? <ScreenState kind="loading" title="식사 기록을 살펴보고 있어요" description="잠시만 기다려 주세요." /> : meal ? (
         <MealAnalysisView meal={meal} profile={profile} medications={medications} />
       ) : (
         <View style={styles.emptyWrap}>

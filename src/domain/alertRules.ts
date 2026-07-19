@@ -26,7 +26,7 @@ export function buildAlertCandidates(
 
   const todayCheckIn = checkIns.find((item) => item.date === today) ?? null;
   const todayMeals = meals.filter((meal) => isoToLocalDate(meal.recordedAt) === today);
-  const todayLogs = medicationLogs.filter((log) => isoToLocalDate(log.takenAt) === today);
+  const todayLogs = medicationLogs.filter((log) => isoToLocalDate(log.takenAt) === today && log.status !== 'skipped');
 
   if (
     nowMinutes >= MISSED_MEAL_CHECK_MINUTES &&

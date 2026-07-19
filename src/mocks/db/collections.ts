@@ -2,6 +2,7 @@ import type {
   CheckIn,
   ConsentRecord,
   GuardianAlert,
+  GuardianCareAction,
   GuardianLink,
   HealthProfile,
   HealthProfileRevision,
@@ -28,3 +29,4 @@ export const nutritionGoalsCollection = createCollection<NutritionGoal>('nutriti
 export const mealProductsCollection = createCollection<MealProduct>('mealProducts');
 export const mealOrdersCollection = createCollection<MealOrder>('mealOrders');
 export const healthProfileRevisionsCollection = createCollection<HealthProfileRevision>('healthProfileRevisions');
+export const guardianCareActionsCollection = createCollection<GuardianCareAction>('guardianCareActions');

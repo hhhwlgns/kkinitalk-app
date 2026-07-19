@@ -1,5 +1,6 @@
 import {
   guardianAlertsCollection,
+  guardianCareActionsCollection,
   guardianLinksCollection,
   medicationsCollection,
 } from '../src/mocks/db/collections';
@@ -95,6 +96,7 @@ async function writePhase() {
     throw new Error(`expected 1 alert, got ${alerts.length}`);
   }
   await guardianAlertsCollection.upsert({ ...alerts[0], comment: '병원 방문 예약함' });
+  await guardianCareActionsCollection.upsert({ id: createId('care-action'), guardianUserId: GUARDIAN_USER_ID, elderlyUserId: ELDERLY_USER_ID, type: 'requestMealRecord', message: '식사 기록을 부탁드렸어요.', createdAt: `${TODAY}T20:10:00.000Z` });
 
   console.log('GUARDIAN_WRITE_PHASE_OK');
 }
@@ -119,10 +121,14 @@ async function readPhase() {
   if (alert.type !== 'high_risk' || alert.comment !== '병원 방문 예약함' || alert.acknowledged !== false) {
     throw new Error('alert comment/state did not persist correctly after restart');
   }
+  const careActions = await guardianCareActionsCollection.query((item) => item.elderlyUserId === ELDERLY_USER_ID);
+  if (careActions.length !== 1 || careActions[0].type !== 'requestMealRecord') {
+    throw new Error('guardian care action did not persist after restart');
+  }
 
   console.log(
     'SMOKE TEST PASSED: guardian connect, medication add/delete, and alert generation/comment persisted across simulated restart',
-    { elderlyUserId: connectedLink.elderlyUserId, medicationCount: meds.length, alertComment: alert.comment },
+    { elderlyUserId: connectedLink.elderlyUserId, medicationCount: meds.length, alertComment: alert.comment, careAction: careActions[0].type },
   );
 }
 

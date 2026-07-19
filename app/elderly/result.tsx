@@ -8,7 +8,8 @@ import { colors, fontFamily, radius, shadow, spacing, typeElder } from '../../sr
 import { useRole } from '../../src/state/RoleContext';
 import { healthProfilesCollection, mealsCollection } from '../../src/mocks/db/collections';
 import type { FoodItem, HealthProfile, Meal } from '../../src/domain/types';
-import { MEAL_CALORIE_TARGET, assessMealFitness, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { FOOD_BANK, MEAL_CALORIE_TARGET, assessMealFitness, sumNutrients } from '../../src/mocks/nutritionAnalysis';
+import { createId } from '../../src/domain/id';
 import { calorieStatus, mealStatus, proteinStatus, sodiumStatus } from '../../src/domain/nutrientStatus';
 import { formatIsoTime } from '../../src/domain/date';
 
@@ -27,14 +28,14 @@ export default function ResultScreen() {
   const [meal, setMeal] = useState<Meal | null>(null);
   const [profile, setProfile] = useState<HealthProfile | null>(null);
   const [isEditFoods, setIsEditFoods] = useState(false);
-  const [removedFoodIds, setRemovedFoodIds] = useState<Set<string>>(new Set());
+  const [editedFoods, setEditedFoods] = useState<FoodItem[]>([]);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     const meals = await mealsCollection.query((item) => item.userId === userId);
     const target = meals.find((item) => item.id === mealId) ?? null;
     setMeal(target);
-    setRemovedFoodIds(new Set());
+    setEditedFoods(target?.foods.map((food) => ({ ...food, portion: food.portion ?? 'regular' })) ?? []);
     setIsEditFoods(false);
 
     const profiles = await healthProfilesCollection.query((item) => item.userId === userId);
@@ -47,10 +48,7 @@ export default function ResultScreen() {
     }, [load]),
   );
 
-  const activeFoods: FoodItem[] = useMemo(
-    () => meal?.foods.filter((food) => !removedFoodIds.has(food.id)) ?? [],
-    [meal, removedFoodIds],
-  );
+  const activeFoods = editedFoods;
 
   const totals = useMemo(() => sumNutrients(activeFoods), [activeFoods]);
   const verdict = useMemo(() => assessMealFitness(totals, profile), [totals, profile]);
@@ -72,12 +70,31 @@ export default function ResultScreen() {
   const overallWord = overall === 'good' ? '균형 좋음' : overall === 'caution' ? '주의' : '위험';
 
   function toggleFood(foodId: string) {
-    setRemovedFoodIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(foodId)) next.delete(foodId);
-      else next.add(foodId);
-      return next;
-    });
+    setEditedFoods((current) => current.filter((food) => food.id !== foodId));
+  }
+
+  function changePortion(foodId: string, portion: NonNullable<FoodItem['portion']>) {
+    const multiplier = { small: 0.65, regular: 1, large: 1.35 }[portion];
+    setEditedFoods((current) => current.map((food) => {
+      if (food.id !== foodId) return food;
+      const previousMultiplier = { small: 0.65, regular: 1, large: 1.35 }[food.portion ?? 'regular'];
+      const scale = multiplier / previousMultiplier;
+      return {
+        ...food,
+        portion,
+        nutrients: {
+          calories: food.nutrients.calories * scale,
+          carbsG: food.nutrients.carbsG * scale,
+          proteinG: food.nutrients.proteinG * scale,
+          fatG: food.nutrients.fatG * scale,
+          sodiumMg: food.nutrients.sodiumMg * scale,
+        },
+      };
+    }));
+  }
+
+  function addFood(food: FoodItem) {
+    setEditedFoods((current) => [...current, { ...food, id: createId('food'), portion: 'regular' }]);
   }
 
   async function saveRecord() {
@@ -89,6 +106,7 @@ export default function ResultScreen() {
       totalNutrients: totals,
       fitness: verdict.fitness,
       fitnessNote: verdict.fitnessNote,
+      analysisEdited: JSON.stringify(activeFoods) !== JSON.stringify(meal.foods),
     };
     await mealsCollection.upsert(updated);
     setSaving(false);
@@ -100,7 +118,7 @@ export default function ResultScreen() {
     if (meal) {
       await mealsCollection.remove(meal.id);
     }
-    router.replace('/elderly/camera');
+    router.replace({ pathname: '/elderly/camera', params: { slot: meal?.slot ?? 'lunch' } });
   }
 
   const displayName = activeFoods.length > 0 ? `${activeFoods[0].name} 등 ${activeFoods.length}가지` : '식사';
@@ -138,21 +156,18 @@ export default function ResultScreen() {
               <Text style={styles.linkLabel}>{isEditFoods ? '완료' : '고치기'}</Text>
             </Pressable>
           </View>
-          <View style={styles.chipsRow}>
+          <View style={styles.foodEditList}>
             {activeFoods.map((food) => (
-              <Pressable
-                key={food.id}
-                onPress={() => isEditFoods && toggleFood(food.id)}
-                style={[styles.foodChip, isEditFoods && styles.foodChipEditing]}
-              >
-                <Text style={[styles.foodChipLabel, isEditFoods && styles.foodChipLabelEditing]}>
-                  {food.name}
-                  {isEditFoods ? '  ✕' : ''}
-                </Text>
-              </Pressable>
+              <View key={food.id} style={styles.foodEditRow}>
+                <View style={styles.foodNameWrap}><Text style={styles.foodChipLabel}>{food.name}</Text><Text style={styles.foodKcal}>{Math.round(food.nutrients.calories)}kcal</Text></View>
+                {isEditFoods && <View style={styles.portionRow}>
+                  {(['small', 'regular', 'large'] as const).map((portion) => <Pressable key={portion} onPress={() => changePortion(food.id, portion)} style={[styles.portionButton, (food.portion ?? 'regular') === portion && styles.portionButtonActive]}><Text style={[styles.portionText, (food.portion ?? 'regular') === portion && styles.portionTextActive]}>{portion === 'small' ? '조금' : portion === 'regular' ? '보통' : '많이'}</Text></Pressable>)}
+                  <Pressable onPress={() => toggleFood(food.id)} style={styles.removeButton}><Text style={styles.removeText}>삭제</Text></Pressable>
+                </View>}
+              </View>
             ))}
           </View>
-          {isEditFoods && <Text style={styles.editHint}>잘못 인식된 음식을 누르면 빠져요</Text>}
+          {isEditFoods && <View style={styles.addFoodArea}><Text style={styles.editHint}>빠진 음식이 있나요?</Text><View style={styles.chipsRow}>{FOOD_BANK.filter((candidate) => !activeFoods.some((food) => food.name === candidate.name)).slice(0, 5).map((food) => <Pressable key={food.id} onPress={() => addFood(food)} style={styles.addFoodChip}><Text style={styles.addFoodText}>+ {food.name}</Text></Pressable>)}</View></View>}
         </View>
 
         <Card
@@ -175,8 +190,8 @@ export default function ResultScreen() {
           <Text style={styles.detailButtonLabel}>자세한 분석 보기</Text>
         </Pressable>
 
-        <Pressable style={styles.primaryButton} onPress={saveRecord} disabled={saving}>
-          <Text style={styles.primaryButtonLabel}>기록 저장하기</Text>
+        <Pressable style={[styles.primaryButton, activeFoods.length === 0 && styles.primaryButtonDisabled]} onPress={saveRecord} disabled={saving || activeFoods.length === 0}>
+          <Text style={styles.primaryButtonLabel}>{activeFoods.length === 0 ? '음식을 하나 이상 추가해 주세요' : '수정한 내용으로 기록 완료'}</Text>
         </Pressable>
 
         <Pressable style={styles.retakeButton} onPress={retake}>
@@ -209,6 +224,14 @@ const styles = StyleSheet.create({
   foodsTitle: { ...typeElder.subheading, color: colors.text },
   linkLabel: { fontSize: 16, fontFamily: fontFamily.bold, color: colors.secondaryAccent },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  foodEditList: { gap: spacing.xs },
+  foodEditRow: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, padding: spacing.sm, gap: spacing.xs },
+  foodNameWrap: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
+  foodKcal: { ...typeElder.caption, color: colors.textMuted },
+  portionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  portionButton: { minHeight: 40, flex: 1, borderRadius: radius.pill, backgroundColor: colors.surfaceSunken, alignItems: 'center', justifyContent: 'center' },
+  portionButtonActive: { backgroundColor: colors.primary }, portionText: { ...typeElder.caption, color: colors.textMuted }, portionTextActive: { color: colors.onPrimary },
+  removeButton: { minHeight: 40, paddingHorizontal: spacing.sm, alignItems: 'center', justifyContent: 'center' }, removeText: { ...typeElder.caption, color: colors.danger },
   foodChip: {
     backgroundColor: colors.surface,
     borderWidth: 1.5,
@@ -221,6 +244,7 @@ const styles = StyleSheet.create({
   foodChipLabel: { ...typeElder.callout, color: colors.text, fontFamily: fontFamily.bold },
   foodChipLabelEditing: { color: colors.danger },
   editHint: { ...typeElder.caption, color: colors.textMuted, marginTop: spacing.xs },
+  addFoodArea: { gap: spacing.xs }, addFoodChip: { borderRadius: radius.pill, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.primarySoft, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm }, addFoodText: { ...typeElder.caption, color: colors.primary },
 
   verdictCard: { gap: spacing.sm },
   verdictText: { ...typeElder.bodyStrong, color: colors.text },
@@ -244,6 +268,7 @@ const styles = StyleSheet.create({
     ...shadow.cta,
   },
   primaryButtonLabel: { ...typeElder.heading, color: colors.onPrimary },
+  primaryButtonDisabled: { backgroundColor: colors.textFaint, shadowOpacity: 0 },
   retakeButton: { paddingVertical: spacing.sm, alignItems: 'center' },
   retakeLabel: { ...typeElder.callout, color: colors.textMuted, fontFamily: fontFamily.bold },
 

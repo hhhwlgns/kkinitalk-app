@@ -35,6 +35,7 @@ export interface FoodItem {
   id: string;
   name: string;
   nutrients: NutrientBreakdown;
+  portion?: 'small' | 'regular' | 'large';
 }
 
 export interface Meal {
@@ -83,6 +84,8 @@ export interface MedicationLog {
   scheduledFor: string;
   recordedBy?: string;
   recorderRole?: Role;
+  status?: 'taken' | 'skipped';
+  skippedReason?: 'forgot' | 'notFeelingWell' | 'away' | 'other' | null;
 }
 
 export type ConditionLevel = 'good' | 'normal' | 'bad';
@@ -196,4 +199,13 @@ export interface HealthProfileRevision {
   changerRole: Role;
   summary: string;
   changedAt: string;
+}
+
+export interface GuardianCareAction {
+  id: string;
+  guardianUserId: string;
+  elderlyUserId: string;
+  type: 'checkIn' | 'requestMealRecord' | 'requestMedicationCheck' | 'note';
+  message: string;
+  createdAt: string;
 }

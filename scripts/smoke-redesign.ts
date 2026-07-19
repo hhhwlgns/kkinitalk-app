@@ -1,4 +1,4 @@
-import { buildNextMealAdvice, buildNutritionBalanceInsight, buildNutritionTrend, summarizeNutritionForDate } from '../src/domain/dailyNutrition';
+import { buildContextualNutritionBalanceInsight, buildNextMealAdvice, buildNutritionBalanceInsight, buildNutritionTrend, expectedNutritionProgress, summarizeNutritionForDate } from '../src/domain/dailyNutrition';
 import type { Meal } from '../src/domain/types';
 
 function meal(id: string, date: string, proteinG: number, sodiumMg: number): Meal {
@@ -46,6 +46,20 @@ if (balance.status !== 'needsAttention' || balance.focusKeys.length < 2 || !bala
   throw new Error(`종합 영양 균형이 부족 영양소와 상한 지표를 함께 반영하지 못했습니다: ${JSON.stringify(balance)}`);
 }
 
+const breakfastOnly = summarizeNutritionForDate([meal('breakfast-context', '2026-07-19', 14, 300)], '2026-07-19');
+const morningContext = { now: new Date(2026, 6, 19, 9, 0, 0), isToday: true };
+const morningProgress = expectedNutritionProgress(breakfastOnly, morningContext);
+const morningBalance = buildContextualNutritionBalanceInsight(breakfastOnly, {
+  calories: { min: 1200, target: 1500, max: 1750 },
+  carbsG: { min: 130, target: 165, max: 200 },
+  proteinG: { min: 40, target: 45, max: 70 },
+  fatG: { min: 30, target: 45, max: 60 },
+  sodiumMg: { min: 0, target: 1400, max: 1640 },
+}, morningContext);
+if (morningProgress < 0.3 || morningProgress > 0.34 || morningBalance.expectedProgress !== morningProgress) {
+  throw new Error(`아침 기록을 하루 전체 목표로 오판했습니다: ${JSON.stringify({ morningProgress, morningBalance })}`);
+}
+
 const trend = buildNutritionTrend(meals, '2026-07-19', 3);
 if (trend.length !== 3 || trend[0].date !== '2026-07-17' || trend[2].date !== '2026-07-19') {
   throw new Error(`최근 영양 추이 날짜가 올바르지 않습니다: ${JSON.stringify(trend.map((item) => item.date))}`);
@@ -56,4 +70,5 @@ console.log('SMOKE TEST PASSED: redesign daily nutrition aggregation distinguish
   states: today.states,
   advice,
   balance,
+  morningBalance,
 });

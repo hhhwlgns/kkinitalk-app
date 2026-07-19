@@ -40,7 +40,7 @@ export default function GuardianMedicationsScreen() {
       healthProfilesCollection.query((item) => item.userId === link.elderlyUserId),
     ]);
     setMedications(meds);
-    setTodayLogs(logs.filter((item) => isoToLocalDate(item.takenAt) === todayDate()));
+    setTodayLogs(logs.filter((item) => isoToLocalDate(item.takenAt) === todayDate() && item.status !== 'skipped'));
     setElderlyName(profiles[profiles.length - 1]?.name ?? '어르신');
   }, [guardianUserId]);
 
