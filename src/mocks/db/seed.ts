@@ -7,9 +7,12 @@ import type {
   GuardianLink,
   HealthProfile,
   Meal,
+  MealOrder,
+  MealProduct,
   MealSlot,
   Medication,
   MedicationLog,
+  NutritionGoal,
   User,
 } from '../../domain/types';
 import { createId } from '../../domain/id';
@@ -20,9 +23,12 @@ import {
   guardianAlertsCollection,
   guardianLinksCollection,
   healthProfilesCollection,
+  mealOrdersCollection,
+  mealProductsCollection,
   mealsCollection,
   medicationLogsCollection,
   medicationsCollection,
+  nutritionGoalsCollection,
   usersCollection,
 } from './collections';
 
@@ -103,6 +109,7 @@ export async function seedMockDb(): Promise<void> {
     avoidedFoods: ['짠 음식'],
     recentWeightKg: 54,
     appetiteLevel: 'normal',
+    allergies: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -112,32 +119,60 @@ export async function seedMockDb(): Promise<void> {
     id: createId('medication'),
     userId: ELDERLY_USER_ID,
     name: '혈압약',
+    category: '혈압약',
+    dosage: '5mg',
+    doseCount: 1,
     timesOfDay: ['08:00', '20:00'],
+    periods: ['morning', 'evening'],
+    mealTiming: 'afterMeal',
     conflictFoods: ['자몽'],
+    cautionNote: '자몽과 자몽주스는 피해주세요.',
+    active: true,
     createdAt: daysAgo(30).toISOString(),
   };
   const diabetesMed: Medication = {
     id: createId('medication'),
     userId: ELDERLY_USER_ID,
     name: '당뇨약',
+    category: '당뇨약',
+    dosage: '500mg',
+    doseCount: 1,
     timesOfDay: ['08:00'],
+    periods: ['morning'],
+    mealTiming: 'withMeal',
     conflictFoods: [],
+    cautionNote: '식사와 함께 드시고 임의로 복용을 중단하지 마세요.',
+    active: true,
     createdAt: daysAgo(30).toISOString(),
   };
   const jointMed: Medication = {
     id: createId('medication'),
     userId: ELDERLY_USER_ID,
     name: '관절약',
+    category: '진통제',
+    dosage: '1정',
+    doseCount: 1,
     timesOfDay: ['12:30'],
+    periods: ['lunch'],
+    mealTiming: 'afterMeal',
     conflictFoods: ['술'],
+    cautionNote: '술과 함께 드시면 속이 불편할 수 있어요.',
+    active: true,
     createdAt: daysAgo(20).toISOString(),
   };
   const vitaminMed: Medication = {
     id: createId('medication'),
     userId: ELDERLY_USER_ID,
     name: '종합비타민',
+    category: '영양제',
+    dosage: '1정',
+    doseCount: 1,
     timesOfDay: ['09:00'],
+    periods: ['morning'],
+    mealTiming: 'afterMeal',
     conflictFoods: [],
+    cautionNote: null,
+    active: true,
     createdAt: daysAgo(20).toISOString(),
   };
   for (const medication of [bloodPressureMed, diabetesMed, jointMed, vitaminMed]) {
@@ -262,6 +297,8 @@ export async function seedMockDb(): Promise<void> {
     inviteCode: 'FAMILY1',
     elderlyUserId: ELDERLY_USER_ID,
     guardianUserId: GUARDIAN_USER_ID,
+    relationship: '딸',
+    permissions: ['view_health', 'manage_profile', 'manage_medications', 'receive_high_risk_alerts', 'send_meals'],
     status: 'connected',
     createdAt: daysAgo(30).toISOString(),
   };
@@ -317,4 +354,97 @@ export async function seedMockDb(): Promise<void> {
     updatedAt: daysAgo(30).toISOString(),
   };
   await consentRecordsCollection.upsert(consent);
+
+  const nutritionGoal: NutritionGoal = {
+    id: ELDERLY_USER_ID,
+    userId: ELDERLY_USER_ID,
+    calories: { min: 1200, target: 1400, max: 1650 },
+    carbsG: { min: 130, target: 153, max: 190 },
+    proteinG: { min: 40, target: 45, max: 70 },
+    fatG: { min: 30, target: 45, max: 60 },
+    sodiumMg: { min: 0, target: 1400, max: 1640 },
+    updatedAt: now,
+  };
+  await nutritionGoalsCollection.upsert(nutritionGoal);
+
+  const products: MealProduct[] = [
+    {
+      id: 'product-low-sodium-fish',
+      name: '담백한 고등어 채소 도시락',
+      description: '국물 없이 담백하게 구운 생선과 부드러운 채소 반찬을 담았어요.',
+      category: 'lowSodium',
+      price: 8900,
+      imageUri: null,
+      foods: ['잡곡밥', '고등어구이', '시금치나물', '두부조림'],
+      nutrients: { calories: 510, carbsG: 58, proteinG: 29, fatG: 17, sodiumMg: 620 },
+      suitableConditions: ['고혈압'],
+      allergens: ['대두', '고등어'],
+      cautionFoods: [],
+      deliveryDays: [isoDate(daysAgo(-1)), isoDate(daysAgo(-2)), isoDate(daysAgo(-3))],
+      featured: true,
+    },
+    {
+      id: 'product-diabetes-chicken',
+      name: '든든한 닭가슴살 잡곡 도시락',
+      description: '잡곡밥과 닭가슴살로 단백질을 든든하게 채운 균형 식단이에요.',
+      category: 'diabetes',
+      price: 9500,
+      imageUri: null,
+      foods: ['잡곡밥', '닭가슴살구이', '버섯볶음', '브로콜리'],
+      nutrients: { calories: 485, carbsG: 49, proteinG: 36, fatG: 14, sodiumMg: 540 },
+      suitableConditions: ['당뇨'],
+      allergens: ['대두'],
+      cautionFoods: [],
+      deliveryDays: [isoDate(daysAgo(-1)), isoDate(daysAgo(-2)), isoDate(daysAgo(-3))],
+      featured: true,
+    },
+    {
+      id: 'product-soft-tofu',
+      name: '부드러운 두부 달걀찜 식단',
+      description: '씹고 삼키기 편한 두부와 달걀찜으로 구성한 부드러운 식단이에요.',
+      category: 'softMeal',
+      price: 8200,
+      imageUri: null,
+      foods: ['진밥', '두부조림', '달걀찜', '애호박볶음'],
+      nutrients: { calories: 430, carbsG: 52, proteinG: 24, fatG: 13, sodiumMg: 480 },
+      suitableConditions: [],
+      allergens: ['달걀', '대두'],
+      cautionFoods: [],
+      deliveryDays: [isoDate(daysAgo(-1)), isoDate(daysAgo(-2)), isoDate(daysAgo(-3))],
+      featured: false,
+    },
+    {
+      id: 'product-protein-bulgogi',
+      name: '단백질 든든 소불고기 도시락',
+      description: '부드러운 소불고기와 나물 반찬으로 단백질을 보충해요.',
+      category: 'highProtein',
+      price: 9900,
+      imageUri: null,
+      foods: ['잡곡밥', '소불고기', '시금치나물', '버섯볶음'],
+      nutrients: { calories: 560, carbsG: 61, proteinG: 32, fatG: 20, sodiumMg: 780 },
+      suitableConditions: [],
+      allergens: ['대두', '밀'],
+      cautionFoods: [],
+      deliveryDays: [isoDate(daysAgo(-1)), isoDate(daysAgo(-2)), isoDate(daysAgo(-3))],
+      featured: true,
+    },
+  ];
+  for (const product of products) {
+    await mealProductsCollection.upsert(product);
+  }
+
+  const mealOrder: MealOrder = {
+    id: 'order-demo-gift',
+    guardianUserId: GUARDIAN_USER_ID,
+    elderlyUserId: ELDERLY_USER_ID,
+    productId: products[0].id,
+    quantity: 1,
+    deliveryDate: isoDate(daysAgo(-1)),
+    deliveryAddressLabel: '김끼니 님 댁',
+    giftMessage: '어머니, 내일 점심 맛있게 드세요!',
+    status: 'preparing',
+    createdAt: now,
+    updatedAt: now,
+  };
+  await mealOrdersCollection.upsert(mealOrder);
 }

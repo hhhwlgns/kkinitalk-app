@@ -23,6 +23,7 @@
     "scripts/smoke-profile.ts",
     "scripts/smoke-guardian.ts",
     "scripts/smoke-consent.ts",
+    "scripts/smoke-redesign.ts",
     "src/mocks/**/*.ts",
     "src/api/**/*.ts",
     "src/domain/**/*.ts"

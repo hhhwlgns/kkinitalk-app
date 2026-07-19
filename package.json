@@ -47,7 +47,8 @@
     "smoke:history": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-history-runner.cjs write && node scripts/smoke-history-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
     "smoke:profile": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-profile-runner.cjs write && node scripts/smoke-profile-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
     "smoke:guardian": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-guardian-runner.cjs write && node scripts/smoke-guardian-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
-    "smoke:consent": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-consent-runner.cjs write && node scripts/smoke-consent-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\""
+    "smoke:consent": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node scripts/smoke-consent-runner.cjs write && node scripts/smoke-consent-runner.cjs read && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\"",
+    "smoke:redesign": "node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\" && tsc -p tsconfig.smoke.json && node .smoke-tmp/scripts/smoke-redesign.js && node -e \"require('fs').rmSync('.smoke-tmp', { recursive: true, force: true })\""
   },
   "private": true
 }

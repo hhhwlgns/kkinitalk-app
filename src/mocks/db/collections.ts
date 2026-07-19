@@ -4,9 +4,13 @@ import type {
   GuardianAlert,
   GuardianLink,
   HealthProfile,
+  HealthProfileRevision,
   Meal,
+  MealOrder,
+  MealProduct,
   Medication,
   MedicationLog,
+  NutritionGoal,
   User,
 } from '../../domain/types';
 import { createCollection } from './store';
@@ -20,3 +24,7 @@ export const checkInsCollection = createCollection<CheckIn>('checkIns');
 export const guardianLinksCollection = createCollection<GuardianLink>('guardianLinks');
 export const guardianAlertsCollection = createCollection<GuardianAlert>('guardianAlerts');
 export const consentRecordsCollection = createCollection<ConsentRecord>('consentRecords');
+export const nutritionGoalsCollection = createCollection<NutritionGoal>('nutritionGoals');
+export const mealProductsCollection = createCollection<MealProduct>('mealProducts');
+export const mealOrdersCollection = createCollection<MealOrder>('mealOrders');
+export const healthProfileRevisionsCollection = createCollection<HealthProfileRevision>('healthProfileRevisions');

@@ -14,6 +14,7 @@ export interface HealthProfile {
   avoidedFoods: string[];
   recentWeightKg: number | null;
   appetiteLevel: 'low' | 'normal' | 'high' | null;
+  allergies?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -41,21 +42,37 @@ export interface Meal {
   userId: string;
   slot: MealSlot;
   photoUri: string | null;
+  photoUris?: string[];
   foods: FoodItem[];
   totalNutrients: NutrientBreakdown;
   fitness: MealFitness;
   fitnessNote: string;
   nextMealSuggestion: string | null;
+  recommendationReason?: string | null;
+  analysisSource?: 'mock' | 'manual';
+  analysisEdited?: boolean;
   recordedAt: string;
 }
+
+export type MedicationPeriod = 'morning' | 'lunch' | 'evening' | 'asNeeded';
+
+export type MedicationMealTiming = 'beforeMeal' | 'afterMeal' | 'withMeal' | 'anytime';
 
 export interface Medication {
   id: string;
   userId: string;
   name: string;
+  category?: string;
+  dosage?: string;
+  doseCount?: number;
   timesOfDay: string[];
+  periods?: MedicationPeriod[];
+  mealTiming?: MedicationMealTiming;
   conflictFoods: string[];
+  cautionNote?: string | null;
+  active?: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface MedicationLog {
@@ -64,6 +81,8 @@ export interface MedicationLog {
   userId: string;
   takenAt: string;
   scheduledFor: string;
+  recordedBy?: string;
+  recorderRole?: Role;
 }
 
 export type ConditionLevel = 'good' | 'normal' | 'bad';
@@ -83,9 +102,18 @@ export interface GuardianLink {
   inviteCode: string;
   elderlyUserId: string;
   guardianUserId: string | null;
+  relationship?: string | null;
+  permissions?: GuardianPermission[];
   status: 'pending' | 'connected';
   createdAt: string;
 }
+
+export type GuardianPermission =
+  | 'view_health'
+  | 'manage_profile'
+  | 'manage_medications'
+  | 'receive_high_risk_alerts'
+  | 'send_meals';
 
 export type AlertType = 'missed_meal' | 'nutrition_risk' | 'missed_medication' | 'high_risk';
 
@@ -110,4 +138,62 @@ export interface User {
   id: string;
   role: Role;
   displayName: string;
+}
+
+export interface NutrientRange {
+  min: number;
+  target: number;
+  max: number;
+}
+
+export interface NutritionGoal {
+  id: string;
+  userId: string;
+  calories: NutrientRange;
+  carbsG: NutrientRange;
+  proteinG: NutrientRange;
+  fatG: NutrientRange;
+  sodiumMg: NutrientRange;
+  updatedAt: string;
+}
+
+export interface MealProduct {
+  id: string;
+  name: string;
+  description: string;
+  category: 'lowSodium' | 'diabetes' | 'highProtein' | 'softMeal' | 'general' | 'porridge' | 'sideDishes';
+  price: number;
+  imageUri: string | null;
+  foods: string[];
+  nutrients: NutrientBreakdown;
+  suitableConditions: string[];
+  allergens: string[];
+  cautionFoods: string[];
+  deliveryDays: string[];
+  featured: boolean;
+}
+
+export type MealOrderStatus = 'confirmed' | 'preparing' | 'shipping' | 'delivered';
+
+export interface MealOrder {
+  id: string;
+  guardianUserId: string;
+  elderlyUserId: string;
+  productId: string;
+  quantity: number;
+  deliveryDate: string;
+  deliveryAddressLabel: string;
+  giftMessage: string | null;
+  status: MealOrderStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HealthProfileRevision {
+  id: string;
+  userId: string;
+  changedBy: string;
+  changerRole: Role;
+  summary: string;
+  changedAt: string;
 }
