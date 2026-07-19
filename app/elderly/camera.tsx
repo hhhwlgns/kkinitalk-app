@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
@@ -11,6 +11,7 @@ import { colors, fontFamily, fontSize, radius, spacing } from '../../src/theme/t
 import { useRole } from '../../src/state/RoleContext';
 import { healthProfilesCollection, mealsCollection } from '../../src/mocks/db/collections';
 import { createId } from '../../src/domain/id';
+import type { Meal } from '../../src/domain/types';
 import {
   analyzeMockPhoto,
   assessMealFitness,
@@ -44,6 +45,7 @@ function goHome() {
 export default function CameraScreen() {
   const { activeUserId } = useRole();
   const userId = activeUserId ?? 'elderly-self';
+  const { slot: requestedSlot } = useLocalSearchParams<{ slot?: string }>();
 
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -67,21 +69,27 @@ export default function CameraScreen() {
     const lastThreeMeals = recentMealsSorted.slice(0, 3);
 
     const { fitness, fitnessNote } = assessMealFitness(totalNutrients, profile);
-    const slot = inferMealSlot(now);
+    const slot = requestedSlot === 'breakfast' || requestedSlot === 'lunch' || requestedSlot === 'dinner'
+      ? requestedSlot
+      : inferMealSlot(now);
 
     const mealId = createId('meal');
     const photoUri = await persistPhoto(uri, mealId);
 
-    const meal = {
+    const meal: Meal = {
       id: mealId,
       userId,
       slot,
       photoUri,
+      photoUris: [photoUri],
       foods,
       totalNutrients,
       fitness,
       fitnessNote,
       nextMealSuggestion: suggestNextMeal(slot, profile, lastThreeMeals),
+      recommendationReason: '오늘 기록과 건강 프로필을 바탕으로 추천했어요.',
+      analysisSource: 'mock',
+      analysisEdited: false,
       recordedAt: now.toISOString(),
     };
 

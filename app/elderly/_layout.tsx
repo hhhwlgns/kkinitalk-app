@@ -5,20 +5,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, shadow } from '../../src/theme/tokens';
 
-const FAB_SIZE = 62;
-const FAB_ICON_SIZE = 30;
-const TAB_BAR_HEIGHT = 58;
+const FAB_SIZE = 66;
+const TAB_BAR_HEIGHT = 64;
 
-function CameraFabButton({ onPress }: { onPress?: () => void }) {
+function VoiceFabButton({ onPress }: { onPress?: () => void }) {
   return (
     <View style={styles.fabWrap} pointerEvents="box-none">
       <Pressable
         onPress={onPress}
         style={styles.fabButton}
         accessibilityRole="button"
-        accessibilityLabel="식사 사진 찍기"
+        accessibilityLabel="AI 음성 대화 시작하기"
       >
-        <Ionicons name="camera" color={colors.onPrimary} size={FAB_ICON_SIZE} />
+        <Ionicons name="mic" color={colors.onPrimary} size={32} />
       </Pressable>
     </View>
   );
@@ -26,46 +25,22 @@ function CameraFabButton({ onPress }: { onPress?: () => void }) {
 
 export default function ElderlyLayout() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarLabelStyle: { fontSize: 13, fontWeight: '600' },
-        tabBarStyle: {
-          height: tabBarHeight,
-          paddingBottom: insets.bottom,
-          paddingTop: 6,
-        },
+        tabBarInactiveTintColor: colors.textFaint,
+        tabBarLabelStyle: { fontSize: 16, fontWeight: '700' },
+        tabBarStyle: { height: TAB_BAR_HEIGHT + insets.bottom, paddingBottom: insets.bottom, paddingTop: 7 },
       }}
     >
-      <Tabs.Screen
-        name="home"
-        options={{ title: '홈', tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} /> }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{ title: '기록', tabBarIcon: ({ color, size }) => <Ionicons name="calendar" color={color} size={size} /> }}
-      />
-      <Tabs.Screen
-        name="camera"
-        options={{
-          title: '',
-          tabBarButton: (props) => (
-            <CameraFabButton onPress={props.onPress as (() => void) | undefined} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="medications"
-        options={{ title: '복약', tabBarIcon: ({ color, size }) => <Ionicons name="medkit" color={color} size={size} /> }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{ title: '내 정보', tabBarIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size} /> }}
-      />
+      <Tabs.Screen name="home" options={{ title: '식사', tabBarIcon: ({ color, size }) => <Ionicons name="restaurant" color={color} size={size} /> }} />
+      <Tabs.Screen name="voice" options={{ title: '', tabBarButton: (props) => <VoiceFabButton onPress={props.onPress as (() => void) | undefined} /> }} />
+      <Tabs.Screen name="medications" options={{ title: '복약', tabBarIcon: ({ color, size }) => <Ionicons name="medkit" color={color} size={size} /> }} />
+      <Tabs.Screen name="history" options={{ href: null }} />
+      <Tabs.Screen name="camera" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
       <Tabs.Screen name="checkin" options={{ href: null }} />
       <Tabs.Screen name="result" options={{ href: null }} />
       <Tabs.Screen name="analysis" options={{ href: null }} />
@@ -75,20 +50,6 @@ export default function ElderlyLayout() {
 }
 
 const styles = StyleSheet.create({
-  fabWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    // Lift the button so it straddles the top edge of the tab bar.
-    marginTop: -(FAB_SIZE / 2 - 6),
-  },
-  fabButton: {
-    width: FAB_SIZE,
-    height: FAB_SIZE,
-    borderRadius: FAB_SIZE / 2,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadow.cta,
-  },
+  fabWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', marginTop: -(FAB_SIZE / 2 - 8) },
+  fabButton: { width: FAB_SIZE, height: FAB_SIZE, borderRadius: FAB_SIZE / 2, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', ...shadow.micOrb },
 });
