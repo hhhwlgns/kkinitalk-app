@@ -76,7 +76,7 @@ export function NutritionOverview({ summary, goal, elder = false }: {
   );
 }
 
-export function NutritionTrendChart({ summaries, nutrientKey = 'sodiumMg', elder = false }: {
+export function NutritionTrendChart({ summaries, nutrientKey = 'proteinG', elder = false }: {
   summaries: DailyNutritionSummary[];
   nutrientKey?: NutrientKey;
   elder?: boolean;
@@ -87,14 +87,22 @@ export function NutritionTrendChart({ summaries, nutrientKey = 'sodiumMg', elder
   const barGap = 10;
   const barWidth = (width - barGap * (summaries.length - 1)) / summaries.length;
   const scale = elder ? typeElder : type;
+  const meta: Record<NutrientKey, { title: string; good: string; attention: string }> = {
+    calories: { title: '최근 7일 식사량', good: '최근 식사량이 대체로 안정적이에요.', attention: '식사량이 적었던 날을 함께 살펴보세요.' },
+    carbsG: { title: '최근 7일 탄수화물', good: '최근 탄수화물 섭취가 대체로 알맞아요.', attention: '밥과 간식의 양이 들쭉날쭉했어요.' },
+    proteinG: { title: '최근 7일 단백질', good: '최근 단백질 반찬을 꾸준히 드셨어요.', attention: '단백질이 부족했던 날에는 달걀이나 두부를 더해보세요.' },
+    fatG: { title: '최근 7일 지방', good: '최근 지방 섭취가 대체로 알맞아요.', attention: '기름진 반찬이 많았던 날을 살펴보세요.' },
+    sodiumMg: { title: '최근 7일 나트륨', good: '최근 나트륨은 상한 안에서 관리되고 있어요.', attention: '높았던 날은 국물을 조금 남겨보세요.' },
+  };
+  const copy = meta[nutrientKey];
 
   return (
     <Card>
-      <Text style={[styles.trendTitle, scale.subheading]}>최근 7일 나트륨</Text>
+      <Text style={[styles.trendTitle, scale.subheading]}>{copy.title}</Text>
       <Text style={[styles.trendSummary, scale.callout]}>
         {summaries.some((item) => item.states[nutrientKey] === 'high' || item.states[nutrientKey] === 'caution')
-          ? '높았던 날은 국물을 조금 남겨보세요.'
-          : '최근에는 대체로 알맞게 드셨어요.'}
+          ? copy.attention
+          : copy.good}
       </Text>
       <View style={styles.chartWrap}>
         <Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>

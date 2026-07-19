@@ -5,9 +5,10 @@ import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MealPhotoGrid } from '../../src/components/nutrition/MealPhotoGrid';
-import { NutritionOverview, NutritionTrendChart } from '../../src/components/nutrition/NutritionOverview';
+import { NutritionBalanceHero } from '../../src/components/nutrition/NutritionBalanceHero';
+import { NutritionBalanceTrend } from '../../src/components/nutrition/NutritionBalanceTrend';
 import { Card } from '../../src/components/ui';
-import { buildNextMealAdvice, buildNutritionTrend, DEFAULT_NUTRITION_GOAL, summarizeNutritionForDate } from '../../src/domain/dailyNutrition';
+import { buildNextMealAdvice, buildNutritionBalanceInsight, buildNutritionTrend, DEFAULT_NUTRITION_GOAL, summarizeNutritionForDate } from '../../src/domain/dailyNutrition';
 import { formatDateWithWeekday, isoToLocalDate, todayDate } from '../../src/domain/date';
 import type { CheckIn, HealthProfile, Meal, MealOrder, MealProduct, Medication, MedicationLog, NutritionGoal } from '../../src/domain/types';
 import {
@@ -69,6 +70,7 @@ export default function ElderlyHomeScreen() {
     updatedAt: new Date().toISOString(),
   }, [goal, userId]);
   const summary = useMemo(() => summarizeNutritionForDate(meals, today, resolvedGoal), [meals, resolvedGoal, today]);
+  const balanceInsight = useMemo(() => buildNutritionBalanceInsight(summary), [summary]);
   const trend = useMemo(() => buildNutritionTrend(meals, today, 7, resolvedGoal), [meals, resolvedGoal, today]);
   const advice = useMemo(() => buildNextMealAdvice(summary), [summary]);
   const todayMeals = useMemo(() => meals.filter((meal) => isoToLocalDate(meal.recordedAt) === today), [meals, today]);
@@ -119,8 +121,10 @@ export default function ElderlyHomeScreen() {
           </Pressable>
         )}
 
-        <NutritionOverview summary={summary} goal={resolvedGoal} elder />
+        <NutritionBalanceHero summary={summary} insight={balanceInsight} goal={resolvedGoal} elder />
+        <NutritionBalanceTrend summaries={trend} elder />
 
+        <Pressable onPress={() => router.push('/elderly/voice')} style={({ pressed }) => [pressed && styles.pressed]}>
         <Card style={styles.adviceCard}>
           <View style={styles.adviceTop}>
             <View style={styles.adviceIcon}><Ionicons name="restaurant" size={25} color={colors.onPrimary} /></View>
@@ -129,9 +133,9 @@ export default function ElderlyHomeScreen() {
           <Text style={styles.adviceTitle}>{advice.title}</Text>
           <Text style={styles.adviceMenu}>{advice.menu}</Text>
           <Text style={styles.adviceReason}>{advice.reason}</Text>
+          <View style={styles.adviceAction}><Text style={styles.adviceActionText}>AI와 메뉴 이야기하기</Text><Ionicons name="arrow-forward" size={22} color={colors.onPrimary} /></View>
         </Card>
-
-        <NutritionTrendChart summaries={trend} elder />
+        </Pressable>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -158,7 +162,7 @@ export default function ElderlyHomeScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>오늘 식사</Text>
+            <View><Text style={styles.sectionTitle}>오늘 식사 기록</Text><Text style={styles.sectionHint}>아침·점심·저녁을 눌러 사진을 남겨주세요</Text></View>
             <Pressable onPress={() => router.push('/elderly/history')} hitSlop={8}>
               <Text style={styles.sectionLink}>지난 기록</Text>
             </Pressable>
@@ -199,10 +203,13 @@ const styles = StyleSheet.create({
   adviceTitle: { ...typeElder.body, color: colors.onPrimary, opacity: 0.9, marginTop: spacing.md },
   adviceMenu: { ...typeElder.heading, color: colors.onPrimary, marginTop: spacing.xxs },
   adviceReason: { ...typeElder.callout, color: colors.onPrimary, opacity: 0.86, marginTop: spacing.xs },
+  adviceAction: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.primaryTranslucent },
+  adviceActionText: { ...typeElder.callout, color: colors.onPrimary },
   section: { gap: spacing.sm },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { ...typeElder.heading, color: colors.text },
   sectionLink: { ...typeElder.callout, color: colors.primary },
+  sectionHint: { ...typeElder.caption, color: colors.textMuted, marginTop: spacing.xxs },
   medicationCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   medicationIcon: { width: 52, height: 52, borderRadius: radius.md, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
   medicationTitle: { ...typeElder.bodyStrong, color: colors.text },

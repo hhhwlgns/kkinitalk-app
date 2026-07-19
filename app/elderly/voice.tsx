@@ -1,98 +1,117 @@
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DisclaimerBanner } from '../../src/components/DisclaimerBanner';
 import { colors, minTouchTarget, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
 
-const QUESTIONS = [
-  { label: '오늘 뭐 먹으면 좋아?', answer: '오늘은 단백질을 보충할 수 있는 생선이나 두부 반찬이 좋아요.' },
-  { label: '아침약 먹었는지 알려줘', answer: '복약 화면에서 오늘 드신 약을 함께 확인해볼게요.' },
-  { label: '식사 사진 찍을래', answer: '좋아요. 카메라를 열어드릴게요.' },
-];
+type Message = { id: string; role: 'assistant' | 'user'; text: string; action?: 'camera' | 'medication' };
+
+const SUGGESTIONS = ['오늘 저녁 뭐 먹을까?', '아침약 먹었는지 알려줘', '씹기 편한 반찬 추천해줘'];
+
+function answerFor(text: string): Omit<Message, 'id' | 'role'> {
+  if (text.includes('약')) return { text: '오늘 복약 기록을 같이 확인해볼게요. 아직 남은 약이 있다면 복약 화면에서 시간대별로 볼 수 있어요.', action: 'medication' };
+  if (text.includes('사진') || text.includes('찍')) return { text: '좋아요. 식사 사진을 찍으면 음식과 영양 균형을 살펴보고 다음 메뉴까지 이어서 알려드릴게요.', action: 'camera' };
+  if (text.includes('씹') || text.includes('부드')) return { text: '씹기 편하면서 단백질도 챙길 수 있는 순두부 달걀찜이 좋아요. 국물은 많이 드시지 않고, 부드러운 나물을 곁들여보실까요?' };
+  return { text: '오늘 기록을 보면 다음 끼니에는 단백질 반찬과 채소를 함께 드시면 좋아요. 두부구이와 부드러운 나물은 어떠세요?' };
+}
 
 export default function ElderlyVoiceScreen() {
+  const [messages, setMessages] = useState<Message[]>([
+    { id: 'welcome', role: 'assistant', text: '안녕하세요. 오늘 식사와 약에 대해 무엇이든 편하게 물어보세요.' },
+  ]);
+  const [input, setInput] = useState('');
   const [listening, setListening] = useState(false);
-  const [question, setQuestion] = useState<string | null>(null);
-  const [answer, setAnswer] = useState('궁금한 것을 말씀해 주세요. 식사와 약을 함께 챙겨드릴게요.');
+  const scrollRef = useRef<ScrollView>(null);
+  const canSend = useMemo(() => input.trim().length > 0, [input]);
 
-  function selectQuestion(label: string, nextAnswer: string) {
-    setQuestion(label);
-    setAnswer(nextAnswer);
-    if (label.includes('사진')) router.push('/elderly/camera');
-    if (label.includes('아침약')) router.push('/elderly/medications');
+  function send(text: string) {
+    const value = text.trim();
+    if (!value) return;
+    const stamp = Date.now();
+    const answer = answerFor(value);
+    setMessages((current) => [
+      ...current,
+      { id: `user-${stamp}`, role: 'user', text: value },
+      { id: `ai-${stamp}`, role: 'assistant', ...answer },
+    ]);
+    setInput('');
+    setListening(false);
+    requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+  }
+
+  function toggleListening() {
+    setListening((value) => !value);
+    if (!listening) setInput('오늘 저녁 뭐 먹을까?');
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View>
-          <Text style={styles.eyebrow}>끼니톡 AI</Text>
-          <Text style={styles.title}>무엇을 도와드릴까요?</Text>
-          <Text style={styles.subtitle}>말로 물어보시면 천천히 알려드릴게요.</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <KeyboardAvoidingView style={styles.flex1} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={styles.header}>
+          <View style={styles.aiAvatar}><Ionicons name="sparkles" size={23} color={colors.onPrimary} /></View>
+          <View style={styles.flex1}><Text style={styles.title}>끼니톡 AI</Text><Text style={styles.online}>오늘 기록을 함께 보고 있어요</Text></View>
+          <Pressable onPress={() => router.push('/elderly/profile')} style={styles.headerButton}><Ionicons name="ellipsis-horizontal" size={26} color={colors.text} /></Pressable>
         </View>
 
-        <View style={styles.conversation}>
-          {question && <View style={styles.userBubble}><Text style={styles.userText}>{question}</Text></View>}
-          <View style={styles.aiBubble}>
-            <View style={styles.aiLabelRow}><Ionicons name="sparkles" size={20} color={colors.primary} /><Text style={styles.aiLabel}>끼니톡 답변</Text></View>
-            <Text style={styles.aiText}>{answer}</Text>
+        <ScrollView ref={scrollRef} style={styles.flex1} contentContainerStyle={styles.messages} keyboardShouldPersistTaps="handled">
+          <View style={styles.contextCard}>
+            <Ionicons name="restaurant-outline" size={22} color={colors.primary} />
+            <View style={styles.flex1}><Text style={styles.contextTitle}>오늘 식사 기록을 반영해 답해드려요</Text><Text style={styles.contextText}>식사 2끼 · 복약 기록 확인 가능</Text></View>
           </View>
-        </View>
-
-        <View style={styles.questionList}>
-          <Text style={styles.questionTitle}>이렇게 물어보세요</Text>
-          {QUESTIONS.map((item) => (
-            <Pressable key={item.label} onPress={() => selectQuestion(item.label, item.answer)} style={({ pressed }) => [styles.questionButton, pressed && styles.pressed]}>
-              <Text style={styles.questionText}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={22} color={colors.primary} />
-            </Pressable>
+          {messages.map((message) => (
+            <View key={message.id} style={[styles.messageRow, message.role === 'user' && styles.userRow]}>
+              {message.role === 'assistant' && <View style={styles.smallAvatar}><Ionicons name="sparkles" size={17} color={colors.primary} /></View>}
+              <View style={[styles.bubble, message.role === 'user' ? styles.userBubble : styles.aiBubble]}>
+                <Text style={[styles.messageText, message.role === 'user' && styles.userText]}>{message.text}</Text>
+                {message.action && (
+                  <Pressable onPress={() => router.push(message.action === 'camera' ? '/elderly/camera' : '/elderly/medications')} style={styles.actionButton}>
+                    <Text style={styles.actionText}>{message.action === 'camera' ? '식사 사진 찍기' : '복약 기록 보기'}</Text>
+                    <Ionicons name="arrow-forward" size={20} color={colors.primary} />
+                  </Pressable>
+                )}
+                {message.role === 'assistant' && <Pressable style={styles.speakButton} accessibilityLabel="답변 소리로 듣기"><Ionicons name="volume-medium" size={21} color={colors.textMuted} /><Text style={styles.speakText}>답변 듣기</Text></Pressable>}
+              </View>
+            </View>
           ))}
-        </View>
+          <View style={styles.suggestions}>
+            {SUGGESTIONS.map((suggestion) => <Pressable key={suggestion} onPress={() => send(suggestion)} style={styles.suggestion}><Text style={styles.suggestionText}>{suggestion}</Text></Pressable>)}
+          </View>
+          <DisclaimerBanner variant="general" />
+        </ScrollView>
 
-        <View style={styles.micArea}>
-          <Pressable
-            onPress={() => {
-              setListening((value) => !value);
-              if (!listening) setAnswer('듣고 있어요. 편하게 말씀해 주세요.');
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={listening ? '음성 듣기 멈추기' : '음성으로 질문하기'}
-            style={[styles.micButton, listening && styles.micButtonListening]}
-          >
-            <Ionicons name={listening ? 'stop' : 'mic'} size={38} color={colors.onPrimary} />
-          </Pressable>
-          <Text style={styles.micHint}>{listening ? '듣고 있어요…' : '누르고 말씀하세요'}</Text>
+        {listening && <View style={styles.listeningBanner}><View style={styles.listeningDot} /><Text style={styles.listeningText}>듣고 있어요. 말씀을 마치고 전송을 눌러주세요.</Text></View>}
+        <View style={styles.composer}>
+          <Pressable onPress={() => router.push('/elderly/camera')} style={styles.attachButton} accessibilityLabel="식사 사진 첨부"><Ionicons name="add" size={28} color={colors.primary} /></Pressable>
+          <View style={[styles.inputWrap, listening && styles.inputListening]}>
+            <TextInput value={input} onChangeText={setInput} onSubmitEditing={() => send(input)} placeholder="메시지를 입력하거나 말해보세요" placeholderTextColor={colors.textFaint} style={styles.input} multiline />
+            <Pressable onPress={toggleListening} style={styles.micButton} accessibilityLabel={listening ? '음성 입력 멈추기' : '음성으로 질문하기'}><Ionicons name={listening ? 'stop-circle' : 'mic'} size={28} color={listening ? colors.danger : colors.primary} /></Pressable>
+          </View>
+          <Pressable onPress={() => send(input)} disabled={!canSend} style={[styles.sendButton, !canSend && styles.sendDisabled]} accessibilityLabel="메시지 보내기"><Ionicons name="arrow-up" size={25} color={colors.onPrimary} /></Pressable>
         </View>
-
-        <DisclaimerBanner variant="general" />
-      </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
-  eyebrow: { ...typeElder.callout, color: colors.primary },
-  title: { ...typeElder.title, color: colors.text, marginTop: spacing.xxs },
-  subtitle: { ...typeElder.body, color: colors.textMuted, marginTop: spacing.xs },
-  conversation: { gap: spacing.sm },
-  userBubble: { alignSelf: 'flex-end', maxWidth: '88%', borderRadius: radius.lg, borderBottomRightRadius: radius.sm, backgroundColor: colors.primary, padding: spacing.md },
-  userText: { ...typeElder.body, color: colors.onPrimary },
-  aiBubble: { borderRadius: radius.lg, borderBottomLeftRadius: radius.sm, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: spacing.md, ...shadow.card },
-  aiLabelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  aiLabel: { ...typeElder.callout, color: colors.primary },
-  aiText: { ...typeElder.body, color: colors.text, marginTop: spacing.sm },
-  questionList: { gap: spacing.xs },
-  questionTitle: { ...typeElder.subheading, color: colors.text, marginBottom: spacing.xs },
-  questionButton: { minHeight: minTouchTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  questionText: { ...typeElder.bodyStrong, color: colors.text, flex: 1 },
-  pressed: { opacity: 0.72 },
-  micArea: { alignItems: 'center', gap: spacing.sm },
-  micButton: { width: 84, height: 84, borderRadius: 42, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', ...shadow.micOrb },
-  micButtonListening: { backgroundColor: colors.danger },
-  micHint: { ...typeElder.callout, color: colors.textMuted },
+  container: { flex: 1, backgroundColor: colors.background }, flex1: { flex: 1 },
+  header: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.dividerLight, backgroundColor: colors.surface },
+  aiAvatar: { width: 46, height: 46, borderRadius: radius.pill, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  smallAvatar: { width: 34, height: 34, borderRadius: radius.pill, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xs },
+  title: { ...typeElder.subheading, color: colors.text }, online: { ...typeElder.caption, color: colors.good }, headerButton: { width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' },
+  messages: { padding: spacing.md, paddingBottom: spacing.xl, gap: spacing.md },
+  contextCard: { flexDirection: 'row', gap: spacing.sm, borderRadius: radius.md, padding: spacing.md, backgroundColor: colors.primarySoft }, contextTitle: { ...typeElder.callout, color: colors.text }, contextText: { ...typeElder.caption, color: colors.textMuted, marginTop: 2 },
+  messageRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs }, userRow: { justifyContent: 'flex-end' },
+  bubble: { maxWidth: '84%', padding: spacing.md }, aiBubble: { borderRadius: radius.lg, borderTopLeftRadius: radius.sm, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, ...shadow.card }, userBubble: { borderRadius: radius.lg, borderTopRightRadius: radius.sm, backgroundColor: colors.primary },
+  messageText: { ...typeElder.body, color: colors.text }, userText: { color: colors.onPrimary },
+  actionButton: { minHeight: minTouchTarget, marginTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.dividerLight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, actionText: { ...typeElder.callout, color: colors.primary },
+  speakButton: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, marginTop: spacing.sm }, speakText: { ...typeElder.caption, color: colors.textMuted },
+  suggestions: { gap: spacing.xs, alignItems: 'flex-start' }, suggestion: { minHeight: 48, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderStrong, paddingHorizontal: spacing.md }, suggestionText: { ...typeElder.callout, color: colors.text },
+  listeningBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, backgroundColor: colors.dangerBg }, listeningDot: { width: 10, height: 10, borderRadius: radius.pill, backgroundColor: colors.danger }, listeningText: { ...typeElder.caption, color: colors.danger, flex: 1 },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs, padding: spacing.sm, borderTopWidth: 1, borderTopColor: colors.dividerLight, backgroundColor: colors.surface }, attachButton: { width: minTouchTarget, height: minTouchTarget, borderRadius: radius.pill, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  inputWrap: { minHeight: minTouchTarget, maxHeight: 120, flex: 1, flexDirection: 'row', alignItems: 'flex-end', borderRadius: radius.lg, backgroundColor: colors.surfaceSunken, borderWidth: 1, borderColor: colors.border, paddingLeft: spacing.md }, inputListening: { borderColor: colors.danger }, input: { ...typeElder.body, color: colors.text, flex: 1, paddingVertical: spacing.sm }, micButton: { width: 48, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' },
+  sendButton: { width: minTouchTarget, height: minTouchTarget, borderRadius: radius.pill, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }, sendDisabled: { backgroundColor: colors.textFaint },
 });

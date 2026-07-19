@@ -5,10 +5,11 @@ import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MealPhotoGrid } from '../../src/components/nutrition/MealPhotoGrid';
-import { NutritionOverview, NutritionTrendChart } from '../../src/components/nutrition/NutritionOverview';
+import { NutritionBalanceHero } from '../../src/components/nutrition/NutritionBalanceHero';
+import { NutritionBalanceTrend } from '../../src/components/nutrition/NutritionBalanceTrend';
 import { Card } from '../../src/components/ui';
 import { buildAlertCandidates } from '../../src/domain/alertRules';
-import { buildNutritionTrend, DEFAULT_NUTRITION_GOAL, summarizeNutritionForDate } from '../../src/domain/dailyNutrition';
+import { buildNutritionBalanceInsight, buildNutritionTrend, DEFAULT_NUTRITION_GOAL, summarizeNutritionForDate } from '../../src/domain/dailyNutrition';
 import { formatDateWithWeekday, isoToLocalDate, todayDate } from '../../src/domain/date';
 import { findConnectedLink } from '../../src/domain/guardianLink';
 import type { CheckIn, GuardianAlert, HealthProfile, Meal, Medication, MedicationLog, NutritionGoal } from '../../src/domain/types';
@@ -64,6 +65,7 @@ export default function GuardianHomeScreen() {
 
   const resolvedGoal = useMemo<NutritionGoal>(() => goal ?? { id: profile?.userId ?? 'elderly-self', userId: profile?.userId ?? 'elderly-self', ...DEFAULT_NUTRITION_GOAL, updatedAt: new Date().toISOString() }, [goal, profile]);
   const summary = useMemo(() => summarizeNutritionForDate(meals, today, resolvedGoal), [meals, resolvedGoal, today]);
+  const balanceInsight = useMemo(() => buildNutritionBalanceInsight(summary), [summary]);
   const trend = useMemo(() => buildNutritionTrend(meals, today, 7, resolvedGoal), [meals, resolvedGoal, today]);
   const todayMeals = useMemo(() => meals.filter((meal) => isoToLocalDate(meal.recordedAt) === today), [meals, today]);
   const scheduledDoseCount = medications.reduce((sum, medication) => sum + medication.timesOfDay.length, 0);
@@ -90,7 +92,14 @@ export default function GuardianHomeScreen() {
           <Card style={styles.safeCard}><Ionicons name="checkmark-circle" size={28} color={colors.good} /><Text style={styles.safeText}>지금 확인할 새로운 알림이 없어요.</Text></Card>
         )}
 
-        <NutritionOverview summary={summary} goal={resolvedGoal} />
+        <View style={styles.statusGrid}>
+          <Card style={styles.statusTile}><Text style={styles.statusLabel}>영양 균형</Text><Text style={styles.statusValue}>{summary.mealCount === 0 ? '기록 전' : `${balanceInsight.score}점`}</Text></Card>
+          <Card style={styles.statusTile}><Text style={styles.statusLabel}>식사 기록</Text><Text style={styles.statusValue}>{summary.mealCount}/3끼</Text></Card>
+          <Card style={styles.statusTile}><Text style={styles.statusLabel}>복약 이행</Text><Text style={styles.statusValue}>{scheduledDoseCount === 0 ? '일정 없음' : `${logs.length}/${scheduledDoseCount}회`}</Text></Card>
+          <Card style={styles.statusTile}><Text style={styles.statusLabel}>오늘 상태</Text><Text style={styles.statusValue}>{checkIn ? (checkIn.condition === 'good' ? '좋음' : checkIn.condition === 'normal' ? '보통' : '확인 필요') : '미확인'}</Text></Card>
+        </View>
+
+        <NutritionBalanceHero summary={summary} insight={balanceInsight} goal={resolvedGoal} />
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>오늘 식사</Text><Pressable onPress={() => router.push('/guardian/history')}><Text style={styles.link}>상세 기록</Text></Pressable></View>
@@ -108,7 +117,11 @@ export default function GuardianHomeScreen() {
           </Pressable>
         </View>
 
-        <NutritionTrendChart summaries={trend} />
+        <NutritionBalanceTrend summaries={trend} />
+        <View style={styles.actionRow}>
+          <Pressable onPress={() => router.push('/guardian/shop')} style={styles.primaryAction}><Ionicons name="gift" size={22} color={colors.onPrimary} /><Text style={styles.primaryActionText}>맞춤 식단 보내기</Text></Pressable>
+          <Pressable onPress={() => router.push('/guardian/history')} style={styles.secondaryAction}><Ionicons name="calendar" size={22} color={colors.primary} /><Text style={styles.secondaryActionText}>기록 보기</Text></Pressable>
+        </View>
         <Pressable onPress={() => router.push('/guardian/manage')} style={styles.manageButton}><Text style={styles.manageButtonText}>건강 프로필과 주간 리포트 보기</Text><Ionicons name="chevron-forward" size={22} color={colors.primary} /></Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -120,4 +133,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }, date: { ...type.callout, color: colors.textMuted }, title: { ...type.title, color: colors.text, marginTop: 2 }, subtitle: { ...type.callout, color: colors.textMuted, marginTop: spacing.xs }, alertBell: { width: minTouchTarget, height: minTouchTarget, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }, alertBadge: { position: 'absolute', right: -2, top: -2, minWidth: 22, height: 22, borderRadius: radius.pill, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }, alertBadgeText: { ...type.caption, color: colors.onPrimary },
   alertCard: { minHeight: 90, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.dangerBorder, backgroundColor: colors.dangerBg, padding: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, alertIcon: { width: 46, height: 46, borderRadius: radius.md, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }, alertEyebrow: { ...type.caption, color: colors.danger }, alertMessage: { ...type.bodyStrong, color: colors.text, marginTop: 2 }, alertMore: { ...type.caption, color: colors.textMuted, marginTop: 2 }, safeCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.goodBg, borderColor: colors.goodBorder }, safeText: { ...type.bodyStrong, color: colors.good },
   section: { gap: spacing.sm }, sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, sectionTitle: { ...type.heading, color: colors.text }, link: { ...type.callout, color: colors.primary }, medicationCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, medicationIcon: { width: 54, height: 54, borderRadius: radius.md, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }, medicationTitle: { ...type.bodyStrong, color: colors.text }, medicationText: { ...type.caption, color: colors.textMuted, marginTop: 2 }, manageButton: { minHeight: minTouchTarget, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md }, manageButtonText: { ...type.bodyStrong, color: colors.primary },
+  statusGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, statusTile: { width: '48%', gap: spacing.xxs }, statusLabel: { ...type.caption, color: colors.textMuted }, statusValue: { ...type.heading, color: colors.text },
+  actionRow: { flexDirection: 'row', gap: spacing.sm }, primaryAction: { minHeight: minTouchTarget, flex: 1, borderRadius: radius.md, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingHorizontal: spacing.sm }, primaryActionText: { ...type.callout, color: colors.onPrimary }, secondaryAction: { minHeight: minTouchTarget, flex: 1, borderRadius: radius.md, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingHorizontal: spacing.sm }, secondaryActionText: { ...type.callout, color: colors.primary },
 });

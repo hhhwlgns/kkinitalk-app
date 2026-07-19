@@ -29,13 +29,14 @@ export function MealPhotoGrid({ meals, onMealPress, onAddPress, elder = false }:
             onPress={() => meal ? onMealPress(meal) : onAddPress(slot)}
             accessibilityRole="button"
             accessibilityLabel={meal ? `${label} 식사 상세 보기` : `${label} 식사 사진 찍기`}
-            style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.tile, !meal && styles.emptyTile, pressed && styles.pressed]}
           >
             {meal?.photoUri ? (
               <Image source={{ uri: meal.photoUri }} style={styles.photo} />
             ) : (
-              <View style={[styles.photo, styles.placeholder]}>
-                <CameraIcon size={25} color={meal ? colors.primary : colors.textFaint} />
+              <View style={[styles.photo, styles.placeholder, !meal && styles.emptyPlaceholder]}>
+                <View style={styles.cameraCircle}><CameraIcon size={28} color={colors.primary} /></View>
+                {!meal && <Text style={[styles.addLabel, scale.caption]}>눌러서 기록</Text>}
               </View>
             )}
             <Text style={[styles.slot, scale.callout]}>{label}</Text>
@@ -52,9 +53,13 @@ export function MealPhotoGrid({ meals, onMealPress, onAddPress, elder = false }:
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', gap: spacing.xs },
   tile: { flex: 1, minHeight: minTouchTarget * 2, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, overflow: 'hidden' },
+  emptyTile: { borderWidth: 2, borderStyle: 'dashed', borderColor: colors.primary },
   pressed: { opacity: 0.72 },
   photo: { width: '100%', aspectRatio: 1.05 },
-  placeholder: { backgroundColor: colors.surfaceSunken, alignItems: 'center', justifyContent: 'center' },
+  placeholder: { backgroundColor: colors.surfaceSunken, alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
+  emptyPlaceholder: { backgroundColor: colors.primaryHoverBg },
+  cameraCircle: { width: 52, height: 52, borderRadius: radius.pill, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  addLabel: { color: colors.primary },
   slot: { color: colors.text, paddingHorizontal: spacing.xs, marginTop: spacing.xs },
   foodName: { ...type.caption, color: colors.textMuted, paddingHorizontal: spacing.xs, paddingBottom: spacing.sm, marginTop: 2 },
 });

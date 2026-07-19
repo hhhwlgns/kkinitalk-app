@@ -1,4 +1,4 @@
-import { buildNextMealAdvice, buildNutritionTrend, summarizeNutritionForDate } from '../src/domain/dailyNutrition';
+import { buildNextMealAdvice, buildNutritionBalanceInsight, buildNutritionTrend, summarizeNutritionForDate } from '../src/domain/dailyNutrition';
 import type { Meal } from '../src/domain/types';
 
 function meal(id: string, date: string, proteinG: number, sodiumMg: number): Meal {
@@ -37,8 +37,13 @@ if (today.states.sodiumMg !== 'caution' || today.states.proteinG !== 'low') {
 }
 
 const advice = buildNextMealAdvice(today);
-if (!advice.title.includes('나트륨') || advice.menu.length === 0) {
-  throw new Error(`다음 메뉴 조언이 나트륨 주의를 반영하지 못했습니다: ${JSON.stringify(advice)}`);
+if (!advice.reason.includes('간을 세게 하지 않은') || !advice.title.includes('단백질') || advice.menu.length === 0) {
+  throw new Error(`다음 메뉴 조언이 여러 영양 상태와 나트륨 행동을 종합하지 못했습니다: ${JSON.stringify(advice)}`);
+}
+
+const balance = buildNutritionBalanceInsight(today);
+if (balance.status !== 'needsAttention' || balance.focusKeys.length < 2 || !balance.focusKeys.includes('sodiumMg')) {
+  throw new Error(`종합 영양 균형이 부족 영양소와 상한 지표를 함께 반영하지 못했습니다: ${JSON.stringify(balance)}`);
 }
 
 const trend = buildNutritionTrend(meals, '2026-07-19', 3);
@@ -50,4 +55,5 @@ console.log('SMOKE TEST PASSED: redesign daily nutrition aggregation distinguish
   totals: today.totals,
   states: today.states,
   advice,
+  balance,
 });
