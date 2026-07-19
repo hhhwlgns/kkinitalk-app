@@ -8,7 +8,7 @@ import { isoToLocalDate, todayDate } from '../../src/domain/date';
 import { colors, fontFamily, fontSize, radius, shadow, spacing, typeElder } from '../../src/theme/tokens';
 import { useRole } from '../../src/state/RoleContext';
 import { useConsent } from '../../src/state/ConsentContext';
-import { guardianLinksCollection, healthProfilesCollection } from '../../src/mocks/db/collections';
+import { guardianLinksCollection, healthProfilesCollection, usersCollection } from '../../src/mocks/db/collections';
 import { createId } from '../../src/domain/id';
 import { generateInviteCode } from '../../src/domain/inviteCode';
 import type { GuardianLink, HealthProfile } from '../../src/domain/types';
@@ -26,7 +26,7 @@ const APPETITE_OPTIONS: { label: string; value: 'low' | 'normal' | 'high' }[] = 
   { label: '입맛이 좋아요', value: 'high' },
 ];
 
-type RowKey = 'basic' | 'conditions' | 'medications' | 'swallowing' | 'avoidedFoods' | 'appetite' | 'invite' | 'consent';
+type RowKey = 'basic' | 'conditions' | 'medications' | 'swallowing' | 'avoidedFoods' | 'appetite' | 'consent';
 
 function daysSince(iso: string): number {
   const created = new Date(isoToLocalDate(iso)).getTime();
@@ -91,6 +91,8 @@ export default function ProfileScreen() {
   const [recentWeightKg, setRecentWeightKg] = useState('');
   const [appetiteLevel, setAppetiteLevel] = useState<'low' | 'normal' | 'high' | null>(null);
   const [pendingLinks, setPendingLinks] = useState<GuardianLink[]>([]);
+  const [connectedLinks, setConnectedLinks] = useState<GuardianLink[]>([]);
+  const [guardianNames, setGuardianNames] = useState<Record<string, string>>({});
   const [openRows, setOpenRows] = useState<Partial<Record<RowKey, boolean>>>({});
 
   const load = useCallback(async () => {
@@ -106,10 +108,13 @@ export default function ProfileScreen() {
       setRecentWeightKg(existing.recentWeightKg !== null ? String(existing.recentWeightKg) : '');
       setAppetiteLevel(existing.appetiteLevel);
     }
-    const links = await guardianLinksCollection.query(
-      (item) => item.elderlyUserId === userId && item.status === 'pending',
-    );
-    setPendingLinks(links);
+    const [links, users] = await Promise.all([
+      guardianLinksCollection.query((item) => item.elderlyUserId === userId),
+      usersCollection.query((item) => item.role === 'guardian'),
+    ]);
+    setPendingLinks(links.filter((item) => item.status === 'pending'));
+    setConnectedLinks(links.filter((item) => item.status === 'connected'));
+    setGuardianNames(Object.fromEntries(users.map((user) => [user.id, user.displayName])));
     await loadHighRiskSharingConsent(userId);
   }, [userId, loadHighRiskSharingConsent]);
 
@@ -157,10 +162,48 @@ export default function ProfileScreen() {
   const initial = name.trim().charAt(0) || '나';
   const subtitle = profile ? `끼니톡과 ${daysSince(profile.createdAt)}일째` : '끼니톡과 함께 시작해요';
   const primaryLink = pendingLinks[0] ?? null;
+  const displayLink = primaryLink ?? connectedLinks[0] ?? null;
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.codeCard}>
+          <View style={styles.codeHeader}>
+            <View style={styles.codeIcon}><Text style={styles.codeIconText}>연결</Text></View>
+            <View style={styles.flex1}>
+              <Text style={styles.codeLabel}>내 보호자 연결 코드</Text>
+              <Text style={styles.codeHelper}>가족에게 이 코드를 알려주세요</Text>
+            </View>
+          </View>
+          <Text style={styles.codeValue}>{displayLink?.inviteCode ?? '코드 없음'}</Text>
+          {!displayLink && (
+            <Pressable style={styles.codeButton} onPress={createInviteCode}>
+              <Text style={styles.codeButtonText}>연결 코드 만들기</Text>
+            </Pressable>
+          )}
+        </View>
+
+        <View style={styles.guardianSection}>
+          <Text style={styles.guardianSectionTitle}>연결된 보호자</Text>
+          {connectedLinks.length === 0 ? (
+            <View style={styles.emptyGuardianCard}>
+              <Text style={styles.emptyGuardianTitle}>아직 연결된 보호자가 없어요</Text>
+              <Text style={styles.emptyGuardianDescription}>위 코드를 가족에게 알려주시면 건강 기록을 함께 볼 수 있어요.</Text>
+            </View>
+          ) : connectedLinks.map((link) => (
+            <View key={link.id} style={styles.guardianCard}>
+              <View style={styles.guardianAvatar}>
+                <Text style={styles.guardianAvatarText}>{guardianNames[link.guardianUserId ?? '']?.charAt(0) || '보'}</Text>
+              </View>
+              <View style={styles.flex1}>
+                <Text style={styles.guardianName}>{guardianNames[link.guardianUserId ?? ''] ?? '보호자'}</Text>
+                <Text style={styles.guardianRelation}>{link.relationship ?? '가족'} · 건강 기록 공유 중</Text>
+              </View>
+              <View style={styles.connectedBadge}><Text style={styles.connectedBadgeText}>연결됨</Text></View>
+            </View>
+          ))}
+        </View>
+
         <View style={styles.headerRow}>
           <View style={styles.avatar}>
             <Text style={styles.avatarInitial}>{initial}</Text>
@@ -311,20 +354,6 @@ export default function ProfileScreen() {
         </ProfileRow>
 
         <ProfileRow
-          label="보호자 초대 코드"
-          value={primaryLink ? primaryLink.inviteCode : '아직 만들지 않았어요'}
-          open={!!openRows.invite}
-          onToggleOpen={() => toggleRow('invite')}
-        >
-          <Text style={styles.helperText}>가족에게 알려주시면 기록을 함께 볼 수 있어요.</Text>
-          {!primaryLink && (
-            <Pressable style={styles.editButton} onPress={createInviteCode}>
-              <Text style={styles.editButtonLabel}>코드 만들기</Text>
-            </Pressable>
-          )}
-        </ProfileRow>
-
-        <ProfileRow
           label="고위험 상태 공유 동의"
           value={highRiskSharingConsent ? '동의함' : '동의하지 않음'}
           open={!!openRows.consent}
@@ -439,4 +468,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
+  codeCard: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    ...shadow.raised,
+  },
+  codeHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  codeIcon: { width: 52, height: 52, borderRadius: radius.md, backgroundColor: colors.primaryTranslucent, alignItems: 'center', justifyContent: 'center' },
+  codeIconText: { ...typeElder.caption, color: colors.onPrimary, fontFamily: fontFamily.bold },
+  codeLabel: { ...typeElder.bodyStrong, color: colors.onPrimary },
+  codeHelper: { ...typeElder.caption, color: colors.onPrimary, opacity: 0.82, marginTop: 2 },
+  codeValue: { ...typeElder.display, color: colors.onPrimary, textAlign: 'center', letterSpacing: 5, marginVertical: spacing.md },
+  codeButton: { minHeight: 56, borderRadius: radius.md, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  codeButtonText: { ...typeElder.bodyStrong, color: colors.primary },
+  guardianSection: { gap: spacing.sm },
+  guardianSectionTitle: { ...typeElder.heading, color: colors.text },
+  guardianCard: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md, ...shadow.card },
+  guardianAvatar: { width: 48, height: 48, borderRadius: radius.pill, backgroundColor: colors.goodBg, alignItems: 'center', justifyContent: 'center' },
+  guardianAvatarText: { ...typeElder.bodyStrong, color: colors.good },
+  guardianName: { ...typeElder.bodyStrong, color: colors.text },
+  guardianRelation: { ...typeElder.caption, color: colors.textMuted, marginTop: 2 },
+  connectedBadge: { borderRadius: radius.pill, backgroundColor: colors.goodBg, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm },
+  connectedBadgeText: { ...typeElder.caption, color: colors.good },
+  emptyGuardianCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md },
+  emptyGuardianTitle: { ...typeElder.bodyStrong, color: colors.text },
+  emptyGuardianDescription: { ...typeElder.caption, color: colors.textMuted, marginTop: spacing.xs },
 });
